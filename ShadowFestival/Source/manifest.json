@@ -1,0 +1,15 @@
+{
+  "Name": "Festival of the Mundane Redux",
+  "Author": "Originally by MouseyPounds and Mr. Podunkian with Redux by ThaleTheLich",
+  "Version": "2.2.0",
+  "Description": "The Shadows have their own Spirit's Eve festival in the sewers. Come visit. Now selling Dinosaur Shirts and Boots!",
+  "UniqueID": "MouseyPounds.ShadowFestival",
+  "EntryDll": "ShadowFestival.dll",
+  "MinimumApiVersion": "4.0.0",
+  "UpdateKeys": [
+    "Nexus:42678",
+    "Nexus:4630",
+    "Nexus:4996"
+  ],
+  "Dependencies": []
+}
