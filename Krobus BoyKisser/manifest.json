@@ -1,0 +1,12 @@
+{
+    "Name": "[CP] Krobus Boykisser",
+    "Author": "ThaleTheGreat and CitrineGamer",
+    "Description": "Krobus Boykisser Meme",
+    "Version": "1.0.1",
+    "UniqueID": "ThaleTheGreat.KrobusBoykisser",
+    "MinimumApiVersion": "3.0.0",
+    "UpdateKeys": [ "Nexus:46172", "GitHub:ThaleTheGreat/BoykisserKrobus" ],
+    "ContentPackFor": {
+        "UniqueID": "Pathoschild.ContentPatcher"
+    }
+}
