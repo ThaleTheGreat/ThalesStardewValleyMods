@@ -1,0 +1,18 @@
+{
+    "Name": "Calendar Master",
+    "Author": "ThaleTheGreat",
+    "Version": "1.0.0",
+    "Description": "In-game menu to change day/season/year and freeze time. Defaults to applying changes next morning; optional GMCM setting enables immediate apply.",
+    "UniqueID": "ThaleTheGreat.CalendarMaster",
+    "EntryDll": "CalendarMaster.dll",
+    "MinimumApiVersion": "4.0.0",
+    "UpdateKeys": [
+        "Nexus:42497"
+    ],
+    "OptionalDependencies": [
+        {
+            "UniqueID": "spacechase0.GenericModConfigMenu",
+            "IsRequired": false
+        }
+    ]
+}
