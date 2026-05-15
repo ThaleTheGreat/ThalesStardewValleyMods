@@ -1,0 +1,12 @@
+{
+  "Name": "The Amazing Deathicorn Redux",
+  "Author": "ThaleTheGreat",
+  "Version": "1.0.0",
+  "Description": "Have you ever wanted a Deathicorn!? What? No? Oh. Well this is awkward...",
+  "UniqueID": "ThaleTheGreat.TheAmazingDeathicornRedux",
+  "EntryDll": "TheAmazingDeathicornRedux.dll",
+  "UpdateKeys": [
+    "Nexus:42786"
+  ],
+  "MinimumApiVersion": "4.0.0"
+}

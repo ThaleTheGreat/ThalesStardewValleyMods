@@ -1,0 +1,11 @@
+{
+  "EnableHornLasers": true,
+  "EnableDeathicornGlow": true,
+  "GlowRadius": 5.0,
+  "GlowColor": "Prismatic",
+  "LaserIntervalSeconds": 2.0,
+  "RangeTiles": 5,
+  "BoltCoreColor": "Prismatic",
+  "BoltGlowColor": "Prismatic",
+  "ImpactSplashColor": "Prismatic"
+}
