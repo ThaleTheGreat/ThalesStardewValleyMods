@@ -1,7 +1,7 @@
 {
   "Name": "[CP] The Amazing Deathicorn Redux",
   "Author": "ThaleTheGreat",
-  "Version": "1.0.0",
+  "Version": "2.0.0",
   "Description": "External Content Patcher asset layer for The Amazing Deathicorn Redux.",
   "UniqueID": "ThaleTheGreat.TheAmazingDeathicornRedux.CP",
   "ContentPackFor": {
