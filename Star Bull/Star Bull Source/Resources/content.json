@@ -1,0 +1,1693 @@
+{
+  "Format": "2.1.0",
+  "Changes": [
+    {
+      "Action": "EditData",
+      "Target": "Data/Objects",
+      "Entries": {
+        "{{ModId}}_Original": {
+          "Name": "Red Bull Original",
+          "DisplayName": "Red Bull Original",
+          "Description": "Red Bull gives you wings! The iconic original with a unique sweet-tart flavor.",
+          "Type": "Basic",
+          "Category": -20,
+          "Price": 0,
+          "CanBeSold": false,
+          "ExcludeFromShippingCollection": true,
+          "Edibility": 52,
+          "IsDrink": true,
+          "Buffs": [
+            {
+              "DisplayName": "Wings!",
+              "Description": "Wings! +1 Speed, +30 Max Energy, +1 Farming, +1 Foraging, +16 Magnetism",
+              "Duration": 360,
+              "CustomAttributes": {
+                "Speed": 1,
+                "MaxStamina": 30,
+                "FarmingLevel": 1,
+                "ForagingLevel": 1,
+                "MagneticRadius": 16
+              },
+              "Id": "{{ModId}}_OriginalBoost"
+            }
+          ],
+          "Texture": "Mods/{{ModId}}/Original",
+          "SpriteIndex": 0
+        },
+        "{{ModId}}_Sugarfree": {
+          "Name": "Red Bull Sugarfree",
+          "DisplayName": "Red Bull Sugarfree",
+          "Description": "All the energy, none of the sugar. Crisp and refreshing.",
+          "Type": "Basic",
+          "Category": -20,
+          "Price": 0,
+          "CanBeSold": false,
+          "ExcludeFromShippingCollection": true,
+          "Edibility": 52,
+          "IsDrink": true,
+          "Buffs": [
+            {
+              "DisplayName": "Sugar-Free Energy",
+              "Description": "Sugar-Free Energy. +1 Speed, +30 Max Energy, +1 Fishing, +1 Luck, +16 Magnetism",
+              "Duration": 360,
+              "CustomAttributes": {
+                "Speed": 1,
+                "MaxStamina": 30,
+                "FishingLevel": 1,
+                "LuckLevel": 1,
+                "MagneticRadius": 16
+              }
+            }
+          ],
+          "Texture": "Mods/{{ModId}}/Sugarfree",
+          "SpriteIndex": 0
+        },
+        "{{ModId}}_Zero": {
+          "Name": "Red Bull Zero",
+          "DisplayName": "Red Bull Zero",
+          "Description": "Zero sugar, tastes like the original. The perfect balance.",
+          "Type": "Basic",
+          "Category": -20,
+          "Price": 0,
+          "CanBeSold": false,
+          "ExcludeFromShippingCollection": true,
+          "Edibility": 52,
+          "IsDrink": true,
+          "Buffs": [
+            {
+              "DisplayName": "Zero Compromise",
+              "Description": "Zero Compromise. +1 Speed, +30 Max Energy, +1 Mining, +1 Combat, +16 Magnetism",
+              "Duration": 360,
+              "CustomAttributes": {
+                "Speed": 1,
+                "MaxStamina": 30,
+                "MiningLevel": 1,
+                "CombatLevel": 1,
+                "MagneticRadius": 16
+              }
+            }
+          ],
+          "Texture": "Mods/{{ModId}}/Zero",
+          "SpriteIndex": 0
+        },
+        "{{ModId}}_TotalZero": {
+          "Name": "Red Bull Total Zero",
+          "DisplayName": "Red Bull Total Zero",
+          "Description": "Zero sugar, zero calories, zero carbs. Clinical precision.",
+          "Type": "Basic",
+          "Category": -20,
+          "Price": 0,
+          "CanBeSold": false,
+          "ExcludeFromShippingCollection": true,
+          "Edibility": 52,
+          "IsDrink": true,
+          "Buffs": [
+            {
+              "DisplayName": "Clinical Energy",
+              "Description": "Clinical Energy. +1 Speed, +30 Max Energy, +32 Magnetism, +2 Immunity",
+              "Duration": 360,
+              "CustomAttributes": {
+                "Speed": 1,
+                "MaxStamina": 30,
+                "MagneticRadius": 32,
+                "Immunity": 2
+              }
+            }
+          ],
+          "Texture": "Mods/{{ModId}}/TotalZero",
+          "SpriteIndex": 0
+        },
+        "{{ModId}}_RedEdition": {
+          "Name": "Red Bull Red Edition",
+          "DisplayName": "Red Bull Red Edition",
+          "Description": "Fresh, sweet, juicy watermelon. Incredibly refreshing!",
+          "Type": "Basic",
+          "Category": -20,
+          "Price": 0,
+          "CanBeSold": false,
+          "ExcludeFromShippingCollection": true,
+          "Edibility": 56,
+          "IsDrink": true,
+          "Buffs": [
+            {
+              "DisplayName": "Watermelon Rush",
+              "Description": "Watermelon Rush. +1 Speed, +40 Max Energy, +1 to all skills",
+              "Duration": 480,
+              "CustomAttributes": {
+                "Speed": 1,
+                "MaxStamina": 40,
+                "FarmingLevel": 1,
+                "FishingLevel": 1,
+                "ForagingLevel": 1,
+                "MiningLevel": 1,
+                "CombatLevel": 1
+              }
+            }
+          ],
+          "Texture": "Mods/{{ModId}}/RedEdition",
+          "SpriteIndex": 0
+        },
+        "{{ModId}}_YellowEdition": {
+          "Name": "Red Bull Yellow Edition",
+          "DisplayName": "Red Bull Yellow Edition",
+          "Description": "A vibrant blend of tropical fruits. Vacation in a can!",
+          "Type": "Basic",
+          "Category": -20,
+          "Price": 0,
+          "CanBeSold": false,
+          "ExcludeFromShippingCollection": true,
+          "Edibility": 56,
+          "IsDrink": true,
+          "Buffs": [
+            {
+              "DisplayName": "Tropical Energy",
+              "Description": "Tropical Energy. +1 Speed, +40 Max Energy, +5 Foraging, +2 Luck",
+              "Duration": 480,
+              "CustomAttributes": {
+                "Speed": 1,
+                "MaxStamina": 40,
+                "ForagingLevel": 5,
+                "LuckLevel": 2
+              }
+            }
+          ],
+          "Texture": "Mods/{{ModId}}/YellowEdition",
+          "SpriteIndex": 0
+        },
+        "{{ModId}}_BlueEdition": {
+          "Name": "Red Bull Blue Edition",
+          "DisplayName": "Red Bull Blue Edition",
+          "Description": "Deep, authentic blueberry flavor. Fruity yet sophisticated.",
+          "Type": "Basic",
+          "Category": -20,
+          "Price": 0,
+          "CanBeSold": false,
+          "ExcludeFromShippingCollection": true,
+          "Edibility": 56,
+          "IsDrink": true,
+          "Buffs": [
+            {
+              "DisplayName": "Berry Focus",
+              "Description": "Berry Focus. +1 Speed, +40 Max Energy, +2 Mining, +2 Luck",
+              "Duration": 480,
+              "CustomAttributes": {
+                "Speed": 1,
+                "MaxStamina": 40,
+                "MiningLevel": 2,
+                "LuckLevel": 2
+              }
+            }
+          ],
+          "Texture": "Mods/{{ModId}}/BlueEdition",
+          "SpriteIndex": 0
+        },
+        "{{ModId}}_CoconutEdition": {
+          "Name": "Red Bull Coconut Edition",
+          "DisplayName": "Red Bull Coconut Edition",
+          "Description": "Unique coconut balanced by tart berry. Creamy yet refreshing!",
+          "Type": "Basic",
+          "Category": -20,
+          "Price": 0,
+          "CanBeSold": false,
+          "ExcludeFromShippingCollection": true,
+          "Edibility": 56,
+          "IsDrink": true,
+          "Buffs": [
+            {
+              "DisplayName": "Exotic Fortitude",
+              "Description": "Exotic Fortitude. +2 Speed, +60 Max Energy, +5 Mining, +5 Attack, +5 Defense, +5 Luck, +10 Immunity, +64 Magnetism",
+              "Duration": 480,
+              "CustomAttributes": {
+                "Speed": 2,
+                "MaxStamina": 60,
+                "MiningLevel": 5,
+                "Attack": 5,
+                "Defense": 5,
+                "LuckLevel": 5,
+                "Immunity": 10,
+                "MagneticRadius": 64
+              }
+            }
+          ],
+          "Texture": "Mods/{{ModId}}/CoconutEdition",
+          "SpriteIndex": 0
+        },
+        "{{ModId}}_PeachEdition": {
+          "Name": "Red Bull Peach Edition",
+          "DisplayName": "Red Bull Peach Edition",
+          "Description": "Soft, floral, incredibly smooth. Like biting into a perfectly ripe peach.",
+          "Type": "Basic",
+          "Category": -20,
+          "Price": 0,
+          "CanBeSold": false,
+          "ExcludeFromShippingCollection": true,
+          "Edibility": 56,
+          "IsDrink": true,
+          "Buffs": [
+            {
+              "DisplayName": "Desert Refreshment",
+              "Description": "Desert Refreshment. +1 Speed, +40 Max Energy, +2 Farming, +2 Luck",
+              "Duration": 480,
+              "CustomAttributes": {
+                "Speed": 1,
+                "MaxStamina": 40,
+                "FarmingLevel": 2,
+                "LuckLevel": 2
+              }
+            }
+          ],
+          "Texture": "Mods/{{ModId}}/PeachEdition",
+          "SpriteIndex": 0
+        },
+        "{{ModId}}_AmberEdition": {
+          "Name": "Red Bull Amber Edition",
+          "DisplayName": "Red Bull Amber Edition",
+          "Description": "Sweet strawberry meets tangy apricot. A delightfully balanced crowd favorite!",
+          "Type": "Basic",
+          "Category": -20,
+          "Price": 0,
+          "CanBeSold": false,
+          "ExcludeFromShippingCollection": true,
+          "Edibility": 56,
+          "IsDrink": true,
+          "Buffs": [
+            {
+              "DisplayName": "Warrior's Vigor",
+              "Description": "Warrior's Vigor. +2 Speed, +60 Max Energy, +5 Mining, +5 Attack, +5 Defense, +5 Luck, +10 Immunity, +64 Magnetism",
+              "Duration": 480,
+              "CustomAttributes": {
+                "Speed": 2,
+                "MaxStamina": 60,
+                "MiningLevel": 5,
+                "Attack": 5,
+                "Defense": 5,
+                "LuckLevel": 5,
+                "Immunity": 10,
+                "MagneticRadius": 64
+              }
+            }
+          ],
+          "Texture": "Mods/{{ModId}}/AmberEdition",
+          "SpriteIndex": 0
+        },
+        "{{ModId}}_SeaBlueEdition": {
+          "Name": "Red Bull Sea Blue Edition",
+          "DisplayName": "Red Bull Sea Blue Edition",
+          "Description": "The game-changer! Complex juneberry with blueberry notes.",
+          "Type": "Basic",
+          "Category": -20,
+          "Price": 0,
+          "CanBeSold": false,
+          "ExcludeFromShippingCollection": true,
+          "Edibility": 56,
+          "IsDrink": true,
+          "Buffs": [
+            {
+              "DisplayName": "Angler's Focus",
+              "Description": "Angler's Focus. +1 Speed, +40 Max Energy, +2 Fishing, +2 Luck",
+              "Duration": 480,
+              "CustomAttributes": {
+                "Speed": 1,
+                "MaxStamina": 40,
+                "FishingLevel": 2,
+                "LuckLevel": 2
+              }
+            }
+          ],
+          "Texture": "Mods/{{ModId}}/SeaBlueEdition",
+          "SpriteIndex": 0
+        },
+        "{{ModId}}_GreenEdition": {
+          "Name": "Red Bull Green Edition",
+          "DisplayName": "Red Bull Green Edition",
+          "Description": "Exotic dragon fruit! Subtle kiwi-pear notes.",
+          "Type": "Basic",
+          "Category": -20,
+          "Price": 0,
+          "CanBeSold": false,
+          "ExcludeFromShippingCollection": true,
+          "Edibility": 56,
+          "IsDrink": true,
+          "Buffs": [
+            {
+              "DisplayName": "Exotic Energy",
+              "Description": "Exotic Energy. +1 Speed, +40 Max Energy, +5 Foraging, +2 Luck",
+              "Duration": 480,
+              "CustomAttributes": {
+                "Speed": 1,
+                "MaxStamina": 40,
+                "ForagingLevel": 5,
+                "LuckLevel": 2
+              }
+            }
+          ],
+          "Texture": "Mods/{{ModId}}/GreenEdition",
+          "SpriteIndex": 0
+        },
+        "{{ModId}}_WinterEdition2025": {
+          "Name": "Red Bull Winter Edition",
+          "DisplayName": "Red Bull Winter Edition 2025 (Fuji Apple & Ginger)",
+          "Description": "Limited Edition! Crisp Fuji apple with a gentle ginger kick.",
+          "Type": "Basic",
+          "Category": -20,
+          "Price": 0,
+          "CanBeSold": false,
+          "ExcludeFromShippingCollection": true,
+          "Edibility": 60,
+          "IsDrink": true,
+          "Buffs": [
+            {
+              "DisplayName": "Cozy Warmth",
+              "Description": "Cozy Warmth. +1 Speed, +50 Max Energy, +5 Mining, +32 Magnetism, +2 Luck",
+              "Duration": 600,
+              "CustomAttributes": {
+                "Speed": 1,
+                "MaxStamina": 50,
+                "MiningLevel": 5,
+                "MagneticRadius": 32,
+                "LuckLevel": 2
+              }
+            }
+          ],
+          "Texture": "Mods/{{ModId}}/WinterEdition2025",
+          "SpriteIndex": 0
+        },
+        "{{ModId}}_SummerEdition2026": {
+          "Name": "Red Bull Summer Edition 2026",
+          "DisplayName": "Red Bull Summer Edition 2026 (Sudachi-Lime)",
+          "Description": "Limited Edition! Bright sudachi citrus with zesty lime.",
+          "Type": "Basic",
+          "Category": -20,
+          "Price": 0,
+          "CanBeSold": false,
+          "ExcludeFromShippingCollection": true,
+          "Edibility": 60,
+          "IsDrink": true,
+          "Buffs": [
+            {
+              "DisplayName": "Summer Harvest",
+              "Description": "Summer Harvest. +1 Speed, +50 Max Energy, +3 Farming, +32 Magnetism, +1 Foraging, +1 Fishing",
+              "Duration": 600,
+              "CustomAttributes": {
+                "Speed": 1,
+                "MaxStamina": 50,
+                "FarmingLevel": 3,
+                "MagneticRadius": 32,
+                "ForagingLevel": 1,
+                "FishingLevel": 1
+              }
+            }
+          ],
+          "Texture": "Mods/{{ModId}}/SummerEdition2026",
+          "SpriteIndex": 0
+        },
+        "{{ModId}}_SpringEdition2026": {
+          "Name": "Red Bull Spring Edition 2026",
+          "DisplayName": "Red Bull Spring Edition 2026",
+          "Description": "Limited Edition! Cherry Sakura flavor from Japan.",
+          "Type": "Basic",
+          "Category": -20,
+          "Price": 0,
+          "CanBeSold": false,
+          "ExcludeFromShippingCollection": true,
+          "Edibility": 60,
+          "IsDrink": true,
+          "Buffs": [
+            {
+              "DisplayName": "Cherry Blossom Breeze",
+              "Description": "Cherry Blossom Breeze. +1 Speed, +50 Max Energy, +3 Foraging, +32 Magnetism, +1 Farming, +1 Fishing",
+              "Duration": 600,
+              "CustomAttributes": {
+                "Speed": 1,
+                "MaxStamina": 50,
+                "ForagingLevel": 3,
+                "MagneticRadius": 32,
+                "FarmingLevel": 1,
+                "FishingLevel": 1
+              }
+            }
+          ],
+          "Texture": "Mods/{{ModId}}/SpringEdition2026",
+          "SpriteIndex": 0
+        },
+        "{{ModId}}_PinkEdition": {
+          "Name": "Red Bull Pink Edition",
+          "DisplayName": "Red Bull Pink Edition (Wild Berries)",
+          "Description": "Wild berry blend with a bright, sweet-tart finish.",
+          "Type": "Basic",
+          "Category": -20,
+          "Price": 0,
+          "CanBeSold": false,
+          "ExcludeFromShippingCollection": true,
+          "Edibility": 56,
+          "IsDrink": true,
+          "Buffs": [
+            {
+              "DisplayName": "Berry Breeze",
+              "Description": "Berry Breeze. +1 Speed, +40 Max Energy, +2 Foraging, +2 Luck",
+              "Duration": 480,
+              "CustomAttributes": {
+                "Speed": 1,
+                "MaxStamina": 40,
+                "ForagingLevel": 2,
+                "LuckLevel": 2
+              }
+            }
+          ],
+          "Texture": "Mods/{{ModId}}/PinkEdition",
+          "SpriteIndex": 0
+        },
+        "{{ModId}}_IcedEdition": {
+          "Name": "Red Bull Iced Edition",
+          "DisplayName": "Red Bull Iced Edition (Iced Vanilla Berry)",
+          "Description": "Vanilla and berry notes with a cool, refreshing finish.",
+          "Type": "Basic",
+          "Category": -20,
+          "Price": 0,
+          "CanBeSold": false,
+          "ExcludeFromShippingCollection": true,
+          "Edibility": 56,
+          "IsDrink": true,
+          "Buffs": [
+            {
+              "DisplayName": "Chill Focus",
+              "Description": "Chill Focus. +1 Speed, +40 Max Energy, +2 Combat, +2 Luck",
+              "Duration": 480,
+              "CustomAttributes": {
+                "Speed": 1,
+                "MaxStamina": 40,
+                "CombatLevel": 2,
+                "LuckLevel": 2
+              }
+            }
+          ],
+          "Texture": "Mods/{{ModId}}/IcedEdition",
+          "SpriteIndex": 0
+        },
+        "{{ModId}}_SummerEdition2025": {
+          "Name": "Red Bull Summer Edition 2025",
+          "DisplayName": "Summer Edition 2025 (White Peach)",
+          "Description": "Limited Edition! Light white-peach flavor with citrusy brightness.",
+          "Type": "Basic",
+          "Category": -20,
+          "Price": 0,
+          "CanBeSold": false,
+          "ExcludeFromShippingCollection": true,
+          "Edibility": 60,
+          "IsDrink": true,
+          "Buffs": [
+            {
+              "DisplayName": "Peach Sunshine",
+              "Description": "Peach Sunshine. +1 Speed, +50 Max Energy, +3 Farming, +32 Magnetism, +1 Foraging, +1 Fishing",
+              "Duration": 600,
+              "CustomAttributes": {
+                "Speed": 1,
+                "MaxStamina": 50,
+                "FarmingLevel": 3,
+                "MagneticRadius": 32,
+                "ForagingLevel": 1,
+                "FishingLevel": 1
+              }
+            }
+          ],
+          "Texture": "Mods/{{ModId}}/SummerEdition2025",
+          "SpriteIndex": 0
+        },
+        "{{ModId}}_SummerEdition2024": {
+          "Name": "Red Bull Summer Edition 2024",
+          "DisplayName": "Summer Edition 2024 (Curuba Elderflower)",
+          "Description": "Limited Edition! Exotic curuba with delicate elderflower.",
+          "Type": "Basic",
+          "Category": -20,
+          "Price": 0,
+          "CanBeSold": false,
+          "ExcludeFromShippingCollection": true,
+          "Edibility": 60,
+          "IsDrink": true,
+          "Buffs": [
+            {
+              "DisplayName": "Sunset Sip",
+              "Description": "Sunset Sip. +1 Speed, +50 Max Energy, +3 Farming, +32 Magnetism, +1 Foraging, +1 Fishing",
+              "Duration": 600,
+              "CustomAttributes": {
+                "Speed": 1,
+                "MaxStamina": 50,
+                "FarmingLevel": 3,
+                "MagneticRadius": 32,
+                "ForagingLevel": 1,
+                "FishingLevel": 1
+              }
+            }
+          ],
+          "Texture": "Mods/{{ModId}}/SummerEdition2024",
+          "SpriteIndex": 0
+        },
+        "{{ModId}}_SummerEdition2023": {
+          "Name": "Red Bull Summer Edition 2023",
+          "DisplayName": "Summer Edition 2023 (Juneberry)",
+          "Description": "Limited Edition! Unique juneberry flavor—sweet, crisp, and bright.",
+          "Type": "Basic",
+          "Category": -20,
+          "Price": 0,
+          "CanBeSold": false,
+          "ExcludeFromShippingCollection": true,
+          "Edibility": 60,
+          "IsDrink": true,
+          "Buffs": [
+            {
+              "DisplayName": "Juneberry Spark",
+              "Description": "Juneberry Spark. +1 Speed, +50 Max Energy, +3 Farming, +32 Magnetism, +1 Foraging, +1 Fishing",
+              "Duration": 600,
+              "CustomAttributes": {
+                "Speed": 1,
+                "MaxStamina": 50,
+                "FarmingLevel": 3,
+                "MagneticRadius": 32,
+                "ForagingLevel": 1,
+                "FishingLevel": 1
+              }
+            }
+          ],
+          "Texture": "Mods/{{ModId}}/SummerEdition2023",
+          "SpriteIndex": 0
+        },
+        "{{ModId}}_SummerEdition2022": {
+          "Name": "Red Bull Summer Edition 2022",
+          "DisplayName": "Summer Edition 2022 (Strawberry Apricot)",
+          "Description": "Limited Edition! Strawberry and apricot with a juicy finish.",
+          "Type": "Basic",
+          "Category": -20,
+          "Price": 0,
+          "CanBeSold": false,
+          "ExcludeFromShippingCollection": true,
+          "Edibility": 60,
+          "IsDrink": true,
+          "Buffs": [
+            {
+              "DisplayName": "Fruit Burst",
+              "Description": "Fruit Burst. +1 Speed, +50 Max Energy, +3 Farming, +32 Magnetism, +1 Foraging, +1 Fishing",
+              "Duration": 600,
+              "CustomAttributes": {
+                "Speed": 1,
+                "MaxStamina": 50,
+                "FarmingLevel": 3,
+                "MagneticRadius": 32,
+                "ForagingLevel": 1,
+                "FishingLevel": 1
+              }
+            }
+          ],
+          "Texture": "Mods/{{ModId}}/SummerEdition2022",
+          "SpriteIndex": 0
+        },
+        "{{ModId}}_SummerEdition2021": {
+          "Name": "Red Bull Summer Edition 2021",
+          "DisplayName": "Summer Edition 2021 (Dragon Fruit)",
+          "Description": "Limited Edition! Exotic dragon fruit with subtle kiwi-pear notes.",
+          "Type": "Basic",
+          "Category": -20,
+          "Price": 0,
+          "CanBeSold": false,
+          "ExcludeFromShippingCollection": true,
+          "Edibility": 60,
+          "IsDrink": true,
+          "Buffs": [
+            {
+              "DisplayName": "Exotic Lift",
+              "Description": "Exotic Lift. +1 Speed, +50 Max Energy, +3 Farming, +32 Magnetism, +1 Foraging, +1 Fishing",
+              "Duration": 600,
+              "CustomAttributes": {
+                "Speed": 1,
+                "MaxStamina": 50,
+                "FarmingLevel": 3,
+                "MagneticRadius": 32,
+                "ForagingLevel": 1,
+                "FishingLevel": 1
+              }
+            }
+          ],
+          "Texture": "Mods/{{ModId}}/SummerEdition2021",
+          "SpriteIndex": 0
+        },
+        "{{ModId}}_SummerEdition2020": {
+          "Name": "Red Bull Summer Edition 2020",
+          "DisplayName": "Summer Edition 2020 (Watermelon)",
+          "Description": "Limited Edition! Sweet watermelon flavor—summer in a can.",
+          "Type": "Basic",
+          "Category": -20,
+          "Price": 0,
+          "CanBeSold": false,
+          "ExcludeFromShippingCollection": true,
+          "Edibility": 60,
+          "IsDrink": true,
+          "Buffs": [
+            {
+              "DisplayName": "Watermelon Rush",
+              "Description": "Watermelon Rush. +1 Speed, +50 Max Energy, +3 Farming, +32 Magnetism, +1 Foraging, +1 Fishing",
+              "Duration": 600,
+              "CustomAttributes": {
+                "Speed": 1,
+                "MaxStamina": 50,
+                "FarmingLevel": 3,
+                "MagneticRadius": 32,
+                "ForagingLevel": 1,
+                "FishingLevel": 1
+              }
+            }
+          ],
+          "Texture": "Mods/{{ModId}}/SummerEdition2020",
+          "SpriteIndex": 0
+        },
+        "{{ModId}}_WinterEdition2024": {
+          "Name": "Red Bull Winter Edition 2024",
+          "DisplayName": "Winter Edition 2024 (Iced Vanilla Berry)",
+          "Description": "Limited Edition! Vanilla with berry notes and an icy finish.",
+          "Type": "Basic",
+          "Category": -20,
+          "Price": 0,
+          "CanBeSold": false,
+          "ExcludeFromShippingCollection": true,
+          "Edibility": 60,
+          "IsDrink": true,
+          "Buffs": [
+            {
+              "DisplayName": "Icy Calm",
+              "Description": "Icy Calm. +1 Speed, +50 Max Energy, +5 Mining, +32 Magnetism, +2 Luck",
+              "Duration": 600,
+              "CustomAttributes": {
+                "Speed": 1,
+                "MaxStamina": 50,
+                "MiningLevel": 5,
+                "MagneticRadius": 32,
+                "LuckLevel": 2
+              }
+            }
+          ],
+          "Texture": "Mods/{{ModId}}/WinterEdition2024",
+          "SpriteIndex": 0
+        },
+        "{{ModId}}_WinterEdition2023": {
+          "Name": "Red Bull Winter Edition 2023",
+          "DisplayName": "Winter Edition 2023 (Pear Cinnamon)",
+          "Description": "Limited Edition! Sweet pear with warm cinnamon spices.",
+          "Type": "Basic",
+          "Category": -20,
+          "Price": 0,
+          "CanBeSold": false,
+          "ExcludeFromShippingCollection": true,
+          "Edibility": 60,
+          "IsDrink": true,
+          "Buffs": [
+            {
+              "DisplayName": "Cozy Warmth",
+              "Description": "Cozy Warmth. +1 Speed, +50 Max Energy, +5 Mining, +32 Magnetism, +2 Luck",
+              "Duration": 600,
+              "CustomAttributes": {
+                "Speed": 1,
+                "MaxStamina": 50,
+                "MiningLevel": 5,
+                "MagneticRadius": 32,
+                "LuckLevel": 2
+              }
+            }
+          ],
+          "Texture": "Mods/{{ModId}}/WinterEdition2023",
+          "SpriteIndex": 0
+        },
+        "{{ModId}}_WinterEdition2022": {
+          "Name": "Red Bull Winter Edition 2022",
+          "DisplayName": "Winter Edition 2022 (Fig Apple)",
+          "Description": "Limited Edition! Fig and apple with rich winter sweetness.",
+          "Type": "Basic",
+          "Category": -20,
+          "Price": 0,
+          "CanBeSold": false,
+          "ExcludeFromShippingCollection": true,
+          "Edibility": 60,
+          "IsDrink": true,
+          "Buffs": [
+            {
+              "DisplayName": "Rich Reserve",
+              "Description": "Rich Reserve. +1 Speed, +50 Max Energy, +5 Mining, +32 Magnetism, +2 Luck",
+              "Duration": 600,
+              "CustomAttributes": {
+                "Speed": 1,
+                "MaxStamina": 50,
+                "MiningLevel": 5,
+                "MagneticRadius": 32,
+                "LuckLevel": 2
+              }
+            }
+          ],
+          "Texture": "Mods/{{ModId}}/WinterEdition2022",
+          "SpriteIndex": 0
+        },
+        "{{ModId}}_WinterEdition2021": {
+          "Name": "Red Bull Winter Edition 2021",
+          "DisplayName": "Winter Edition 2021 (Pomegranate)",
+          "Description": "Limited Edition! Bold pomegranate with a tart finish.",
+          "Type": "Basic",
+          "Category": -20,
+          "Price": 0,
+          "CanBeSold": false,
+          "ExcludeFromShippingCollection": true,
+          "Edibility": 60,
+          "IsDrink": true,
+          "Buffs": [
+            {
+              "DisplayName": "Tart Power",
+              "Description": "Tart Power. +1 Speed, +50 Max Energy, +5 Mining, +32 Magnetism, +2 Luck",
+              "Duration": 600,
+              "CustomAttributes": {
+                "Speed": 1,
+                "MaxStamina": 50,
+                "MiningLevel": 5,
+                "MagneticRadius": 32,
+                "LuckLevel": 2
+              }
+            }
+          ],
+          "Texture": "Mods/{{ModId}}/WinterEdition2021",
+          "SpriteIndex": 0
+        },
+        "{{ModId}}_WinterEdition2020": {
+          "Name": "Red Bull Winter Edition 2020",
+          "DisplayName": "Winter Edition 2020 (Arctic Berry)",
+          "Description": "Limited Edition! Cool arctic berry flavor—crisp and frosty.",
+          "Type": "Basic",
+          "Category": -20,
+          "Price": 0,
+          "CanBeSold": false,
+          "ExcludeFromShippingCollection": true,
+          "Edibility": 60,
+          "IsDrink": true,
+          "Buffs": [
+            {
+              "DisplayName": "Frostbite Focus",
+              "Description": "Frostbite Focus. +1 Speed, +50 Max Energy, +5 Mining, +32 Magnetism, +2 Luck",
+              "Duration": 600,
+              "CustomAttributes": {
+                "Speed": 1,
+                "MaxStamina": 50,
+                "MiningLevel": 5,
+                "MagneticRadius": 32,
+                "LuckLevel": 2
+              }
+            }
+          ],
+          "Texture": "Mods/{{ModId}}/WinterEdition2020",
+          "SpriteIndex": 0
+        },
+        "{{ModId}}_SpringEdition2025": {
+          "Name": "Red Bull Spring Edition 2025",
+          "DisplayName": "Spring Edition 2025 (Grapefruit & Blossom)",
+          "Description": "Limited Edition! Bright grapefruit with soft floral blossom notes.",
+          "Type": "Basic",
+          "Category": -20,
+          "Price": 0,
+          "CanBeSold": false,
+          "ExcludeFromShippingCollection": true,
+          "Edibility": 60,
+          "IsDrink": true,
+          "Buffs": [
+            {
+              "DisplayName": "Citrus Bloom",
+              "Description": "Citrus Bloom. +1 Speed, +50 Max Energy, +3 Foraging, +32 Magnetism, +1 Farming, +1 Fishing",
+              "Duration": 600,
+              "CustomAttributes": {
+                "Speed": 1,
+                "MaxStamina": 50,
+                "ForagingLevel": 3,
+                "MagneticRadius": 32,
+                "FarmingLevel": 1,
+                "FishingLevel": 1
+              }
+            }
+          ],
+          "Texture": "Mods/{{ModId}}/SpringEdition2025",
+          "SpriteIndex": 0
+        },
+        "{{ModId}}_SpringEdition2024": {
+          "Name": "Red Bull Spring Edition 2024",
+          "DisplayName": "Spring Edition 2024 (Waldbeere)",
+          "Description": "Limited Edition! Forest berries with a tart-sweet finish.",
+          "Type": "Basic",
+          "Category": -20,
+          "Price": 0,
+          "CanBeSold": false,
+          "ExcludeFromShippingCollection": true,
+          "Edibility": 60,
+          "IsDrink": true,
+          "Buffs": [
+            {
+              "DisplayName": "Forest Spark",
+              "Description": "Forest Spark. +1 Speed, +50 Max Energy, +3 Foraging, +32 Magnetism, +1 Farming, +1 Fishing",
+              "Duration": 600,
+              "CustomAttributes": {
+                "Speed": 1,
+                "MaxStamina": 50,
+                "ForagingLevel": 3,
+                "MagneticRadius": 32,
+                "FarmingLevel": 1,
+                "FishingLevel": 1
+              }
+            }
+          ],
+          "Texture": "Mods/{{ModId}}/SpringEdition2024",
+          "SpriteIndex": 0
+        },
+        "{{ModId}}_QiBull": {
+          "Name": "Qi Bull",
+          "DisplayName": "Qi Bull",
+          "Description": "An enigmatic energy drink infused with Mr. Qi's strange luck.",
+          "Type": "Basic",
+          "Category": -20,
+          "Price": 0,
+          "CanBeSold": false,
+          "ExcludeFromShippingCollection": true,
+          "Edibility": 60,
+          "IsDrink": true,
+          "Buffs": [
+            {
+              "DisplayName": "Qi's Favor",
+              "Description": "Qi's Favor. +1 Speed, +60 Max Energy, +6 Luck, +86 Magnetism",
+              "Duration": 720,
+              "CustomAttributes": {
+                "Speed": 1,
+                "MaxStamina": 60,
+                "LuckLevel": 6,
+                "MagneticRadius": 86
+              }
+            }
+          ],
+          "Texture": "Mods/{{ModId}}/QiBull",
+          "SpriteIndex": 0
+        },
+        "{{ModId}}_StarBullMusk": {
+          "Name": "Star Bull Monster Musk",
+          "DisplayName": "Star Bull (Monster Musk)",
+          "Description": "A mysterious arcane blend that makes you irresistible to monsters.",
+          "Type": "Basic",
+          "Category": -20,
+          "Price": 0,
+          "CanBeSold": false,
+          "ExcludeFromShippingCollection": true,
+          "Edibility": 60,
+          "IsDrink": true,
+          "Buffs": [
+            {
+              "DisplayName": "Musked Up",
+              "Description": "Musked Up. +1 Speed, +60 Max Energy, +5 Mining, +5 Immunity, +64 Magnetism, Monster Musk effect",
+              "Duration": 720,
+              "CustomAttributes": {
+                "Speed": 1,
+                "MaxStamina": 60,
+                "MiningLevel": 5,
+                "Immunity": 5,
+                "MagneticRadius": 64
+              },
+              "Id": "{{ModId}}_StarBullMuskBuff",
+              "BuffId": "24"
+            }
+          ],
+          "Texture": "Mods/{{ModId}}/StarBullMusk",
+          "SpriteIndex": 0
+        },
+        "{{ModId}}_StarBullGarlic": {
+          "Name": "Star Bull Garlic",
+          "DisplayName": "Star Bull (Oil of Garlic)",
+          "Description": "An arcane infusion that wards off enemies with a pungent aura.",
+          "Type": "Basic",
+          "Category": -20,
+          "Price": 0,
+          "CanBeSold": false,
+          "ExcludeFromShippingCollection": true,
+          "Edibility": 60,
+          "IsDrink": true,
+          "Buffs": [
+            {
+              "DisplayName": "Garlic Ward",
+              "Description": "Garlic Ward. +1 Speed, +60 Max Energy, +5 Mining, +2 Luck, +64 Magnetism, Oil of Garlic effect",
+              "Duration": 720,
+              "CustomAttributes": {
+                "Speed": 1,
+                "MaxStamina": 60,
+                "MiningLevel": 5,
+                "LuckLevel": 2,
+                "MagneticRadius": 64
+              },
+              "Id": "{{ModId}}_StarBullGarlicBuff",
+              "BuffId": "23"
+            }
+          ],
+          "Texture": "Mods/{{ModId}}/StarBullGarlic",
+          "SpriteIndex": 0
+        }
+      }
+    },
+    {
+      "Action": "Load",
+      "Target": "Mods/{{ModId}}/Original",
+      "FromFile": "assets/original.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Mods/{{ModId}}/Sugarfree",
+      "FromFile": "assets/sugarfree.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Mods/{{ModId}}/Zero",
+      "FromFile": "assets/zero.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Mods/{{ModId}}/TotalZero",
+      "FromFile": "assets/total_zero.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Mods/{{ModId}}/RedEdition",
+      "FromFile": "assets/red_edition.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Mods/{{ModId}}/YellowEdition",
+      "FromFile": "assets/yellow_edition.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Mods/{{ModId}}/BlueEdition",
+      "FromFile": "assets/blue_edition.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Mods/{{ModId}}/CoconutEdition",
+      "FromFile": "assets/coconut_edition.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Mods/{{ModId}}/PeachEdition",
+      "FromFile": "assets/peach_edition.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Mods/{{ModId}}/AmberEdition",
+      "FromFile": "assets/amber_edition.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Mods/{{ModId}}/SeaBlueEdition",
+      "FromFile": "assets/seablue_edition.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Mods/{{ModId}}/GreenEdition",
+      "FromFile": "assets/green_edition.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Mods/{{ModId}}/WinterEdition2025",
+      "FromFile": "assets/winter_edition_2025.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Mods/{{ModId}}/SummerEdition2026",
+      "FromFile": "assets/summer_edition_2026.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Mods/{{ModId}}/SpringEdition2026",
+      "FromFile": "assets/spring_edition_2026.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Mods/{{ModId}}/PinkEdition",
+      "FromFile": "assets/pink_edition.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Mods/{{ModId}}/IcedEdition",
+      "FromFile": "assets/iced_edition.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Mods/{{ModId}}/SummerEdition2025",
+      "FromFile": "assets/summer_edition_2025.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Mods/{{ModId}}/SummerEdition2024",
+      "FromFile": "assets/summer_edition_2024.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Mods/{{ModId}}/SummerEdition2023",
+      "FromFile": "assets/summer_edition_2023.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Mods/{{ModId}}/SummerEdition2022",
+      "FromFile": "assets/summer_edition_2022.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Mods/{{ModId}}/SummerEdition2021",
+      "FromFile": "assets/summer_edition_2021.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Mods/{{ModId}}/SummerEdition2020",
+      "FromFile": "assets/summer_edition_2020.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Mods/{{ModId}}/WinterEdition2024",
+      "FromFile": "assets/winter_edition_2024.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Mods/{{ModId}}/WinterEdition2023",
+      "FromFile": "assets/winter_edition_2023.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Mods/{{ModId}}/WinterEdition2022",
+      "FromFile": "assets/winter_edition_2022.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Mods/{{ModId}}/WinterEdition2021",
+      "FromFile": "assets/winter_edition_2021.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Mods/{{ModId}}/WinterEdition2020",
+      "FromFile": "assets/winter_edition_2020.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Mods/{{ModId}}/SpringEdition2025",
+      "FromFile": "assets/spring_edition_2025.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Mods/{{ModId}}/SpringEdition2024",
+      "FromFile": "assets/spring_edition_2024.png"
+    },
+    {
+      "Action": "EditData",
+      "Target": "Data/Shops",
+      "TargetField": [
+        "SeedShop",
+        "Items"
+      ],
+      "Entries": {
+        "{{ModId}}_Original": {
+          "Id": "{{ModId}}_Original",
+          "ItemId": "(O){{ModId}}_Original",
+          "Price": 250,
+          "AvailableStock": -1
+        },
+        "{{ModId}}_Sugarfree": {
+          "Id": "{{ModId}}_Sugarfree",
+          "ItemId": "(O){{ModId}}_Sugarfree",
+          "Price": 250,
+          "AvailableStock": -1
+        },
+        "{{ModId}}_Zero": {
+          "Id": "{{ModId}}_Zero",
+          "ItemId": "(O){{ModId}}_Zero",
+          "Price": 250,
+          "AvailableStock": -1
+        }
+      }
+    },
+    {
+      "Action": "EditData",
+      "Target": "Data/Shops",
+      "TargetField": [
+        "Joja",
+        "Items"
+      ],
+      "Entries": {
+        "{{ModId}}_Original_Joja": {
+          "Id": "{{ModId}}_Original_Joja",
+          "ItemId": "(O){{ModId}}_Original",
+          "Price": 250,
+          "AvailableStock": -1
+        },
+        "{{ModId}}_Sugarfree_Joja": {
+          "Id": "{{ModId}}_Sugarfree_Joja",
+          "ItemId": "(O){{ModId}}_Sugarfree",
+          "Price": 250,
+          "AvailableStock": -1
+        },
+        "{{ModId}}_Zero_Joja": {
+          "Id": "{{ModId}}_Zero_Joja",
+          "ItemId": "(O){{ModId}}_Zero",
+          "Price": 250,
+          "AvailableStock": -1
+        }
+      }
+    },
+    {
+      "Action": "EditData",
+      "Target": "Data/Shops",
+      "TargetField": [
+        "Saloon",
+        "Items"
+      ],
+      "Entries": {
+        "{{ModId}}_Original_Saloon": {
+          "Id": "{{ModId}}_Original_Saloon",
+          "ItemId": "(O){{ModId}}_Original",
+          "Price": 250,
+          "AvailableStock": -1
+        },
+        "{{ModId}}_Sugarfree_Saloon": {
+          "Id": "{{ModId}}_Sugarfree_Saloon",
+          "ItemId": "(O){{ModId}}_Sugarfree",
+          "Price": 250,
+          "AvailableStock": -1
+        },
+        "{{ModId}}_Zero_Saloon": {
+          "Id": "{{ModId}}_Zero_Saloon",
+          "ItemId": "(O){{ModId}}_Zero",
+          "Price": 250,
+          "AvailableStock": -1
+        },
+        "{{ModId}}_IcedEdition": {
+          "Id": "{{ModId}}_IcedEdition_Saloon",
+          "ItemId": "(O){{ModId}}_IcedEdition",
+          "Price": 500,
+          "AvailableStock": -1
+        }
+      }
+    },
+    {
+      "Action": "EditData",
+      "Target": "Data/Shops",
+      "TargetField": [
+        "FishShop",
+        "Items"
+      ],
+      "Entries": {
+        "{{ModId}}_SeaBlueEdition": {
+          "Id": "{{ModId}}_SeaBlueEdition_Fish",
+          "ItemId": "(O){{ModId}}_SeaBlueEdition",
+          "Price": 500,
+          "AvailableStock": -1
+        }
+      }
+    },
+    {
+      "Action": "EditData",
+      "Target": "Data/Shops",
+      "TargetField": [
+        "AdventureShop",
+        "Items"
+      ],
+      "Entries": {
+        "{{ModId}}_StarBullMusk": {
+          "Id": "{{ModId}}_StarBullMusk_AG",
+          "ItemId": "(O){{ModId}}_StarBullMusk",
+          "Price": 2000,
+          "AvailableStock": -1
+        },
+        "{{ModId}}_StarBullGarlic": {
+          "Id": "{{ModId}}_StarBullGarlic_AG",
+          "ItemId": "(O){{ModId}}_StarBullGarlic",
+          "Price": 4000,
+          "AvailableStock": -1
+        }
+      }
+    },
+    {
+      "Action": "EditData",
+      "Target": "Data/Shops",
+      "TargetField": [
+        "Hospital",
+        "Items"
+      ],
+      "Entries": {
+        "{{ModId}}_TotalZero": {
+          "Id": "{{ModId}}_TotalZero_Hospital",
+          "ItemId": "(O){{ModId}}_TotalZero",
+          "Price": 275,
+          "AvailableStock": -1
+        }
+      }
+    },
+    {
+      "Action": "EditData",
+      "Target": "Data/Shops",
+      "TargetField": [
+        "Sandy",
+        "Items"
+      ],
+      "Entries": {
+        "{{ModId}}_PeachEdition": {
+          "Id": "{{ModId}}_PeachEdition_Oasis",
+          "ItemId": "(O){{ModId}}_PeachEdition",
+          "Price": 500,
+          "AvailableStock": -1
+        }
+      }
+    },
+    {
+      "Action": "EditData",
+      "Target": "Data/Shops",
+      "TargetField": [
+        "DesertTrade",
+        "Items"
+      ],
+      "Entries": {
+        "{{ModId}}_AmberEdition": {
+          "Id": "{{ModId}}_AmberEdition_Desert",
+          "ItemId": "(O){{ModId}}_AmberEdition",
+          "AvailableStock": 1,
+          "AvailableStockLimit": "Player",
+          "TradeItemId": "(O)749",
+          "TradeItemAmount": 25
+        }
+      }
+    },
+    {
+      "Action": "EditData",
+      "Target": "Data/Shops",
+      "TargetField": [
+        "IceCreamStand",
+        "Items"
+      ],
+      "Entries": {
+        "{{ModId}}_SummerEdition2026": {
+          "Id": "{{ModId}}_SummerEdition2026_IceCream",
+          "ItemId": "(O){{ModId}}_SummerEdition2026",
+          "Price": 500,
+          "AvailableStock": 1,
+          "Condition": "SEASON Summer",
+          "AvailableStockLimit": "Player"
+        },
+        "{{ModId}}_SummerEdition2025": {
+          "Id": "{{ModId}}_Summer2025_IceCream",
+          "ItemId": "(O){{ModId}}_SummerEdition2025",
+          "Price": 500,
+          "AvailableStock": 1,
+          "Condition": "SEASON Summer",
+          "AvailableStockLimit": "Player"
+        },
+        "{{ModId}}_SummerEdition2024": {
+          "Id": "{{ModId}}_Summer2024_IceCream",
+          "ItemId": "(O){{ModId}}_SummerEdition2024",
+          "Price": 500,
+          "AvailableStock": 1,
+          "Condition": "SEASON Summer",
+          "AvailableStockLimit": "Player"
+        },
+        "{{ModId}}_SummerEdition2023": {
+          "Id": "{{ModId}}_Summer2023_IceCream",
+          "ItemId": "(O){{ModId}}_SummerEdition2023",
+          "Price": 500,
+          "AvailableStock": 1,
+          "Condition": "SEASON Summer",
+          "AvailableStockLimit": "Player"
+        },
+        "{{ModId}}_SummerEdition2022": {
+          "Id": "{{ModId}}_Summer2022_IceCream",
+          "ItemId": "(O){{ModId}}_SummerEdition2022",
+          "Price": 500,
+          "AvailableStock": 1,
+          "Condition": "SEASON Summer",
+          "AvailableStockLimit": "Player"
+        },
+        "{{ModId}}_SummerEdition2021": {
+          "Id": "{{ModId}}_Summer2021_IceCream",
+          "ItemId": "(O){{ModId}}_SummerEdition2021",
+          "Price": 500,
+          "AvailableStock": 1,
+          "Condition": "SEASON Summer",
+          "AvailableStockLimit": "Player"
+        },
+        "{{ModId}}_SummerEdition2020": {
+          "Id": "{{ModId}}_Summer2020_IceCream",
+          "ItemId": "(O){{ModId}}_SummerEdition2020",
+          "Price": 500,
+          "AvailableStock": 1,
+          "Condition": "SEASON Summer",
+          "AvailableStockLimit": "Player"
+        }
+      }
+    },
+    {
+      "Action": "EditData",
+      "Target": "Data/Shops",
+      "TargetField": [
+        "IslandTrade",
+        "Items"
+      ],
+      "Entries": {
+        "{{ModId}}_YellowEdition_Island": {
+          "Id": "{{ModId}}_YellowEdition_Island",
+          "ItemId": "(O){{ModId}}_YellowEdition",
+          "AvailableStock": -1,
+          "TradeItemId": "(O)829",
+          "TradeItemAmount": 10
+        },
+        "{{ModId}}_YellowEdition_Island_Bone": {
+          "Id": "{{ModId}}_YellowEdition_Island_Bone",
+          "ItemId": "(O){{ModId}}_YellowEdition",
+          "AvailableStock": -1,
+          "TradeItemId": "(O)881",
+          "TradeItemAmount": 10
+        }
+      }
+    },
+    {
+      "Action": "EditData",
+      "Target": "Data/Shops",
+      "TargetField": [
+        "Blacksmith",
+        "Items"
+      ],
+      "Entries": {
+        "{{ModId}}_BlueEdition_Blacksmith": {
+          "Id": "{{ModId}}_BlueEdition_Blacksmith",
+          "ItemId": "(O){{ModId}}_BlueEdition",
+          "Price": 500,
+          "AvailableStock": -1
+        }
+      }
+    },
+    {
+      "Action": "EditData",
+      "Target": "Data/Shops",
+      "TargetField": [
+        "Raccoon",
+        "Items"
+      ],
+      "Entries": {
+        "{{ModId}}_GreenEdition_Raccoon": {
+          "Id": "{{ModId}}_GreenEdition_Raccoon",
+          "ItemId": "(O){{ModId}}_GreenEdition",
+          "AvailableStock": -1,
+          "TradeItemId": "(O)709",
+          "TradeItemAmount": 10
+        },
+        "{{ModId}}_GreenEdition_Raccoon_RottenPlant": {
+          "Id": "{{ModId}}_GreenEdition_Raccoon_RottenPlant",
+          "ItemId": "(O){{ModId}}_GreenEdition",
+          "AvailableStock": -1,
+          "TradeItemId": "(O)747",
+          "TradeItemAmount": 10
+        }
+      }
+    },
+    {
+      "Action": "EditData",
+      "Target": "Data/Shops",
+      "TargetField": [
+        "ShadowShop",
+        "Items"
+      ],
+      "Entries": {
+        "{{ModId}}_RedEdition_ShadowShop_Trash": {
+          "Id": "{{ModId}}_RedEdition_ShadowShop_Trash",
+          "ItemId": "(O){{ModId}}_RedEdition",
+          "AvailableStock": -1,
+          "TradeItemId": "(O)168",
+          "TradeItemAmount": 10
+        },
+        "{{ModId}}_RedEdition_ShadowShop_Driftwood": {
+          "Id": "{{ModId}}_RedEdition_ShadowShop_Driftwood",
+          "ItemId": "(O){{ModId}}_RedEdition",
+          "AvailableStock": -1,
+          "TradeItemId": "(O)169",
+          "TradeItemAmount": 10
+        },
+        "{{ModId}}_RedEdition_ShadowShop_SoggyNewspaper": {
+          "Id": "{{ModId}}_RedEdition_ShadowShop_SoggyNewspaper",
+          "ItemId": "(O){{ModId}}_RedEdition",
+          "AvailableStock": -1,
+          "TradeItemId": "(O)172",
+          "TradeItemAmount": 10
+        }
+      }
+    },
+    {
+      "Action": "EditData",
+      "Target": "Data/Shops",
+      "TargetField": [
+        "VolcanoShop",
+        "Items"
+      ],
+      "Entries": {
+        "{{ModId}}_CoconutEdition_Volcano": {
+          "Id": "{{ModId}}_CoconutEdition_Volcano",
+          "ItemId": "(O){{ModId}}_CoconutEdition",
+          "AvailableStock": 1,
+          "AvailableStockLimit": "Player",
+          "TradeItemId": "(O)848",
+          "TradeItemAmount": 25
+        }
+      }
+    },
+    {
+      "Action": "EditData",
+      "Target": "Data/Shops",
+      "TargetField": [
+        "Bookseller",
+        "Items"
+      ],
+      "Entries": {
+        "{{ModId}}_PinkEdition_Bookseller": {
+          "Id": "{{ModId}}_PinkEdition_Bookseller",
+          "ItemId": "(O){{ModId}}_PinkEdition",
+          "Price": 500,
+          "AvailableStock": -1
+        }
+      }
+    },
+    {
+      "Action": "Load",
+      "Target": "Mods/{{ModId}}/QiBull",
+      "FromFile": "assets/qi_bull.png"
+    },
+    {
+      "Action": "EditData",
+      "Target": "Data/Shops",
+      "TargetField": [
+        "Casino",
+        "Items"
+      ],
+      "Entries": {
+        "{{ModId}}_QiBull_Casino": {
+          "Id": "{{ModId}}_QiBull_Casino",
+          "ItemId": "(O){{ModId}}_QiBull",
+          "Price": 1000,
+          "AvailableStock": -1
+        }
+      }
+    },
+    {
+      "Action": "Load",
+      "Target": "Mods/{{ModId}}/StarBullMusk",
+      "FromFile": "assets/starbull_musk.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Mods/{{ModId}}/StarBullGarlic",
+      "FromFile": "assets/starbull_garlic.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "ThaleTheGreat.StarBull_RedBullHatTex",
+      "FromFile": "assets/redbull_hat.png"
+    },
+    {
+      "Action": "EditData",
+      "Target": "Data/Hats",
+      "Entries": {
+        "{{ModId}}_RedBullHat": "{{ModId}}_RedBullHat/A two-horned Red Bull hat, perfect for any occasion./false/false//Red Bull Hat/0/ThaleTheGreat.StarBull_RedBullHatTex"
+      }
+    },
+    {
+      "Action": "EditData",
+      "Target": "Data/Shops",
+      "TargetField": [
+        "HatMouse",
+        "Items"
+      ],
+      "Entries": {
+        "{{ModId}}_RedBullHat_HatMouse": {
+          "Id": "{{ModId}}_RedBullHat_HatMouse",
+          "ItemId": "(H){{ModId}}_RedBullHat",
+          "Price": 10000,
+          "AvailableStock": -1
+        }
+      }
+    },
+    {
+      "Action": "EditData",
+      "Target": "Data/Shops",
+      "TargetField": [
+        "Traveler",
+        "Items"
+      ],
+      "Entries": {
+        "{{ModId}}_SpringEdition2026_Traveler": {
+          "Id": "{{ModId}}_SpringEdition2026_Traveler",
+          "ItemId": "(O){{ModId}}_SpringEdition2026",
+          "Price": 750,
+          "AvailableStock": 1,
+          "Condition": "SEASON Spring",
+          "AvailableStockLimit": "Player"
+        },
+        "{{ModId}}_SpringEdition2025_Traveler": {
+          "Id": "{{ModId}}_SpringEdition2025_Traveler",
+          "ItemId": "(O){{ModId}}_SpringEdition2025",
+          "Price": 750,
+          "AvailableStock": 1,
+          "Condition": "SEASON Spring",
+          "AvailableStockLimit": "Player"
+        },
+        "{{ModId}}_SpringEdition2024_Traveler": {
+          "Id": "{{ModId}}_SpringEdition2024_Traveler",
+          "ItemId": "(O){{ModId}}_SpringEdition2024",
+          "Price": 750,
+          "AvailableStock": 1,
+          "Condition": "SEASON Spring",
+          "AvailableStockLimit": "Player"
+        },
+        "{{ModId}}_WinterEdition2025_Traveler": {
+          "Id": "{{ModId}}_WinterEdition2025_Traveler",
+          "ItemId": "(O){{ModId}}_WinterEdition2025",
+          "Price": 750,
+          "AvailableStock": 1,
+          "Condition": "SEASON Winter",
+          "AvailableStockLimit": "Player"
+        },
+        "{{ModId}}_WinterEdition2024_Traveler": {
+          "Id": "{{ModId}}_WinterEdition2024_Traveler",
+          "ItemId": "(O){{ModId}}_WinterEdition2024",
+          "Price": 750,
+          "AvailableStock": 1,
+          "Condition": "SEASON Winter",
+          "AvailableStockLimit": "Player"
+        },
+        "{{ModId}}_WinterEdition2023_Traveler": {
+          "Id": "{{ModId}}_WinterEdition2023_Traveler",
+          "ItemId": "(O){{ModId}}_WinterEdition2023",
+          "Price": 750,
+          "AvailableStock": 1,
+          "Condition": "SEASON Winter",
+          "AvailableStockLimit": "Player"
+        },
+        "{{ModId}}_WinterEdition2022_Traveler": {
+          "Id": "{{ModId}}_WinterEdition2022_Traveler",
+          "ItemId": "(O){{ModId}}_WinterEdition2022",
+          "Price": 750,
+          "AvailableStock": 1,
+          "Condition": "SEASON Winter",
+          "AvailableStockLimit": "Player"
+        },
+        "{{ModId}}_WinterEdition2021_Traveler": {
+          "Id": "{{ModId}}_WinterEdition2021_Traveler",
+          "ItemId": "(O){{ModId}}_WinterEdition2021",
+          "Price": 750,
+          "AvailableStock": 1,
+          "Condition": "SEASON Winter",
+          "AvailableStockLimit": "Player"
+        },
+        "{{ModId}}_WinterEdition2020_Traveler": {
+          "Id": "{{ModId}}_WinterEdition2020_Traveler",
+          "ItemId": "(O){{ModId}}_WinterEdition2020",
+          "Price": 750,
+          "AvailableStock": 1,
+          "Condition": "SEASON Winter",
+          "AvailableStockLimit": "Player"
+        },
+        "{{ModId}}_SummerEdition2026_Traveler": {
+          "Id": "{{ModId}}_SummerEdition2026_Traveler",
+          "ItemId": "(O){{ModId}}_SummerEdition2026",
+          "Price": 750,
+          "AvailableStock": 1,
+          "Condition": "SEASON Fall",
+          "AvailableStockLimit": "Player"
+        },
+        "{{ModId}}_SummerEdition2025_Traveler": {
+          "Id": "{{ModId}}_SummerEdition2025_Traveler",
+          "ItemId": "(O){{ModId}}_SummerEdition2025",
+          "Price": 750,
+          "AvailableStock": 1,
+          "Condition": "SEASON Fall",
+          "AvailableStockLimit": "Player"
+        },
+        "{{ModId}}_SummerEdition2024_Traveler": {
+          "Id": "{{ModId}}_SummerEdition2024_Traveler",
+          "ItemId": "(O){{ModId}}_SummerEdition2024",
+          "Price": 750,
+          "AvailableStock": 1,
+          "Condition": "SEASON Fall",
+          "AvailableStockLimit": "Player"
+        },
+        "{{ModId}}_SummerEdition2023_Traveler": {
+          "Id": "{{ModId}}_SummerEdition2023_Traveler",
+          "ItemId": "(O){{ModId}}_SummerEdition2023",
+          "Price": 750,
+          "AvailableStock": 1,
+          "Condition": "SEASON Fall",
+          "AvailableStockLimit": "Player"
+        },
+        "{{ModId}}_SummerEdition2022_Traveler": {
+          "Id": "{{ModId}}_SummerEdition2022_Traveler",
+          "ItemId": "(O){{ModId}}_SummerEdition2022",
+          "Price": 750,
+          "AvailableStock": 1,
+          "Condition": "SEASON Fall",
+          "AvailableStockLimit": "Player"
+        },
+        "{{ModId}}_SummerEdition2021_Traveler": {
+          "Id": "{{ModId}}_SummerEdition2021_Traveler",
+          "ItemId": "(O){{ModId}}_SummerEdition2021",
+          "Price": 750,
+          "AvailableStock": 1,
+          "Condition": "SEASON Fall",
+          "AvailableStockLimit": "Player"
+        },
+        "{{ModId}}_SummerEdition2020_Traveler": {
+          "Id": "{{ModId}}_SummerEdition2020_Traveler",
+          "ItemId": "(O){{ModId}}_SummerEdition2020",
+          "Price": 750,
+          "AvailableStock": 1,
+          "Condition": "SEASON Fall",
+          "AvailableStockLimit": "Player"
+        },
+        "{{ModId}}_SpringEdition2024_Traveler_Summer": {
+          "Id": "{{ModId}}_SpringEdition2024_Traveler_Summer",
+          "ItemId": "(O){{ModId}}_SpringEdition2024",
+          "Price": 750,
+          "AvailableStock": 1,
+          "AvailableStockLimit": "Player",
+          "Condition": "SEASON Summer"
+        },
+        "{{ModId}}_SpringEdition2025_Traveler_Summer": {
+          "Id": "{{ModId}}_SpringEdition2025_Traveler_Summer",
+          "ItemId": "(O){{ModId}}_SpringEdition2025",
+          "Price": 750,
+          "AvailableStock": 1,
+          "AvailableStockLimit": "Player",
+          "Condition": "SEASON Summer"
+        },
+        "{{ModId}}_SpringEdition2026_Traveler_Summer": {
+          "Id": "{{ModId}}_SpringEdition2026_Traveler_Summer",
+          "ItemId": "(O){{ModId}}_SpringEdition2026",
+          "Price": 750,
+          "AvailableStock": 1,
+          "AvailableStockLimit": "Player",
+          "Condition": "SEASON Summer"
+        }
+      }
+    }
+  ]
+}
