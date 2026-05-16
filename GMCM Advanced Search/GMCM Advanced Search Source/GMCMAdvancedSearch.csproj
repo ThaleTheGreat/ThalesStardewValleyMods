@@ -3,12 +3,16 @@
     <TargetFramework>net6.0</TargetFramework>
     <AssemblyName>GMCMAdvancedSearch</AssemblyName>
     <RootNamespace>GMCMAdvancedSearch</RootNamespace>
-    <Version>1.1.0</Version>
+    <Version>1.1.2</Version>
     <Nullable>enable</Nullable>
     <LangVersion>10.0</LangVersion>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="LICENSE" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="4.3.0" PrivateAssets="all" />
