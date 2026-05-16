@@ -1,0 +1,16 @@
+{
+  "Name": "Wait Menu",
+  "Author": "ThaleTheGreat",
+  "Version": "1.1.0",
+  "Description": "Adds a wait menu (30-minute steps up to 4 hours) opened with a configurable keybind (default Ctrl+W). Controller-friendly.",
+  "UniqueID": "ThaleTheGreat.WaitMenu",
+  "EntryDll": "WaitMenu.dll",
+  "MinimumApiVersion": "4.0.0",
+  "OptionalDependencies": [
+    {
+      "UniqueID": "spacechase0.GenericModConfigMenu",
+      "IsRequired": false
+    }
+  ],
+  "UpdateKeys": [ "Nexus:42486" ]
+}
