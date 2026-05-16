@@ -37,6 +37,10 @@ internal sealed class SearchMenu : IClickableMenu
     private readonly bool wasMouseVisibleOnOpen;
     private bool isClosing;
 
+    // Generic Mod Config Menu reflects this field on active child menus while updating.
+    // Keeping it here prevents GMCM from throwing when this menu is opened from GMCM.
+    private bool titleInPosition = true;
+
     private const int OuterPad = 32;
     private const int SearchRowHeight = 72;
     private const int StatusHeight = 44;
@@ -144,6 +148,7 @@ internal sealed class SearchMenu : IClickableMenu
 
     public override void update(GameTime time)
     {
+        _ = titleInPosition;
         base.update(time);
         Game1.game1.IsMouseVisible = false;
         searchBox.Update();
