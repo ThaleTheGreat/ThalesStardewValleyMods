@@ -1,0 +1,18 @@
+{
+  "Name": "Saloon Cover",
+  "Author": "ThaleTheGreat",
+  "Version": "1.0.0",
+  "Description": "Adds a vanilla bouncer inside the Stardrop Saloon who asks for a 15g cover after 8pm.",
+  "UniqueID": "ThaleTheGreat.SaloonCover",
+  "EntryDll": "SaloonCover.dll",
+  "MinimumApiVersion": "4.0.0",
+  "UpdateKeys": [
+    "Nexus:46345"
+  ],
+  "Dependencies": [
+    {
+      "UniqueID": "spacechase0.GenericModConfigMenu",
+      "IsRequired": false
+    }
+  ]
+}
