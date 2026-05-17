@@ -32,7 +32,6 @@ internal sealed class ModEntry : Mod
   private const string VendingMachineMailFlag = "ThaleTheGreat.StarBull_VendingMachineReceived";
   private readonly Dictionary<string, string> _loadMap = new Dictionary<string, string>((IEqualityComparer<string>) StringComparer.OrdinalIgnoreCase);
   private readonly Dictionary<string, List<ModEntry.EditOp>> _editOpsByTarget = new Dictionary<string, List<ModEntry.EditOp>>((IEqualityComparer<string>) StringComparer.OrdinalIgnoreCase);
-  private readonly Dictionary<string, Texture2D> _textureCache = new Dictionary<string, Texture2D>((IEqualityComparer<string>) StringComparer.OrdinalIgnoreCase);
   private ModConfig _config = new ModConfig();
   private bool _enableLogging = true;
   private bool _easyMode = false;
@@ -61,14 +60,8 @@ internal sealed class ModEntry : Mod
   {
     foreach (IAssetName iassetName in (IEnumerable<IAssetName>) e.NamesWithoutLocale)
     {
-      string baseName = iassetName.BaseName;
-      if (string.Equals(baseName, this.VendingMachineTexture, StringComparison.OrdinalIgnoreCase))
-        this._textureCache.Remove("assets/vending_machine.png");
-      else if (string.Equals(baseName, this.CustomBuffIconTexture, StringComparison.OrdinalIgnoreCase))
-      {
-        this._textureCache.Remove("assets/buff_icon.png");
+      if (string.Equals(iassetName.BaseName, this.CustomBuffIconTexture, StringComparison.OrdinalIgnoreCase))
         this._cachedCustomBuffIcon = null;
-      }
     }
   }
 
@@ -899,22 +892,11 @@ internal sealed class ModEntry : Mod
 
   private Texture2D LoadEmbeddedTexture(string fromFile)
   {
-    Texture2D texture2D1;
-    if (this._textureCache.TryGetValue(fromFile, out texture2D1))
-    {
-      if (texture2D1 != null && !((GraphicsResource) texture2D1).IsDisposed)
-        return texture2D1;
-      this._textureCache.Remove(fromFile);
-    }
     Stream stream1 = ModEntry.OpenEmbeddedStream(fromFile);
     if (stream1 == null)
       throw new FileNotFoundException($"Embedded texture not found for '{fromFile}'.");
     using (Stream stream2 = stream1)
-    {
-      Texture2D texture2D2 = Texture2D.FromStream(Game1.graphics.GraphicsDevice, stream2);
-      this._textureCache[fromFile] = texture2D2;
-      return texture2D2;
-    }
+      return Texture2D.FromStream(Game1.graphics.GraphicsDevice, stream2);
   }
 
   private static void MergeDict<T>(
