@@ -3,13 +3,13 @@ $ErrorActionPreference = "Stop"
 $ProjectDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $SourceRoot = Split-Path -Parent $ProjectDir
 $ReleaseRoot = Join-Path $SourceRoot "Release"
-$ReleaseParent = Join-Path $ReleaseRoot "Festival of the Mundane Redux"
-$ModOutputDir = Join-Path $ReleaseParent "ShadowFestival"
+$ReleaseParent = Join-Path $ReleaseRoot "Festival of the Mundane Redux v3.1.0"
+$ModOutputDir = Join-Path $ReleaseParent "Festival of the Mundane Redux"
 $CpSourceDir = Join-Path $SourceRoot "[CP] Festival of the Mundane Redux"
 $CpOutputDir = Join-Path $ReleaseParent "[CP] Festival of the Mundane Redux"
 $BuildDir = Join-Path $ProjectDir "bin\Release\net6.0"
 
-Write-Host "Building ShadowFestival..."
+Write-Host "Building Festival of the Mundane Redux..."
 dotnet build $ProjectDir -c Release
 
 if (Test-Path $ReleaseRoot) {
