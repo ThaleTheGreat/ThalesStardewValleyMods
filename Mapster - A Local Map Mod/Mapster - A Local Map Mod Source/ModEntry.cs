@@ -4,18 +4,19 @@ using Microsoft.Xna.Framework.Input;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
-using StardewValley.BellsAndWhistles;
 using StardewValley.Menus;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace Mapster
+namespace ThaleTheGreat.Mapster
 {
     public sealed class ModEntry : Mod
     {
         private const int DropdownRowsVisible = 8;
+        private const float WheelZoomStep = 1.04f;
+        private const float ZoomSmoothing = 0.22f;
         private static readonly Rectangle ScrollRunnerSource = new(403, 383, 6, 6);
         private static readonly Rectangle ScrollThumbSource = new(435, 463, 6, 10);
 
@@ -26,6 +27,7 @@ namespace Mapster
         private bool dropdownOpen;
         private int dropdownScroll;
         private Rectangle mapRect;
+        private Rectangle mapViewportRect;
         private Rectangle dropdownRect;
         private Rectangle previewWorldRect;
         private List<GameLocation> locations = new();
@@ -38,9 +40,13 @@ namespace Mapster
         private int frozenToolIndex = -1;
         private int previewRefreshCountdown;
         private bool previewRefreshFailed;
+        private TimeSpan previewAnimationClock = TimeSpan.Zero;
         private bool previousMouseVisible;
         private bool searchFocused;
         private float mapZoom = 1f;
+        private float targetMapZoom = 1f;
+        private Vector2 zoomAnchorWorld = Vector2.Zero;
+        private Vector2 zoomAnchorScreen = Vector2.Zero;
         private Vector2 mapPanPixels = Vector2.Zero;
         private bool mapRightDragging;
         private Point lastRightDragPoint;
@@ -85,12 +91,12 @@ namespace Mapster
             frozenToolIndex = -1;
             previewRefreshCountdown = 0;
             previewRefreshFailed = false;
+            previewAnimationClock = TimeSpan.Zero;
             filteredLocations.Clear();
             searchBox = null;
             lastSearchText = string.Empty;
             searchFocused = false;
-            mapZoom = 1f;
-            mapPanPixels = Vector2.Zero;
+            ResetMapZoom();
             mapRightDragging = false;
         }
 
@@ -149,6 +155,7 @@ namespace Mapster
                 return;
             }
 
+
             if (!IsMouseInput(e.Button))
             {
                 if (searchFocused && TryGetKeyboardKey(e.Button, out Keys key))
@@ -174,11 +181,14 @@ namespace Mapster
 
         private bool BeginMapDrag(Point mouse)
         {
-            if (!mapRect.Contains(mouse) || mapZoom <= 1.001f)
+            if (!GetMapInteractionRect().Contains(mouse) || !CanPanMap())
                 return false;
 
             mapRightDragging = true;
             lastRightDragPoint = mouse;
+            targetMapZoom = mapZoom;
+            zoomAnchorWorld = Vector2.Zero;
+            zoomAnchorScreen = Vector2.Zero;
             return true;
         }
 
@@ -198,8 +208,8 @@ namespace Mapster
             viewedLocation = Game1.currentLocation ?? viewedLocation;
             previewRefreshCountdown = 0;
             previewRefreshFailed = false;
-            mapZoom = 1f;
-            mapPanPixels = Vector2.Zero;
+            previewAnimationClock = TimeSpan.Zero;
+            ResetMapZoom();
             mapRightDragging = false;
             previousMouseVisible = Game1.game1.IsMouseVisible;
             Game1.game1.IsMouseVisible = false;
@@ -221,6 +231,7 @@ namespace Mapster
                 Game1.player.CurrentToolIndex = frozenToolIndex;
 
             UpdateSearchFilter();
+            UpdateSmoothMapZoom();
             UpdateMapRightDrag();
 
             if (!Config.AnimatePreview || previewRefreshFailed || isCapturingPreview || viewedLocation is null)
@@ -275,8 +286,7 @@ namespace Mapster
                         dropdownOpen = false;
                         dropdownDraggingThumb = false;
                         dropdownScroll = Math.Clamp(dropdownScroll, 0, GetMaxDropdownScroll());
-                        mapZoom = 1f;
-                        mapPanPixels = Vector2.Zero;
+                        ResetMapZoom();
                         DisposePreview();
                         ClearSearchInput(false);
                         CapturePreview();
@@ -309,7 +319,7 @@ namespace Mapster
                 return true;
             }
 
-            if (Config.AllowTeleport && mapRect.Contains(mouse) && viewedLocation is not null)
+            if (Config.AllowTeleport && GetMapInteractionRect().Contains(mouse) && viewedLocation is not null)
             {
                 TeleportToPreviewPoint(mouse);
                 return true;
@@ -379,6 +389,9 @@ namespace Mapster
                 previewWorldRect = new Rectangle(startX, startY, renderWidth, renderHeight);
                 Game1.viewport = new xTile.Dimensions.Rectangle(startX, startY, renderWidth, renderHeight);
 
+                if (refreshOnly && Config.AnimatePreview && !ReferenceEquals(location, oldLocation))
+                    AdvancePreviewAnimations(location);
+
                 MethodInfo? drawMethod = typeof(Game1).GetMethod("_draw", BindingFlags.Instance | BindingFlags.NonPublic);
                 if (drawMethod is null)
                     throw new MissingMethodException(nameof(Game1), "_draw");
@@ -404,78 +417,188 @@ namespace Mapster
             }
         }
 
+        private void AdvancePreviewAnimations(GameLocation location)
+        {
+            TimeSpan elapsed = TimeSpan.FromMilliseconds(Math.Max(16, Config.AnimatedPreviewRefreshTicks * 16));
+            previewAnimationClock += elapsed;
+            GameTime gameTime = new(previewAnimationClock, elapsed);
+
+            InvokeCompatible(location, "updateEvenIfFarmerIsntHere", gameTime);
+            InvokeCompatible(location, "UpdateWhenCurrentLocation", gameTime);
+            InvokeCompatible(location, "updateCharacters", gameTime);
+        }
+
+        private void InvokeCompatible(object target, string methodName, GameTime gameTime)
+        {
+            try
+            {
+                MethodInfo? method = target.GetType()
+                    .GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                    .Where(method => string.Equals(method.Name, methodName, StringComparison.Ordinal))
+                    .OrderBy(method => method.GetParameters().Length)
+                    .FirstOrDefault(method => CanBuildArguments(method, gameTime));
+
+                if (method is null)
+                    return;
+
+                method.Invoke(target, BuildArguments(method, gameTime));
+            }
+            catch (Exception ex)
+            {
+                LogDebug($"Couldn't advance preview animation through {methodName}: {ex}");
+            }
+        }
+
+        private static bool CanBuildArguments(MethodInfo method, GameTime gameTime)
+        {
+            ParameterInfo[] parameters = method.GetParameters();
+            if (parameters.Length == 0)
+                return true;
+
+            return parameters.All(parameter => CanProvideArgument(parameter.ParameterType, gameTime));
+        }
+
+        private static bool CanProvideArgument(Type type, GameTime gameTime)
+        {
+            return !type.IsByRef
+                && (type.IsInstanceOfType(gameTime)
+                    || type == typeof(GameLocation)
+                    || type == typeof(bool)
+                    || type == typeof(int)
+                    || !type.IsValueType);
+        }
+
+        private object?[] BuildArguments(MethodInfo method, GameTime gameTime)
+        {
+            ParameterInfo[] parameters = method.GetParameters();
+            object?[] args = new object?[parameters.Length];
+
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                Type type = parameters[i].ParameterType;
+                if (type.IsInstanceOfType(gameTime))
+                    args[i] = gameTime;
+                else if (type == typeof(GameLocation))
+                    args[i] = viewedLocation;
+                else if (type == typeof(bool))
+                    args[i] = false;
+                else if (type == typeof(int))
+                    args[i] = 0;
+                else
+                    args[i] = null;
+            }
+
+            return args;
+        }
+
         private void DrawMap(SpriteBatch b)
         {
-            b.Draw(Game1.fadeToBlackRect, new Rectangle(0, 0, Game1.uiViewport.Width, Game1.uiViewport.Height), Color.Black);
-
             int outerPad = 32;
-            int titleY = 20;
+            int borderPad = 16;
             int dropdownHeight = OptionsDropDown.dropDownButtonSource.Height * 4;
             int controlWidth = Math.Min(Game1.uiViewport.Width - outerPad * 2, 1180);
             int controlX = (Game1.uiViewport.Width - controlWidth) / 2;
-            int dropdownY = titleY + 56;
+            int dropdownY = 28;
             dropdownRect = new Rectangle(controlX, dropdownY, controlWidth, dropdownHeight);
 
             if (previewTexture is not null && viewedLocation is not null)
             {
                 int mapTop = dropdownRect.Bottom + 36;
-                int mapBottomReserve = 28;
-                int maxMapWidth = Math.Max(1, Game1.uiViewport.Width - outerPad * 2);
-                int maxMapHeight = Math.Max(180, Game1.uiViewport.Height - mapTop - mapBottomReserve);
-                Rectangle availableMapRect = new(outerPad, mapTop, maxMapWidth, maxMapHeight);
-                Rectangle fittedMapRect = GetFittedMapRect(availableMapRect);
-                mapRect = GetZoomedMapRect(availableMapRect, fittedMapRect);
+                int mapBottomReserve = Config.AllowTeleport ? 48 : 20;
+                int maxFrameWidth = Math.Max(1, Game1.uiViewport.Width - outerPad * 2);
+                int maxFrameHeight = Math.Max(180, Game1.uiViewport.Height - mapTop - mapBottomReserve);
+                Rectangle borderRect = new(outerPad, mapTop, maxFrameWidth, maxFrameHeight);
+                mapViewportRect = new Rectangle(
+                    borderRect.X + borderPad,
+                    borderRect.Y + borderPad,
+                    Math.Max(1, borderRect.Width - borderPad * 2),
+                    Math.Max(1, borderRect.Height - borderPad * 2));
+
+                Rectangle naturalMapRect = GetNaturalMapDestinationRect(mapViewportRect);
+                mapRect = GetVisibleMapDestinationRect(naturalMapRect, mapViewportRect);
 
                 ClampMapPan();
-                b.Draw(previewTexture, mapRect, GetMapSourceRect(), Color.White);
+                naturalMapRect = GetNaturalMapDestinationRect(mapViewportRect);
+                mapRect = GetVisibleMapDestinationRect(naturalMapRect, mapViewportRect);
+
+                IClickableMenu.drawTextureBox(b, borderRect.X, borderRect.Y, borderRect.Width, borderRect.Height, Color.White);
+                b.Draw(Game1.staminaRect, mapViewportRect, Color.Black);
+                if (mapRect.Width > 0 && mapRect.Height > 0)
+                    b.Draw(previewTexture, mapRect, GetVisibleMapSourceRect(naturalMapRect, mapRect), Color.White);
 
                 if (Config.AllowTeleport)
-                    DrawSmallText(b, "Click the preview to warp to this relative map position.", new Vector2(mapRect.X, Math.Min(Game1.uiViewport.Height - 32, mapRect.Bottom + 8)));
+                    DrawSmallText(b, "Click the preview to warp to this relative map position.", new Vector2(borderRect.X, Math.Min(Game1.uiViewport.Height - 32, borderRect.Bottom + 6)));
             }
 
-            DrawHeader(b, 0, titleY - 20, Game1.uiViewport.Width);
             DrawDropdown(b, controlX, dropdownY, controlWidth);
 
             if (dropdownOpen)
                 DrawDropdownList(b);
         }
 
-        private Rectangle GetFittedMapRect(Rectangle bounds)
+        private float GetBaseMapScale(Rectangle bounds)
         {
             if (previewTexture is null)
-                return bounds;
+                return 1f;
 
-            float fitScale = Math.Min(bounds.Width / (float)previewTexture.Width, bounds.Height / (float)previewTexture.Height);
-            fitScale = Math.Max(0.1f, fitScale);
-            int drawWidth = Math.Max(1, (int)Math.Round(previewTexture.Width * fitScale));
-            int drawHeight = Math.Max(1, (int)Math.Round(previewTexture.Height * fitScale));
-            return new Rectangle(
-                bounds.X + (bounds.Width - drawWidth) / 2,
-                bounds.Y + (bounds.Height - drawHeight) / 2,
-                drawWidth,
-                drawHeight);
+            float fitScale = Math.Min(bounds.Width / (float)Math.Max(1, previewTexture.Width), bounds.Height / (float)Math.Max(1, previewTexture.Height));
+            return Math.Max(0.1f, fitScale);
         }
 
-        private Rectangle GetZoomedMapRect(Rectangle availableMapRect, Rectangle fittedMapRect)
+        private Rectangle GetNaturalMapDestinationRect(Rectangle viewportRect)
         {
-            if (mapZoom <= 1.001f)
-                return fittedMapRect;
+            if (previewTexture is null)
+                return viewportRect;
 
-            float progress = Math.Clamp((mapZoom - 1f) / 1.5f, 0f, 1f);
-            progress = progress * progress * (3f - 2f * progress);
-            int width = Math.Max(1, (int)Math.Round(MathHelper.Lerp(fittedMapRect.Width, availableMapRect.Width, progress)));
-            int height = Math.Max(1, (int)Math.Round(MathHelper.Lerp(fittedMapRect.Height, availableMapRect.Height, progress)));
+            float scale = GetBaseMapScale(viewportRect) * Math.Clamp(mapZoom, 1f, 10f);
+            int width = Math.Max(1, (int)Math.Round(previewTexture.Width * scale));
+            int height = Math.Max(1, (int)Math.Round(previewTexture.Height * scale));
+            float centerX = viewportRect.X + viewportRect.Width / 2f - mapPanPixels.X * scale;
+            float centerY = viewportRect.Y + viewportRect.Height / 2f - mapPanPixels.Y * scale;
+
             return new Rectangle(
-                availableMapRect.X + (availableMapRect.Width - width) / 2,
-                availableMapRect.Y + (availableMapRect.Height - height) / 2,
+                (int)Math.Round(centerX - width / 2f),
+                (int)Math.Round(centerY - height / 2f),
                 width,
                 height);
         }
 
-        private void DrawHeader(SpriteBatch b, int panelX, int panelY, int panelWidth)
+        private static Rectangle GetVisibleMapDestinationRect(Rectangle naturalRect, Rectangle viewportRect)
         {
-            string title = $"Mapster - {GetLocationName(viewedLocation)}";
-            SpriteText.drawStringHorizontallyCenteredAt(b, title, panelX + panelWidth / 2, panelY + 20, 999999, -1, 999999, 1f, 0.8f);
+            int left = Math.Max(naturalRect.Left, viewportRect.Left);
+            int top = Math.Max(naturalRect.Top, viewportRect.Top);
+            int right = Math.Min(naturalRect.Right, viewportRect.Right);
+            int bottom = Math.Min(naturalRect.Bottom, viewportRect.Bottom);
+
+            if (right <= left || bottom <= top)
+                return Rectangle.Empty;
+
+            return new Rectangle(left, top, right - left, bottom - top);
+        }
+
+        private Rectangle GetVisibleMapSourceRect(Rectangle naturalRect, Rectangle visibleDestRect)
+        {
+            if (previewTexture is null || visibleDestRect.Width <= 0 || visibleDestRect.Height <= 0 || naturalRect.Width <= 0 || naturalRect.Height <= 0)
+                return Rectangle.Empty;
+
+            float scaleX = previewTexture.Width / (float)naturalRect.Width;
+            float scaleY = previewTexture.Height / (float)naturalRect.Height;
+            int x = Math.Clamp((int)Math.Round((visibleDestRect.X - naturalRect.X) * scaleX), 0, Math.Max(0, previewTexture.Width - 1));
+            int y = Math.Clamp((int)Math.Round((visibleDestRect.Y - naturalRect.Y) * scaleY), 0, Math.Max(0, previewTexture.Height - 1));
+            int width = Math.Clamp((int)Math.Round(visibleDestRect.Width * scaleX), 1, previewTexture.Width - x);
+            int height = Math.Clamp((int)Math.Round(visibleDestRect.Height * scaleY), 1, previewTexture.Height - y);
+            return new Rectangle(x, y, width, height);
+        }
+
+        private Rectangle GetMapInteractionRect()
+        {
+            if (mapZoom > 1.001f && mapViewportRect.Width > 0 && mapViewportRect.Height > 0)
+                return mapViewportRect;
+
+            if (mapRect.Width > 0 && mapRect.Height > 0)
+                return mapRect;
+
+            return mapViewportRect;
         }
 
         private TextBox CreateSearchBox()
@@ -540,30 +663,92 @@ namespace Mapster
 
         private void ZoomMap(int direction, Point mouse)
         {
-            if (previewTexture is null || !mapRect.Contains(mouse))
+            if (previewTexture is null || !GetMapInteractionRect().Contains(mouse))
                 return;
 
-            Rectangle before = GetMapSourceRect();
-            float relativeX = Math.Clamp((mouse.X - mapRect.X) / (float)Math.Max(1, mapRect.Width), 0f, 1f);
-            float relativeY = Math.Clamp((mouse.Y - mapRect.Y) / (float)Math.Max(1, mapRect.Height), 0f, 1f);
-            float anchorX = before.X + before.Width * relativeX;
-            float anchorY = before.Y + before.Height * relativeY;
+            zoomAnchorWorld = GetSourcePointAtScreen(mouse);
+            zoomAnchorScreen = new Vector2(mouse.X, mouse.Y);
 
-            float factor = direction > 0 ? 1.08f : 1f / 1.08f;
-            mapZoom = Math.Clamp(mapZoom * factor, 1f, 10f);
+            float factor = direction > 0 ? WheelZoomStep : 1f / WheelZoomStep;
+            targetMapZoom = Math.Clamp(targetMapZoom * factor, 1f, 10f);
+        }
 
-            Rectangle after = GetMapSourceRect(false);
-            float centerX = anchorX - after.Width * relativeX;
-            float centerY = anchorY - after.Height * relativeY;
-            mapPanPixels = new Vector2(
-                centerX + after.Width / 2f - previewTexture.Width / 2f,
-                centerY + after.Height / 2f - previewTexture.Height / 2f);
+        private void UpdateSmoothMapZoom()
+        {
+            if (previewTexture is null)
+                return;
+
+            targetMapZoom = Math.Clamp(targetMapZoom, 1f, 10f);
+            if (mapRightDragging)
+            {
+                targetMapZoom = mapZoom;
+                ClampMapPan();
+                return;
+            }
+
+            bool zoomChanging = Math.Abs(mapZoom - targetMapZoom) >= 0.001f;
+            if (!zoomChanging)
+            {
+                mapZoom = targetMapZoom;
+                ClampMapPan();
+                return;
+            }
+
+            mapZoom = MathHelper.Lerp(mapZoom, targetMapZoom, ZoomSmoothing);
+
+            if (zoomAnchorWorld == Vector2.Zero || zoomAnchorScreen == Vector2.Zero)
+            {
+                zoomAnchorWorld = new Vector2(previewTexture.Width / 2f, previewTexture.Height / 2f);
+                zoomAnchorScreen = new Vector2(mapViewportRect.X + mapViewportRect.Width / 2f, mapViewportRect.Y + mapViewportRect.Height / 2f);
+            }
+
+            ApplyZoomAnchor();
             ClampMapPan();
+        }
+
+        private void ApplyZoomAnchor()
+        {
+            if (previewTexture is null || mapViewportRect.Width <= 0 || mapViewportRect.Height <= 0)
+                return;
+
+            float scale = GetBaseMapScale(mapViewportRect) * Math.Clamp(mapZoom, 1f, 10f);
+            if (scale <= 0f)
+                return;
+
+            Vector2 viewportCenter = new(mapViewportRect.X + mapViewportRect.Width / 2f, mapViewportRect.Y + mapViewportRect.Height / 2f);
+            Vector2 sourceCenter = new(previewTexture.Width / 2f, previewTexture.Height / 2f);
+            Vector2 desiredMapCenterOnScreen = zoomAnchorScreen - (zoomAnchorWorld - sourceCenter) * scale;
+            mapPanPixels = (viewportCenter - desiredMapCenterOnScreen) / scale;
+        }
+
+        private Vector2 GetSourcePointAtScreen(Point mouse)
+        {
+            if (previewTexture is null)
+                return Vector2.Zero;
+
+            Rectangle naturalRect = GetNaturalMapDestinationRect(mapViewportRect);
+            if (naturalRect.Width <= 0 || naturalRect.Height <= 0)
+                return new Vector2(previewTexture.Width / 2f, previewTexture.Height / 2f);
+
+            float x = (mouse.X - naturalRect.X) * (previewTexture.Width / (float)naturalRect.Width);
+            float y = (mouse.Y - naturalRect.Y) * (previewTexture.Height / (float)naturalRect.Height);
+            return new Vector2(
+                Math.Clamp(x, 0f, Math.Max(0f, previewTexture.Width)),
+                Math.Clamp(y, 0f, Math.Max(0f, previewTexture.Height)));
+        }
+
+        private void ResetMapZoom()
+        {
+            mapZoom = 1f;
+            targetMapZoom = 1f;
+            mapPanPixels = Vector2.Zero;
+            zoomAnchorWorld = Vector2.Zero;
+            zoomAnchorScreen = Vector2.Zero;
         }
 
         private void UpdateMapRightDrag()
         {
-            if (previewTexture is null || mapZoom <= 1.001f)
+            if (previewTexture is null || !CanPanMap())
             {
                 mapRightDragging = false;
                 return;
@@ -580,7 +765,7 @@ namespace Mapster
 
             if (!mapRightDragging)
             {
-                if (!mapRect.Contains(mouse))
+                if (!GetMapInteractionRect().Contains(mouse))
                     return;
 
                 mapRightDragging = true;
@@ -595,10 +780,22 @@ namespace Mapster
             if (deltaX == 0 && deltaY == 0)
                 return;
 
-            Rectangle source = GetMapSourceRect();
-            mapPanPixels.X -= deltaX * (source.Width / (float)Math.Max(1, mapRect.Width));
-            mapPanPixels.Y -= deltaY * (source.Height / (float)Math.Max(1, mapRect.Height));
+            float scale = GetBaseMapScale(mapViewportRect) * Math.Clamp(mapZoom, 1f, 10f);
+            if (scale <= 0f)
+                return;
+
+            mapPanPixels.X -= deltaX / scale;
+            mapPanPixels.Y -= deltaY / scale;
             ClampMapPan();
+        }
+
+        private bool CanPanMap()
+        {
+            if (previewTexture is null || mapViewportRect.Width <= 0 || mapViewportRect.Height <= 0)
+                return false;
+
+            float scale = GetBaseMapScale(mapViewportRect) * Math.Clamp(mapZoom, 1f, 10f);
+            return previewTexture.Width * scale > mapViewportRect.Width + 1 || previewTexture.Height * scale > mapViewportRect.Height + 1;
         }
 
         private Rectangle GetMapSourceRect(bool clamp = true)
@@ -606,37 +803,9 @@ namespace Mapster
             if (previewTexture is null)
                 return Rectangle.Empty;
 
-            if (mapZoom <= 1.001f || mapRect.Width <= 0 || mapRect.Height <= 0)
-                return new Rectangle(0, 0, previewTexture.Width, previewTexture.Height);
-
-            float zoom = Math.Clamp(mapZoom, 1f, 10f);
-            float destinationAspect = mapRect.Width / (float)Math.Max(1, mapRect.Height);
-            float sourceWidth = previewTexture.Width / zoom;
-            float sourceHeight = sourceWidth / Math.Max(0.001f, destinationAspect);
-
-            if (sourceHeight > previewTexture.Height / zoom)
-            {
-                sourceHeight = previewTexture.Height / zoom;
-                sourceWidth = sourceHeight * destinationAspect;
-            }
-
-            sourceWidth = Math.Clamp(sourceWidth, 1f, previewTexture.Width);
-            sourceHeight = Math.Clamp(sourceHeight, 1f, previewTexture.Height);
-
-            float centerX = previewTexture.Width / 2f + mapPanPixels.X;
-            float centerY = previewTexture.Height / 2f + mapPanPixels.Y;
-            int width = Math.Max(1, (int)Math.Round(sourceWidth));
-            int height = Math.Max(1, (int)Math.Round(sourceHeight));
-            int x = (int)Math.Round(centerX - width / 2f);
-            int y = (int)Math.Round(centerY - height / 2f);
-
-            if (clamp)
-            {
-                x = Math.Clamp(x, 0, Math.Max(0, previewTexture.Width - width));
-                y = Math.Clamp(y, 0, Math.Max(0, previewTexture.Height - height));
-            }
-
-            return new Rectangle(x, y, width, height);
+            Rectangle naturalRect = GetNaturalMapDestinationRect(mapViewportRect);
+            Rectangle visibleRect = GetVisibleMapDestinationRect(naturalRect, mapViewportRect);
+            return GetVisibleMapSourceRect(naturalRect, visibleRect);
         }
 
         private void ClampMapPan()
@@ -645,15 +814,17 @@ namespace Mapster
                 return;
 
             mapZoom = Math.Clamp(mapZoom, 1f, 10f);
-            if (mapZoom <= 1.001f)
+            targetMapZoom = Math.Clamp(targetMapZoom, 1f, 10f);
+
+            float scale = GetBaseMapScale(mapViewportRect) * mapZoom;
+            if (scale <= 0f)
             {
                 mapPanPixels = Vector2.Zero;
                 return;
             }
 
-            Rectangle source = GetMapSourceRect(false);
-            float maxX = Math.Max(0f, (previewTexture.Width - source.Width) / 2f);
-            float maxY = Math.Max(0f, (previewTexture.Height - source.Height) / 2f);
+            float maxX = Math.Max(0f, (previewTexture.Width * scale - mapViewportRect.Width) / (2f * scale));
+            float maxY = Math.Max(0f, (previewTexture.Height * scale - mapViewportRect.Height) / (2f * scale));
             mapPanPixels = new Vector2(
                 Math.Clamp(mapPanPixels.X, -maxX, maxX),
                 Math.Clamp(mapPanPixels.Y, -maxY, maxY));
@@ -862,11 +1033,12 @@ namespace Mapster
 
         private void TeleportToPreviewPoint(Point mouse)
         {
-            if (viewedLocation is null || mapRect.Width <= 0 || mapRect.Height <= 0)
+            Rectangle clickRect = GetMapInteractionRect();
+            if (viewedLocation is null || clickRect.Width <= 0 || clickRect.Height <= 0 || !clickRect.Contains(mouse))
                 return;
 
-            float xRatio = Math.Clamp((mouse.X - mapRect.X) / (float)mapRect.Width, 0f, 1f);
-            float yRatio = Math.Clamp((mouse.Y - mapRect.Y) / (float)mapRect.Height, 0f, 1f);
+            float xRatio = Math.Clamp((mouse.X - clickRect.X) / (float)clickRect.Width, 0f, 1f);
+            float yRatio = Math.Clamp((mouse.Y - clickRect.Y) / (float)clickRect.Height, 0f, 1f);
             Rectangle source = GetMapSourceRect();
             int worldX = previewWorldRect.X + source.X + (int)Math.Round(source.Width * xRatio);
             int worldY = previewWorldRect.Y + source.Y + (int)Math.Round(source.Height * yRatio);
@@ -980,7 +1152,7 @@ namespace Mapster
                     return;
                 }
 
-                if (owner.mapRect.Contains(mouse))
+                if (owner.GetMapInteractionRect().Contains(mouse))
                     owner.ZoomMap(direction, mouse);
             }
 
@@ -998,8 +1170,7 @@ namespace Mapster
                 base.gameWindowSizeChanged(oldBounds, newBounds);
                 width = Game1.uiViewport.Width;
                 height = Game1.uiViewport.Height;
-                owner.mapZoom = 1f;
-                owner.mapPanPixels = Vector2.Zero;
+                owner.ResetMapZoom();
                 owner.DisposePreview();
             }
 
