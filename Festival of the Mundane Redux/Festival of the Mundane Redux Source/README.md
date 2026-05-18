@@ -10,19 +10,21 @@ Original mod concept, writing, festival map, minigame, and core implementation b
 
 Redux update by **ThaleTheGreat**.
 
-This Redux is primarily intended as a compatibility and maintenance update, not a full redesign of the original festival. Dino
+This Redux is primarily intended as a compatibility and maintenance update, not a full redesign of the original festival.
 
 ## Requirements
 
 - Stardew Valley 1.6+
 - SMAPI 4.0+
+- Content Patcher
+- Festival of the Mundane Redux Content (`[CP] Festival of the Mundane Redux`)
 
-No Content Patcher or Json Assets dependency is required.
+Json Assets is not required.
 
 ## Installation
 
-1. Install SMAPI.
-2. Copy the `ShadowFestival` folder into your Stardew Valley `Mods` folder.
+1. Install SMAPI and Content Patcher.
+2. Copy both `Festival of the Mundane Redux` and `[CP] Festival of the Mundane Redux` into your Stardew Valley `Mods` folder.
 3. Launch the game through SMAPI.
 4. On Fall 27, enter the Sewers to visit the Festival of the Mundane.
 
@@ -93,14 +95,16 @@ The original mod included a Forest shop filtering hook to remove festival hats f
 Redux will apply festival-specific Krobus dialogue on the festival day, matching the original festival flavor, but it does not replace Krobus's shop stock, or shop logic.
 
 ### Krobus image
+
 The Redux changes Krobus to load their Trench Coat sprite and portrait during the festival.
 
-###Thematics
+### Thematics
+
 The Redux changes the song that plays during the festival.
 
 ### Safer festival interaction handling
 
-Redux only intercepts action-button clicks while the player is in the Sewer on the actual festival day and no menu is already open. This prevents festival interaction code from interfering with normal Sewer or shop behavior outside the festival.
+Redux only intercepts action-button clicks while the player is in the Sewer on the actual festival day and no menu is already open. The Hat Mouse festival shop now accepts a small interaction area around the vendor instead of a single exact tile, which makes the shop interaction more tolerant of Sewer map edits from compatibility patches. This prevents festival interaction code from interfering with normal Sewer or shop behavior outside the festival.
 
 ### Build/package cleanup
 
@@ -114,7 +118,7 @@ From the source folder, run:
 dotnet build
 ```
 
-The build output should contain the compiled `ShadowFestival.dll` along with the manifest, data file, i18n files, and assets required by the mod.
+The built DLL mod folder should be named `Festival of the Mundane Redux` and contain the compiled `ShadowFestival.dll` along with the manifest, data file, i18n files, and assets required by the mod.
 
 ## Compatibility notes
 
