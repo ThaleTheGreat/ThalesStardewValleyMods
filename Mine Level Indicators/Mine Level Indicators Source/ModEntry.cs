@@ -123,7 +123,7 @@ public sealed class ModEntry : Mod
 
     private void OnRenderedHud(object sender, RenderedHudEventArgs e)
     {
-        if (Game1.eventUp || string.IsNullOrWhiteSpace(hoverText))
+        if (!ShouldDrawHudIndicator())
             return;
 
         EnsureIcon();
@@ -138,10 +138,20 @@ public sealed class ModEntry : Mod
 
     private void OnRenderingHud(object sender, RenderingHudEventArgs e)
     {
-        if (icon == null || string.IsNullOrWhiteSpace(hoverText) || !icon.containsPoint(Game1.getMouseX(), Game1.getMouseY()))
+        if (!ShouldDrawHudIndicator() || icon == null || !icon.containsPoint(Game1.getMouseX(), Game1.getMouseY()))
             return;
 
         IClickableMenu.drawHoverText(e.SpriteBatch, hoverText, Game1.dialogueFont);
+    }
+
+    private bool ShouldDrawHudIndicator()
+    {
+        return Context.IsWorldReady
+            && !Game1.eventUp
+            && Game1.displayHUD
+            && !Game1.game1.takingMapScreenshot
+            && Game1.activeClickableMenu == null
+            && !string.IsNullOrWhiteSpace(hoverText);
     }
 
     private void ClearLists()
