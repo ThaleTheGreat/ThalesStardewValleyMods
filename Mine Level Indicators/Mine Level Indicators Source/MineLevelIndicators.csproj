@@ -7,6 +7,9 @@
     <LangVersion>10.0</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
+    <Version>1.1.0</Version>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <ModFolderName>Mine Level Indicators</ModFolderName>
   </PropertyGroup>
 
   <ItemGroup>
