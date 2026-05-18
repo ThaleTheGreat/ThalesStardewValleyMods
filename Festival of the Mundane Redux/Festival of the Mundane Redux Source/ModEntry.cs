@@ -30,10 +30,7 @@ public class ModEntry : Mod
 {
   internal static ModData Data;
   internal static readonly Random Random = new Random();
-  private static readonly List<Vector2> VendorTiles = new List<Vector2>()
-  {
-    new Vector2(8f, 19f)
-  };
+  private static readonly Vector2 VendorTile = new Vector2(8f, 19f);
   protected bool _gettingKickedOut;
   protected bool _mapChanged;
   protected readonly Dictionary<string, int> _currentDialogueIndex = new Dictionary<string, int>();
@@ -1035,13 +1032,24 @@ public class ModEntry : Mod
     }
   }
 
+  private static bool IsClickingFestivalHatMouse(Vector2 tile)
+  {
+    return Math.Abs(tile.X - ModEntry.VendorTile.X) <= 1f && Math.Abs(tile.Y - ModEntry.VendorTile.Y) <= 1f;
+  }
+
   private void Input_ButtonPressed(object sender, ButtonPressedEventArgs e)
   {
     if (!Context.IsWorldReady || Game1.currentLocation == null || !this.IsShadowFestivalToday() || Game1.player.freezePause > 0 || this._gettingKickedOut || !Game1.currentLocation.Name.Equals("Sewer") || Game1.activeClickableMenu != null || !SButtonExtensions.IsActionButton(e.Button))
       return;
-    if (this.IsClickingKrobus(e.Cursor.GrabTile))
+
+    Vector2 grabTile = e.Cursor.GrabTile;
+    Vector2 facingTile = Game1.player.GetGrabTile();
+    Vector2 playerTile = Game1.player.Tile;
+
+    if (this.IsClickingKrobus(grabTile))
       return;
-    if (ModEntry.VendorTiles.Contains(e.Cursor.GrabTile))
+
+    if (Game1.player.FacingDirection == 0 && (ModEntry.IsClickingFestivalHatMouse(grabTile) || ModEntry.IsClickingFestivalHatMouse(facingTile) || ModEntry.IsClickingFestivalHatMouse(playerTile)))
     {
       this.Helper.Input.Suppress(e.Button);
       DelayedAction.functionAfterDelay(() =>
@@ -1050,15 +1058,15 @@ public class ModEntry : Mod
           return;
         this.TryOpenShop("HatMouse");
       }, 1);
+      return;
     }
-    else
+
+    string str1 = Game1.currentLocation.doesTileHaveProperty((int) grabTile.X, (int) grabTile.Y, "Action", "Buildings", false);
+    if (str1 == null)
+      return;
+    string[] strArray = str1.Split(' ', StringSplitOptions.None);
+    if (strArray.Length >= 2 && strArray[0] == "FestivalDialogue")
     {
-      string str1 = Game1.currentLocation.doesTileHaveProperty((int) e.Cursor.GrabTile.X, (int) e.Cursor.GrabTile.Y, "Action", "Buildings", false);
-      if (str1 == null)
-        return;
-      string[] strArray = str1.Split(' ', StringSplitOptions.None);
-      if (strArray.Length >= 2 && strArray[0] == "FestivalDialogue")
-      {
         this.Helper.Input.Suppress(e.Button);
         bool flag = ((NetFieldBase<Hat, NetRef<Hat>>) Game1.player.hat).Value != null && ModEntry.Data.CalmingHats.Contains(((Item) ((NetFieldBase<Hat, NetRef<Hat>>) Game1.player.hat).Value).Name);
         if (!strArray[1].StartsWith("BigShadow") && !strArray[1].StartsWith("Snack") && !strArray[1].StartsWith("Festival_AncientDoll") && !flag)
@@ -1102,7 +1110,6 @@ public class ModEntry : Mod
         }, new GameLocation.afterQuestionBehavior(this.OnPinGameAnswer), null);
       }
     }
-  }
 
   private bool IsClickingKrobus(Vector2 grabTile)
   {
