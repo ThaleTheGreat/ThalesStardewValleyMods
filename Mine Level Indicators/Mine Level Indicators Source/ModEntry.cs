@@ -19,16 +19,65 @@ public sealed class ModEntry : Mod
     private readonly List<(int Level, string Type)> infestedLevels = new();
     private readonly List<int> mushroomLevels = new();
     private ClickableTextureComponent icon;
+    private ModConfig config;
     private string hoverText = string.Empty;
     private bool reflectionWarned;
 
     public override void Entry(IModHelper helper)
     {
+        config = helper.ReadConfig<ModConfig>();
+
+        helper.Events.GameLoop.GameLaunched += OnGameLaunched;
         helper.Events.GameLoop.DayStarted += OnDayStarted;
-        helper.Events.GameLoop.SaveLoaded += (_, _) => ClearLists();
+        helper.Events.GameLoop.SaveLoaded += (_, _) => RefreshIndicators();
         helper.Events.GameLoop.ReturnedToTitle += (_, _) => ClearLists();
         helper.Events.Display.RenderingHud += OnRenderingHud;
         helper.Events.Display.RenderedHud += OnRenderedHud;
+    }
+
+    private void OnGameLaunched(object sender, GameLaunchedEventArgs e)
+    {
+        IGenericModConfigMenuApi gmcm = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
+        if (gmcm == null)
+            return;
+
+        gmcm.Register(
+            ModManifest,
+            reset: () =>
+            {
+                config = new ModConfig();
+                RefreshIndicators();
+            },
+            save: () =>
+            {
+                Helper.WriteConfig(config);
+                RefreshIndicators();
+            }
+        );
+
+        gmcm.AddBoolOption(
+            ModManifest,
+            getValue: () => config.ShowInfestedLevelIndicators,
+            setValue: value =>
+            {
+                config.ShowInfestedLevelIndicators = value;
+                RefreshIndicators();
+            },
+            name: () => "Show Infested Level Indicators",
+            tooltip: () => "Show infested mine levels in the HUD tooltip."
+        );
+
+        gmcm.AddBoolOption(
+            ModManifest,
+            getValue: () => config.ShowMushroomLevelIndicators,
+            setValue: value =>
+            {
+                config.ShowMushroomLevelIndicators = value;
+                RefreshIndicators();
+            },
+            name: () => "Show Mushroom Level Indicators",
+            tooltip: () => "Show mushroom mine levels in the HUD tooltip."
+        );
     }
 
     private void EnsureIcon()
@@ -50,15 +99,23 @@ public sealed class ModEntry : Mod
 
     private void OnDayStarted(object sender, DayStartedEventArgs e)
     {
+        RefreshIndicators();
+    }
+
+    private void RefreshIndicators()
+    {
         ClearLists();
+
+        if (!Context.IsWorldReady || (!config.ShowInfestedLevelIndicators && !config.ShowMushroomLevelIndicators))
+            return;
 
         int deepestMineLevel = Game1.player?.deepestMineLevel ?? 0;
         int maxLevel = Math.Min(Math.Max(deepestMineLevel, 0), 120);
 
-        if (maxLevel >= 1)
+        if (config.ShowInfestedLevelIndicators && maxLevel >= 1)
             LocateInfestedLevels(maxLevel);
 
-        if (maxLevel >= 81)
+        if (config.ShowMushroomLevelIndicators && maxLevel >= 81)
             LocateMushroomLevels(maxLevel);
 
         hoverText = BuildHoverText(deepestMineLevel);
@@ -66,7 +123,7 @@ public sealed class ModEntry : Mod
 
     private void OnRenderedHud(object sender, RenderedHudEventArgs e)
     {
-        if (Game1.eventUp)
+        if (Game1.eventUp || string.IsNullOrWhiteSpace(hoverText))
             return;
 
         EnsureIcon();
@@ -81,7 +138,7 @@ public sealed class ModEntry : Mod
 
     private void OnRenderingHud(object sender, RenderingHudEventArgs e)
     {
-        if (icon == null || !icon.containsPoint(Game1.getMouseX(), Game1.getMouseY()))
+        if (icon == null || string.IsNullOrWhiteSpace(hoverText) || !icon.containsPoint(Game1.getMouseX(), Game1.getMouseY()))
             return;
 
         IClickableMenu.drawHoverText(e.SpriteBatch, hoverText, Game1.dialogueFont);
@@ -97,15 +154,27 @@ public sealed class ModEntry : Mod
 
     private string BuildHoverText(int deepest)
     {
-        string infestedText = infestedLevels.Any()
-            ? string.Join(Environment.NewLine, infestedLevels.Select(level => $"{level.Level}{(string.IsNullOrEmpty(level.Type) ? string.Empty : " - " + level.Type)}"))
-            : "None";
+        List<string> sections = new();
 
-        string mushroomText = deepest > 80
-            ? mushroomLevels.Any() ? string.Join(Environment.NewLine, mushroomLevels.Select(level => level.ToString())) : "None"
-            : "Mine Not Sufficiently Explored";
+        if (config.ShowInfestedLevelIndicators)
+        {
+            string infestedText = infestedLevels.Any()
+                ? string.Join(Environment.NewLine, infestedLevels.Select(level => $"{level.Level}{(string.IsNullOrEmpty(level.Type) ? string.Empty : " - " + level.Type)}"))
+                : "None";
 
-        return $"Infested Levels:\n{infestedText}\n\nMushroom Levels:\n{mushroomText}";
+            sections.Add($"Infested Levels:\n{infestedText}");
+        }
+
+        if (config.ShowMushroomLevelIndicators)
+        {
+            string mushroomText = deepest > 80
+                ? mushroomLevels.Any() ? string.Join(Environment.NewLine, mushroomLevels.Select(level => level.ToString())) : "None"
+                : "Mine Not Sufficiently Explored";
+
+            sections.Add($"Mushroom Levels:\n{mushroomText}");
+        }
+
+        return string.Join("\n\n", sections);
     }
 
     private void LocateInfestedLevels(int maxLevel)
@@ -198,9 +267,8 @@ public sealed class ModEntry : Mod
         {
             return MineShaft.GetMine($"UndergroundMine{level}");
         }
-        catch (Exception ex)
+        catch
         {
-            Monitor.Log($"Failed to load mine level {level}: {ex.Message}", LogLevel.Trace);
             return null;
         }
     }
