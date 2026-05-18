@@ -40,7 +40,7 @@ public sealed class ModEntry : Mod
 
     private void OnWarped(object? sender, WarpedEventArgs e)
     {
-        if (!ReferenceEquals(e.Player, Game1.player) || !IsSaloon(e.NewLocation) || Game1.timeOfDay < Config.CoverStartsAt)
+        if (!ReferenceEquals(e.Player, Game1.player) || !IsSaloon(e.NewLocation) || !IsCoverActive())
             return;
 
         long playerId = e.Player.UniqueMultiplayerID;
@@ -59,7 +59,7 @@ public sealed class ModEntry : Mod
 
     private void OnUpdateTicked(object? sender, UpdateTickedEventArgs e)
     {
-        if (!Context.IsWorldReady || !IsSaloon(Game1.currentLocation) || Game1.timeOfDay < Config.CoverStartsAt)
+        if (!Context.IsWorldReady || !IsSaloon(Game1.currentLocation) || !IsCoverActive())
             return;
 
         long playerId = Game1.player.UniqueMultiplayerID;
@@ -90,7 +90,7 @@ public sealed class ModEntry : Mod
         int cover = Math.Max(0, Config.CoverCharge);
 
         Game1.currentLocation.createQuestionDialogue(
-            $"Cover is {cover}g after 8pm. Pay to enter?",
+            $"Cover is {cover}g after {FormatTime(Config.CoverStartsAt)}. Pay to enter?",
             new[]
             {
                 new Response("Pay", $"Pay {cover}g"),
@@ -132,7 +132,7 @@ public sealed class ModEntry : Mod
 
     private void OnRenderedWorld(object? sender, RenderedWorldEventArgs e)
     {
-        if (!Context.IsWorldReady || !IsSaloon(Game1.currentLocation) || Game1.timeOfDay < Config.CoverStartsAt)
+        if (!Context.IsWorldReady || !IsSaloon(Game1.currentLocation) || !IsCoverActive())
             return;
 
         bouncerTexture ??= Game1.content.Load<Texture2D>("Characters/Bouncer");
@@ -157,6 +157,31 @@ public sealed class ModEntry : Mod
     private static bool IsSaloon(GameLocation? location)
     {
         return location != null && (location.Name == SaloonLocationName || location.NameOrUniqueName == SaloonLocationName);
+    }
+
+    private bool IsCoverActive()
+    {
+        return Game1.timeOfDay >= Config.CoverStartsAt && IsConfiguredCoverDay();
+    }
+
+    private bool IsConfiguredCoverDay()
+    {
+        return GetCurrentDayOfWeekIndex() switch
+        {
+            0 => Config.CoverOnMonday,
+            1 => Config.CoverOnTuesday,
+            2 => Config.CoverOnWednesday,
+            3 => Config.CoverOnThursday,
+            4 => Config.CoverOnFriday,
+            5 => Config.CoverOnSaturday,
+            6 => Config.CoverOnSunday,
+            _ => true
+        };
+    }
+
+    private static int GetCurrentDayOfWeekIndex()
+    {
+        return Math.Abs(Game1.dayOfMonth - 1) % 7;
     }
 
     private void RegisterGmcm()
@@ -197,6 +222,62 @@ public sealed class ModEntry : Mod
             max: 2600,
             interval: 100,
             formatValue: FormatTime
+        );
+
+        gmcm.AddBoolOption(
+            ModManifest,
+            () => Config.CoverOnSunday,
+            value => Config.CoverOnSunday = value,
+            () => "Sunday Cover",
+            () => "Require a cover charge on Sundays."
+        );
+
+        gmcm.AddBoolOption(
+            ModManifest,
+            () => Config.CoverOnMonday,
+            value => Config.CoverOnMonday = value,
+            () => "Monday Cover",
+            () => "Require a cover charge on Mondays."
+        );
+
+        gmcm.AddBoolOption(
+            ModManifest,
+            () => Config.CoverOnTuesday,
+            value => Config.CoverOnTuesday = value,
+            () => "Tuesday Cover",
+            () => "Require a cover charge on Tuesdays."
+        );
+
+        gmcm.AddBoolOption(
+            ModManifest,
+            () => Config.CoverOnWednesday,
+            value => Config.CoverOnWednesday = value,
+            () => "Wednesday Cover",
+            () => "Require a cover charge on Wednesdays."
+        );
+
+        gmcm.AddBoolOption(
+            ModManifest,
+            () => Config.CoverOnThursday,
+            value => Config.CoverOnThursday = value,
+            () => "Thursday Cover",
+            () => "Require a cover charge on Thursdays."
+        );
+
+        gmcm.AddBoolOption(
+            ModManifest,
+            () => Config.CoverOnFriday,
+            value => Config.CoverOnFriday = value,
+            () => "Friday Cover",
+            () => "Require a cover charge on Fridays."
+        );
+
+        gmcm.AddBoolOption(
+            ModManifest,
+            () => Config.CoverOnSaturday,
+            value => Config.CoverOnSaturday = value,
+            () => "Saturday Cover",
+            () => "Require a cover charge on Saturdays."
         );
 
         gmcm.AddBoolOption(
@@ -242,6 +323,7 @@ public sealed class ModEntry : Mod
     {
         Config.CoverCharge = Math.Clamp(Config.CoverCharge, 0, 1000);
         Config.CoverStartsAt = Math.Clamp(Config.CoverStartsAt, 600, 2600);
+        Config.CoverStartsAt = Config.CoverStartsAt / 100 * 100;
         Config.BouncerTileX = Math.Clamp(Config.BouncerTileX, 0, 100);
         Config.BouncerTileY = Math.Clamp(Config.BouncerTileY, 0, 100);
         Config.EjectTileX = Math.Clamp(Config.EjectTileX, 0, 200);
