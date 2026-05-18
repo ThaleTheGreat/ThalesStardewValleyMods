@@ -2,11 +2,14 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <AssemblyName>ShadowFestival</AssemblyName>
+    <ModFolderName>Festival of the Mundane Redux</ModFolderName>
     <RootNamespace>ShadowFestival</RootNamespace>
     <OutputType>Library</OutputType>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
-    <LangVersion>latest</LangVersion>
+    <LangVersion>10.0</LangVersion>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Version>3.1.0</Version>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
