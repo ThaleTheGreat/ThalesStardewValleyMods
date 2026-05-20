@@ -7,6 +7,7 @@ namespace ThaleTheGreat.Mapster
     {
         public bool ModEnabled { get; set; } = true;
         public bool AllowTeleport { get; set; } = false;
+        public bool ShowLocationDropdown { get; set; } = true;
         public bool AnimatePreview { get; set; } = true;
         public int AnimatedPreviewRefreshTicks { get; set; } = 12;
         public bool DebugLogging { get; set; } = false;

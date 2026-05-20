@@ -74,6 +74,7 @@ namespace ThaleTheGreat.Mapster
             gmcm.Register(ModManifest, () => Config = new ModConfig(), () => Helper.WriteConfig(Config));
             gmcm.AddBoolOption(ModManifest, () => Config.ModEnabled, value => Config.ModEnabled = value, () => "Mod Enabled");
             gmcm.AddBoolOption(ModManifest, () => Config.AllowTeleport, value => Config.AllowTeleport = value, () => "Allow Teleport From Preview");
+            gmcm.AddBoolOption(ModManifest, () => Config.ShowLocationDropdown, value => Config.ShowLocationDropdown = value, () => "Show Location Dropdown", () => "Show the searchable location dropdown. Disable this to only preview the player's current location.");
             gmcm.AddBoolOption(ModManifest, () => Config.AnimatePreview, value => Config.AnimatePreview = value, () => "Animate Map Preview", () => "Periodically refresh the map preview so animated tiles and sprites can update. Turn this off if another mod conflicts with preview rendering.");
             gmcm.AddKeybindList(ModManifest, () => Config.MapKey, value => Config.MapKey = value, () => "Open Mapster");
             gmcm.AddBoolOption(ModManifest, () => Config.DebugLogging, value => Config.DebugLogging = value, () => "Debug Logging");
@@ -158,7 +159,7 @@ namespace ThaleTheGreat.Mapster
 
             if (!IsMouseInput(e.Button))
             {
-                if (searchFocused && TryGetKeyboardKey(e.Button, out Keys key))
+                if (Config.ShowLocationDropdown && searchFocused && TryGetKeyboardKey(e.Button, out Keys key))
                     AppendSearchCharacter(key);
 
                 Helper.Input.Suppress(e.Button);
@@ -213,7 +214,7 @@ namespace ThaleTheGreat.Mapster
             mapRightDragging = false;
             previousMouseVisible = Game1.game1.IsMouseVisible;
             Game1.game1.IsMouseVisible = false;
-            searchBox = CreateSearchBox();
+            searchBox = Config.ShowLocationDropdown ? CreateSearchBox() : null;
             searchFocused = false;
             Game1.keyboardDispatcher.Subscriber = null;
             lastSearchText = string.Empty;
@@ -230,6 +231,9 @@ namespace ThaleTheGreat.Mapster
             if (frozenToolIndex >= 0 && Game1.player is not null && Game1.player.CurrentToolIndex != frozenToolIndex)
                 Game1.player.CurrentToolIndex = frozenToolIndex;
 
+            if (!Config.ShowLocationDropdown)
+                KeepPreviewOnCurrentLocation();
+
             UpdateSearchFilter();
             UpdateSmoothMapZoom();
             UpdateMapRightDrag();
@@ -245,8 +249,39 @@ namespace ThaleTheGreat.Mapster
             CapturePreview(true);
         }
 
+        private void KeepPreviewOnCurrentLocation()
+        {
+            dropdownOpen = false;
+            dropdownDraggingThumb = false;
+            searchFocused = false;
+
+            GameLocation? current = Game1.currentLocation;
+            if (current is null || ReferenceEquals(viewedLocation, current))
+                return;
+
+            viewedLocation = current;
+            ResetMapZoom();
+            DisposePreview();
+            CapturePreview();
+        }
+
         private bool HandleMouseLeft(Point mouse)
         {
+            if (!Config.ShowLocationDropdown)
+            {
+                dropdownOpen = false;
+                dropdownDraggingThumb = false;
+                searchFocused = false;
+
+                if (Config.AllowTeleport && GetMapInteractionRect().Contains(mouse) && viewedLocation is not null)
+                {
+                    TeleportToPreviewPoint(mouse);
+                    return true;
+                }
+
+                return false;
+            }
+
             if (dropdownOpen)
             {
                 Rectangle listRect = GetDropdownListRect();
@@ -499,11 +534,13 @@ namespace ThaleTheGreat.Mapster
             int controlWidth = Math.Min(Game1.uiViewport.Width - outerPad * 2, 1180);
             int controlX = (Game1.uiViewport.Width - controlWidth) / 2;
             int dropdownY = 28;
-            dropdownRect = new Rectangle(controlX, dropdownY, controlWidth, dropdownHeight);
+            dropdownRect = Config.ShowLocationDropdown
+                ? new Rectangle(controlX, dropdownY, controlWidth, dropdownHeight)
+                : Rectangle.Empty;
 
             if (previewTexture is not null && viewedLocation is not null)
             {
-                int mapTop = dropdownRect.Bottom + 36;
+                int mapTop = Config.ShowLocationDropdown ? dropdownRect.Bottom + 36 : 28;
                 int mapBottomReserve = Config.AllowTeleport ? 48 : 20;
                 int maxFrameWidth = Math.Max(1, Game1.uiViewport.Width - outerPad * 2);
                 int maxFrameHeight = Math.Max(180, Game1.uiViewport.Height - mapTop - mapBottomReserve);
@@ -530,10 +567,13 @@ namespace ThaleTheGreat.Mapster
                     DrawSmallText(b, "Click the preview to warp to this relative map position.", new Vector2(borderRect.X, Math.Min(Game1.uiViewport.Height - 32, borderRect.Bottom + 6)));
             }
 
-            DrawDropdown(b, controlX, dropdownY, controlWidth);
+            if (Config.ShowLocationDropdown)
+            {
+                DrawDropdown(b, controlX, dropdownY, controlWidth);
 
-            if (dropdownOpen)
-                DrawDropdownList(b);
+                if (dropdownOpen)
+                    DrawDropdownList(b);
+            }
         }
 
         private float GetBaseMapScale(Rectangle bounds)
@@ -611,7 +651,7 @@ namespace ThaleTheGreat.Mapster
 
         private void UpdateSearchFilter()
         {
-            if (searchBox is null)
+            if (!Config.ShowLocationDropdown || searchBox is null)
                 return;
 
             if (string.Equals(searchBox.Text, lastSearchText, StringComparison.Ordinal))
@@ -626,6 +666,13 @@ namespace ThaleTheGreat.Mapster
 
         private void ApplyLocationFilter()
         {
+            if (!Config.ShowLocationDropdown)
+            {
+                filteredLocations.Clear();
+                dropdownScroll = 0;
+                return;
+            }
+
             string query = searchBox?.Text?.Trim() ?? string.Empty;
             if (string.IsNullOrWhiteSpace(query))
             {
@@ -641,6 +688,15 @@ namespace ThaleTheGreat.Mapster
 
         private void ClearSearchInput(bool keepDropdownOpen)
         {
+            if (!Config.ShowLocationDropdown)
+            {
+                dropdownOpen = false;
+                dropdownDraggingThumb = false;
+                searchFocused = false;
+                Game1.keyboardDispatcher.Subscriber = null;
+                return;
+            }
+
             if (searchBox is not null)
                 searchBox.Text = string.Empty;
 
@@ -1146,7 +1202,7 @@ namespace ThaleTheGreat.Mapster
             public override void receiveScrollWheelAction(int direction)
             {
                 Point mouse = Game1.getMousePosition(true);
-                if (owner.dropdownOpen && (owner.dropdownRect.Contains(mouse) || owner.GetDropdownListRect().Contains(mouse)))
+                if (owner.Config.ShowLocationDropdown && owner.dropdownOpen && (owner.dropdownRect.Contains(mouse) || owner.GetDropdownListRect().Contains(mouse)))
                 {
                     owner.dropdownScroll = Math.Clamp(owner.dropdownScroll + (direction > 0 ? -1 : 1), 0, owner.GetMaxDropdownScroll());
                     return;
