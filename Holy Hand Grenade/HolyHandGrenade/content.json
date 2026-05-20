@@ -1,0 +1,206 @@
+{
+    "Format": "2.5.0",
+    "Changes": [
+        {
+            "Action": "Load",
+            "Target": "Mods/ThaleTheGreat.CaerbannogRabbitTrinket/trinkets",
+            "FromFile": "assets/trinkets.png"
+        },
+        {
+            "Action": "Load",
+            "Target": "Mods/ThaleTheGreat.CaerbannogRabbitTrinket/rabbit",
+            "FromFile": "assets/rabbit.png"
+        },
+        {
+            "Action": "Load",
+            "Target": "Mods/ThaleTheGreat.CaerbannogRabbitTrinket/blood",
+            "FromFile": "assets/blood.png"
+        },
+        {
+            "Action": "EditData",
+            "Target": "Data/Trinkets",
+            "Entries": {
+                "ThaleTheGreat_RabbitOfCaerbannog": {
+                    "Id": "ThaleTheGreat_RabbitOfCaerbannog",
+                    "DisplayName": "{{i18n:Trinket.Name}}",
+                    "Description": "{{i18n:Trinket.Desc}}",
+                    "Texture": "Mods/ThaleTheGreat.CaerbannogRabbitTrinket/trinkets",
+                    "SheetIndex": 0,
+                    "DropsNaturally": true,
+                    "CanBeReforged": true
+                }
+            }
+        },
+        {
+            "Action": "EditData",
+            "Target": "Data/Shops",
+            "TargetField": [
+                "Casino",
+                "Items"
+            ],
+            "Entries": {
+                "ThaleTheGreat_RabbitOfCaerbannog_Casino": {
+                    "Id": "ThaleTheGreat_RabbitOfCaerbannog_Casino",
+                    "ItemId": "(TR)ThaleTheGreat_RabbitOfCaerbannog",
+                    "Price": 100000,
+                    "AvailableStock": 1,
+                    "AvailableStockLimit": "Player"
+                }
+            }
+        },
+        {
+            "Action": "EditData",
+            "Target": "mushymato.TrinketTinker/Tinker",
+            "Entries": {
+                "ThaleTheGreat_RabbitOfCaerbannog": {
+                    "MinLevel": 0,
+                    "VariantsBase": {
+                        "Name": "Rabbit of Caerbannog",
+                        "Width": 16,
+                        "Height": 16
+                    },
+                    "Variants": [
+                        {
+                            "Texture": "Mods/ThaleTheGreat.CaerbannogRabbitTrinket/rabbit",
+                            "SpriteIndex": 0
+                        }
+                    ],
+                    "Motion": {
+                        "MotionClass": "Hop",
+                        "Args": {
+                            "Min": 160,
+                            "Max": 640,
+                            "Rate": 220,
+                            "Pause": 520,
+                            "MaxHeight": 28,
+                            "MoveSync": false,
+                            "MoveSyncAll": false,
+                            "Jitter": 100,
+                            "Velocity": -2,
+                            "NoOverlap": true
+                        },
+                        "AnimClips": {
+                            "Jump.1": {
+                                "FrameStart": 0,
+                                "FrameLength": 4,
+                                "LoopMode": "Standard",
+                                "Interval": 170,
+                                "PauseMovement": false
+                            },
+                            "Jump.2": {
+                                "FrameStart": 4,
+                                "FrameLength": 4,
+                                "LoopMode": "Standard",
+                                "Interval": 170,
+                                "PauseMovement": false
+                            },
+                            "Jump.3": {
+                                "FrameStart": 8,
+                                "FrameLength": 4,
+                                "LoopMode": "Standard",
+                                "Interval": 170,
+                                "PauseMovement": false
+                            },
+                            "Jump.4": {
+                                "FrameStart": 12,
+                                "FrameLength": 4,
+                                "LoopMode": "Standard",
+                                "Interval": 170,
+                                "PauseMovement": false
+                            },
+                            "Maul.1": {
+                                "FrameStart": 0,
+                                "FrameLength": 4,
+                                "LoopMode": "Standard",
+                                "Interval": 75,
+                                "PauseMovement": true
+                            },
+                            "Maul.2": {
+                                "FrameStart": 4,
+                                "FrameLength": 4,
+                                "LoopMode": "Standard",
+                                "Interval": 75,
+                                "PauseMovement": true
+                            },
+                            "Maul.3": {
+                                "FrameStart": 8,
+                                "FrameLength": 4,
+                                "LoopMode": "Standard",
+                                "Interval": 75,
+                                "PauseMovement": true
+                            },
+                            "Maul.4": {
+                                "FrameStart": 12,
+                                "FrameLength": 4,
+                                "LoopMode": "Standard",
+                                "Interval": 75,
+                                "PauseMovement": true
+                            }
+                        },
+                        "DirectionMode": "DRUL",
+                        "FrameStart": 0,
+                        "FrameLength": 4,
+                        "Interval": 140,
+                        "AlwaysMoving": true,
+                        "Collision": "Line",
+                        "Anchors": [
+                            {
+                                "Id": "Owner",
+                                "Mode": "Owner",
+                                "StopRange": 160
+                            }
+                        ],
+                        "Offset": "0,0",
+                        "LayerDepth": "Position",
+                        "HideDuringEvents": true
+                    },
+                    "Abilities": [
+                        [
+                            {
+                                "Id": "RabbitMaul",
+                                "AbilityClass": "Hitscan",
+                                "Description": "Mauls nearby monsters in a spray of blood.",
+                                "Proc": "Timer",
+                                "ProcTimer": 2500,
+                                "ProcOneshotAnim": "Maul",
+                                "ProcSound": "crit",
+                                "Args": {
+                                    "Min": 650,
+                                    "Max": 1200,
+                                    "Range": 64,
+                                    "FacingDirectionOnly": true,
+                                    "Hits": 1,
+                                    "CritChance": 1.0,
+                                    "Knockback": 0.0,
+                                    "HitTAS": "ThaleTheGreat_BloodSplatter"
+                                }
+                            }
+                        ]
+                    ]
+                }
+            }
+        },
+        {
+            "Action": "EditData",
+            "Target": "mushymato.TrinketTinker/TAS",
+            "Entries": {
+                "ThaleTheGreat_BloodSplatter": {
+                    "Id": "ThaleTheGreat_BloodSplatter",
+                    "Texture": "Mods/ThaleTheGreat.CaerbannogRabbitTrinket/blood",
+                    "SourceRect": {
+                        "X": 0,
+                        "Y": 0,
+                        "Width": 60,
+                        "Height": 69
+                    },
+                    "Frames": 7,
+                    "Interval": 180,
+                    "Loops": 0,
+                    "PositionOffset": "0,-24",
+                    "Scale": 1.0,
+                    "SortOffset": 0
+                }
+            }
+        }
+    ]
+}
