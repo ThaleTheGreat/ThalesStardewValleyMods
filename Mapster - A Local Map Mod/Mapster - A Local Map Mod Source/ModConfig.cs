@@ -8,6 +8,12 @@ namespace ThaleTheGreat.Mapster
         public bool ModEnabled { get; set; } = true;
         public bool AllowTeleport { get; set; } = false;
         public bool ShowLocationDropdown { get; set; } = true;
+        public bool ShowMiniMap { get; set; } = true;
+        public string MiniMapSize { get; set; } = "Medium";
+        public bool ShowNpcMapLocationsOnMap { get; set; } = true;
+        public bool ShowNpcMapLocationsOnMiniMap { get; set; } = true;
+        public bool ShowNpcMapLocationTooltipsOnMap { get; set; } = true;
+        public bool ShowNpcMapLocationTooltipsOnMiniMap { get; set; } = true;
         public bool AnimatePreview { get; set; } = true;
         public int AnimatedPreviewRefreshTicks { get; set; } = 12;
         public bool DebugLogging { get; set; } = false;

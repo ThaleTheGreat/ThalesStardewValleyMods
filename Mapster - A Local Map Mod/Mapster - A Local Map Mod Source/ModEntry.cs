@@ -17,11 +17,15 @@ namespace ThaleTheGreat.Mapster
         private const int DropdownRowsVisible = 8;
         private const float WheelZoomStep = 1.04f;
         private const float ZoomSmoothing = 0.22f;
+        private const int MiniMapPad = 8;
+        private static readonly string[] MiniMapSizeOptions = { "Small", "Medium", "Large", "Extra Large" };
         private static readonly Rectangle ScrollRunnerSource = new(403, 383, 6, 6);
         private static readonly Rectangle ScrollThumbSource = new(435, 463, 6, 10);
 
         private ModConfig Config = null!;
         private Texture2D? previewTexture;
+        private Texture2D? miniMapTexture;
+        private GameLocation? miniMapLocation;
         private GameLocation? viewedLocation;
         private bool showingMap;
         private bool dropdownOpen;
@@ -35,6 +39,7 @@ namespace ThaleTheGreat.Mapster
         private TextBox? searchBox;
         private string lastSearchText = string.Empty;
         private bool isCapturingPreview;
+        private bool isCapturingMiniMap;
         private bool dropdownDraggingThumb;
         private int dropdownDragYOffset;
         private int frozenToolIndex = -1;
@@ -59,6 +64,7 @@ namespace ThaleTheGreat.Mapster
             helper.Events.GameLoop.ReturnedToTitle += OnReturnedToTitle;
             helper.Events.Display.MenuChanged += OnMenuChanged;
             helper.Events.Display.WindowResized += OnWindowResized;
+            helper.Events.Display.RenderedHud += OnRenderedHud;
             helper.Events.GameLoop.UpdateTicked += OnUpdateTicked;
             helper.Events.Input.ButtonsChanged += OnButtonsChanged;
             helper.Events.Input.ButtonPressed += OnButtonPressed;
@@ -75,6 +81,12 @@ namespace ThaleTheGreat.Mapster
             gmcm.AddBoolOption(ModManifest, () => Config.ModEnabled, value => Config.ModEnabled = value, () => "Mod Enabled");
             gmcm.AddBoolOption(ModManifest, () => Config.AllowTeleport, value => Config.AllowTeleport = value, () => "Allow Teleport From Preview");
             gmcm.AddBoolOption(ModManifest, () => Config.ShowLocationDropdown, value => Config.ShowLocationDropdown = value, () => "Show Location Dropdown", () => "Show the searchable location dropdown. Disable this to only preview the player's current location.");
+            gmcm.AddBoolOption(ModManifest, () => Config.ShowMiniMap, value => Config.ShowMiniMap = value, () => "Show Mini Map", () => "Show a small local map in the top-left corner during normal gameplay.");
+            gmcm.AddTextOption(ModManifest, () => Config.MiniMapSize, value => Config.MiniMapSize = NormalizeMiniMapSize(value), () => "Mini Map Size", () => "Choose the size of the top-left mini map.", MiniMapSizeOptions);
+            gmcm.AddBoolOption(ModManifest, () => Config.ShowNpcMapLocationsOnMap, value => Config.ShowNpcMapLocationsOnMap = value, () => "NPC Map Locations On Full Map", () => "If NPC Map Locations is installed, show NPC and player markers on Mapster's full map.");
+            gmcm.AddBoolOption(ModManifest, () => Config.ShowNpcMapLocationsOnMiniMap, value => Config.ShowNpcMapLocationsOnMiniMap = value, () => "NPC Map Locations On Mini Map", () => "If NPC Map Locations is installed, show NPC and player markers on Mapster's mini map.");
+            gmcm.AddBoolOption(ModManifest, () => Config.ShowNpcMapLocationTooltipsOnMap, value => Config.ShowNpcMapLocationTooltipsOnMap = value, () => "NPC Tooltips On Full Map", () => "Show a name tooltip when hovering NPC Map Locations markers on Mapster's full map.");
+            gmcm.AddBoolOption(ModManifest, () => Config.ShowNpcMapLocationTooltipsOnMiniMap, value => Config.ShowNpcMapLocationTooltipsOnMiniMap = value, () => "NPC Tooltips On Mini Map", () => "Show a name tooltip when hovering NPC Map Locations markers on Mapster's mini map.");
             gmcm.AddBoolOption(ModManifest, () => Config.AnimatePreview, value => Config.AnimatePreview = value, () => "Animate Map Preview", () => "Periodically refresh the map preview so animated tiles and sprites can update. Turn this off if another mod conflicts with preview rendering.");
             gmcm.AddKeybindList(ModManifest, () => Config.MapKey, value => Config.MapKey = value, () => "Open Mapster");
             gmcm.AddBoolOption(ModManifest, () => Config.DebugLogging, value => Config.DebugLogging = value, () => "Debug Logging");
@@ -83,6 +95,7 @@ namespace ThaleTheGreat.Mapster
         private void OnReturnedToTitle(object? sender, ReturnedToTitleEventArgs e)
         {
             DisposePreview();
+            DisposeMiniMap();
             locations.Clear();
             viewedLocation = null;
             showingMap = false;
@@ -104,6 +117,32 @@ namespace ThaleTheGreat.Mapster
         private void OnWindowResized(object? sender, WindowResizedEventArgs e)
         {
             DisposePreview();
+            DisposeMiniMap();
+        }
+
+        private void OnRenderedHud(object? sender, RenderedHudEventArgs e)
+        {
+            if (!ShouldDrawMiniMap())
+                return;
+
+            if (miniMapTexture is null || miniMapLocation is null || !ReferenceEquals(miniMapLocation, Game1.currentLocation))
+                return;
+
+            DrawMiniMap(e.SpriteBatch);
+        }
+
+        private bool ShouldDrawMiniMap()
+        {
+            return Config.ModEnabled
+                && Config.ShowMiniMap
+                && Context.IsWorldReady
+                && !showingMap
+                && Game1.activeClickableMenu is null
+                && !isCapturingPreview
+                && !isCapturingMiniMap
+                && Game1.currentLocation?.map is not null
+                && Game1.displayHUD
+                && !Game1.game1.takingMapScreenshot;
         }
 
         private void OnMenuChanged(object? sender, MenuChangedEventArgs e)
@@ -225,6 +264,8 @@ namespace ThaleTheGreat.Mapster
 
         private void OnUpdateTicked(object? sender, UpdateTickedEventArgs e)
         {
+            UpdateMiniMapRefresh();
+
             if (!showingMap)
                 return;
 
@@ -247,6 +288,18 @@ namespace ThaleTheGreat.Mapster
 
             previewRefreshCountdown = Math.Max(6, Config.AnimatedPreviewRefreshTicks);
             CapturePreview(true);
+        }
+
+        private void UpdateMiniMapRefresh()
+        {
+            if (!Config.ModEnabled || !Config.ShowMiniMap || !Context.IsWorldReady || showingMap || isCapturingPreview || isCapturingMiniMap)
+                return;
+
+            if (Game1.currentLocation?.map is null)
+                return;
+
+            if (miniMapTexture is null || miniMapLocation is null || !ReferenceEquals(miniMapLocation, Game1.currentLocation))
+                CaptureMiniMapPreview();
         }
 
         private void KeepPreviewOnCurrentLocation()
@@ -452,6 +505,125 @@ namespace ThaleTheGreat.Mapster
             }
         }
 
+        private void CaptureMiniMapPreview()
+        {
+            GameLocation? location = Game1.currentLocation;
+            if (location?.map is null || location.map.Layers.Count == 0)
+                return;
+
+            int renderWidth = Math.Max(Game1.tileSize, location.map.Layers[0].LayerWidth * Game1.tileSize);
+            int renderHeight = Math.Max(Game1.tileSize, location.map.Layers[0].LayerHeight * Game1.tileSize);
+
+            if (miniMapTexture is RenderTarget2D existing && (existing.Width != renderWidth || existing.Height != renderHeight))
+                DisposeMiniMap();
+
+            RenderTarget2D target;
+            if (miniMapTexture is RenderTarget2D reusable)
+            {
+                target = reusable;
+            }
+            else
+            {
+                DisposeMiniMap();
+                target = new RenderTarget2D(Game1.graphics.GraphicsDevice, renderWidth, renderHeight, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+                miniMapTexture = target;
+            }
+
+            xTile.Dimensions.Rectangle oldViewport = Game1.viewport;
+            GameLocation? oldLocation = Game1.currentLocation;
+            bool oldDisplayHud = Game1.displayHUD;
+            bool oldTakingMapScreenshot = Game1.game1.takingMapScreenshot;
+            float oldZoom = Game1.options.baseZoomLevel;
+
+            try
+            {
+                isCapturingMiniMap = true;
+                Game1.displayHUD = false;
+                Game1.game1.takingMapScreenshot = true;
+                Game1.options.baseZoomLevel = 1f;
+                Game1.currentLocation = location;
+                Game1.viewport = new xTile.Dimensions.Rectangle(0, 0, renderWidth, renderHeight);
+
+                MethodInfo? drawMethod = typeof(Game1).GetMethod("_draw", BindingFlags.Instance | BindingFlags.NonPublic);
+                if (drawMethod is null)
+                    throw new MissingMethodException(nameof(Game1), "_draw");
+
+                drawMethod.Invoke(Game1.game1, new object[] { new GameTime(), target });
+                miniMapLocation = location;
+            }
+            catch (Exception ex)
+            {
+                LogDebug($"Couldn't render mini map preview for {GetLocationName(location)}: {ex}");
+            }
+            finally
+            {
+                Game1.graphics.GraphicsDevice.SetRenderTarget(null);
+                Game1.displayHUD = oldDisplayHud;
+                Game1.game1.takingMapScreenshot = oldTakingMapScreenshot;
+                Game1.options.baseZoomLevel = oldZoom;
+                Game1.currentLocation = oldLocation;
+                Game1.viewport = oldViewport;
+                isCapturingMiniMap = false;
+            }
+        }
+
+        private void DrawMiniMap(SpriteBatch b)
+        {
+            if (miniMapTexture is null || miniMapLocation is null)
+                return;
+
+            int frameX = 24;
+            int frameY = 24;
+            Point frameSize = GetMiniMapFrameSize();
+            Rectangle frame = new(frameX, frameY, frameSize.X, frameSize.Y);
+            Rectangle interior = new(frame.X + MiniMapPad, frame.Y + MiniMapPad, Math.Max(1, frame.Width - MiniMapPad * 2), Math.Max(1, frame.Height - MiniMapPad * 2));
+            Rectangle map = GetMiniMapDestinationRect(interior);
+
+            IClickableMenu.drawTextureBox(b, frame.X, frame.Y, frame.Width, frame.Height, Color.White);
+            b.Draw(Game1.staminaRect, interior, Color.Black * 0.9f);
+            b.Draw(miniMapTexture, map, Color.White);
+            Rectangle sourceRect = new(0, 0, miniMapTexture.Width, miniMapTexture.Height);
+            DrawNpcMapLocationMarkers(b, miniMapLocation, map, sourceRect, true);
+            DrawNpcMapLocationTooltip(b, miniMapLocation, map, sourceRect, true);
+        }
+
+        private Rectangle GetMiniMapDestinationRect(Rectangle bounds)
+        {
+            if (miniMapTexture is null)
+                return bounds;
+
+            float scale = Math.Min(bounds.Width / (float)Math.Max(1, miniMapTexture.Width), bounds.Height / (float)Math.Max(1, miniMapTexture.Height));
+            scale = Math.Max(0.01f, scale);
+            int width = Math.Max(1, (int)Math.Round(miniMapTexture.Width * scale));
+            int height = Math.Max(1, (int)Math.Round(miniMapTexture.Height * scale));
+            return new Rectangle(bounds.X + (bounds.Width - width) / 2, bounds.Y + (bounds.Height - height) / 2, width, height);
+        }
+
+        private Point GetMiniMapFrameSize()
+        {
+            return NormalizeMiniMapSize(Config.MiniMapSize) switch
+            {
+                "Small" => new Point(220, 150),
+                "Large" => new Point(340, 235),
+                "Extra Large" => new Point(420, 290),
+                _ => new Point(280, 195)
+            };
+        }
+
+        private static string NormalizeMiniMapSize(string? value)
+        {
+            if (string.Equals(value, "Small", StringComparison.OrdinalIgnoreCase))
+                return "Small";
+
+            if (string.Equals(value, "Large", StringComparison.OrdinalIgnoreCase))
+                return "Large";
+
+            if (string.Equals(value, "Extra Large", StringComparison.OrdinalIgnoreCase))
+                return "Extra Large";
+
+            return "Medium";
+        }
+
         private void AdvancePreviewAnimations(GameLocation location)
         {
             TimeSpan elapsed = TimeSpan.FromMilliseconds(Math.Max(16, Config.AnimatedPreviewRefreshTicks * 16));
@@ -529,7 +701,7 @@ namespace ThaleTheGreat.Mapster
         private void DrawMap(SpriteBatch b)
         {
             int outerPad = 32;
-            int borderPad = 16;
+            int borderPad = 8;
             int dropdownHeight = OptionsDropDown.dropDownButtonSource.Height * 4;
             int controlWidth = Math.Min(Game1.uiViewport.Width - outerPad * 2, 1180);
             int controlX = (Game1.uiViewport.Width - controlWidth) / 2;
@@ -559,9 +731,14 @@ namespace ThaleTheGreat.Mapster
                 mapRect = GetVisibleMapDestinationRect(naturalMapRect, mapViewportRect);
 
                 IClickableMenu.drawTextureBox(b, borderRect.X, borderRect.Y, borderRect.Width, borderRect.Height, Color.White);
-                b.Draw(Game1.staminaRect, mapViewportRect, Color.Black);
+                b.Draw(Game1.staminaRect, new Rectangle(borderRect.X + borderPad, borderRect.Y + borderPad, Math.Max(1, borderRect.Width - borderPad * 2), Math.Max(1, borderRect.Height - borderPad * 2)), Color.Black);
                 if (mapRect.Width > 0 && mapRect.Height > 0)
-                    b.Draw(previewTexture, mapRect, GetVisibleMapSourceRect(naturalMapRect, mapRect), Color.White);
+                {
+                    Rectangle sourceRect = GetVisibleMapSourceRect(naturalMapRect, mapRect);
+                    b.Draw(previewTexture, mapRect, sourceRect, Color.White);
+                    DrawNpcMapLocationMarkers(b, viewedLocation, mapRect, sourceRect, false);
+                    DrawNpcMapLocationTooltip(b, viewedLocation, mapRect, sourceRect, false);
+                }
 
                 if (Config.AllowTeleport)
                     DrawSmallText(b, "Click the preview to warp to this relative map position.", new Vector2(borderRect.X, Math.Min(Game1.uiViewport.Height - 32, borderRect.Bottom + 6)));
@@ -1087,6 +1264,169 @@ namespace ThaleTheGreat.Mapster
             return Math.Max(0, index);
         }
 
+        private bool IsNpcMapLocationsLoaded()
+        {
+            return Helper.ModRegistry.IsLoaded("Bouhm.NPCMapLocations");
+        }
+
+        private void DrawNpcMapLocationMarkers(SpriteBatch b, GameLocation? location, Rectangle destinationRect, Rectangle sourceRect, bool miniMap)
+        {
+            if (location is null || destinationRect.Width <= 0 || destinationRect.Height <= 0 || sourceRect.Width <= 0 || sourceRect.Height <= 0)
+                return;
+
+            if (!IsNpcMapLocationsLoaded())
+                return;
+
+            if (miniMap ? !Config.ShowNpcMapLocationsOnMiniMap : !Config.ShowNpcMapLocationsOnMap)
+                return;
+
+            float iconSize = miniMap ? 14f : 24f;
+
+            foreach (NPC npc in location.characters)
+            {
+                if (npc is null || npc.Sprite?.Texture is null)
+                    continue;
+
+                DrawCharacterMapMarker(b, npc.Sprite.Texture, GetNpcMarkerSourceRect(npc), npc.Position + new Vector2(Game1.tileSize / 2f, Game1.tileSize / 2f), destinationRect, sourceRect, iconSize, Color.White);
+            }
+
+            foreach (Farmer farmer in Game1.getOnlineFarmers())
+            {
+                if (farmer?.currentLocation is null || !ReferenceEquals(farmer.currentLocation, location))
+                    continue;
+
+                DrawFarmerMapMarker(b, farmer, farmer.Position + new Vector2(Game1.tileSize / 2f, Game1.tileSize / 2f), destinationRect, sourceRect, miniMap ? 0.45f : 0.7f);
+            }
+        }
+
+        private static Rectangle GetNpcMarkerSourceRect(NPC npc)
+        {
+            Rectangle source = npc.Sprite.SourceRect;
+            if (source.Width <= 0 || source.Height <= 0)
+                source = new Rectangle(0, 0, 16, 16);
+
+            if (source.Height > source.Width)
+                source.Height = source.Width;
+
+            return source;
+        }
+
+        private void DrawNpcMapLocationTooltip(SpriteBatch b, GameLocation? location, Rectangle destinationRect, Rectangle sourceRect, bool miniMap)
+        {
+            if (location is null || destinationRect.Width <= 0 || destinationRect.Height <= 0 || sourceRect.Width <= 0 || sourceRect.Height <= 0)
+                return;
+
+            if (!IsNpcMapLocationsLoaded())
+                return;
+
+            if (miniMap)
+            {
+                if (!Config.ShowNpcMapLocationsOnMiniMap || !Config.ShowNpcMapLocationTooltipsOnMiniMap)
+                    return;
+            }
+            else if (!Config.ShowNpcMapLocationsOnMap || !Config.ShowNpcMapLocationTooltipsOnMap)
+            {
+                return;
+            }
+
+            string? hoverText = GetNpcMapLocationHoverText(location, destinationRect, sourceRect, miniMap, Game1.getMousePosition(true));
+            if (!string.IsNullOrWhiteSpace(hoverText))
+                IClickableMenu.drawHoverText(b, hoverText, Game1.smallFont);
+        }
+
+        private static string? GetNpcMapLocationHoverText(GameLocation location, Rectangle destinationRect, Rectangle sourceRect, bool miniMap, Point mouse)
+        {
+            float iconSize = miniMap ? 14f : 24f;
+
+            foreach (NPC npc in location.characters)
+            {
+                if (npc is null || npc.Sprite?.Texture is null)
+                    continue;
+
+                Rectangle marker = GetCharacterMarkerRect(npc.Position + new Vector2(Game1.tileSize / 2f, Game1.tileSize / 2f), destinationRect, sourceRect, iconSize);
+                if (marker.Contains(mouse))
+                    return !string.IsNullOrWhiteSpace(npc.displayName) ? npc.displayName : npc.Name;
+            }
+
+            foreach (Farmer farmer in Game1.getOnlineFarmers())
+            {
+                if (farmer?.currentLocation is null || !ReferenceEquals(farmer.currentLocation, location))
+                    continue;
+
+                Rectangle marker = GetFarmerMarkerRect(farmer.Position + new Vector2(Game1.tileSize / 2f, Game1.tileSize / 2f), destinationRect, sourceRect, miniMap ? 0.45f : 0.7f);
+                if (marker.Contains(mouse))
+                    return !string.IsNullOrWhiteSpace(farmer.Name) ? farmer.Name : "Player";
+            }
+
+            return null;
+        }
+
+        private static void DrawCharacterMapMarker(SpriteBatch b, Texture2D texture, Rectangle sourceRect, Vector2 worldPixel, Rectangle destinationRect, Rectangle sourceMapRect, float iconSize, Color color)
+        {
+            Rectangle dest = GetCharacterMarkerRect(worldPixel, destinationRect, sourceMapRect, iconSize);
+            if (dest.Width <= 0 || dest.Height <= 0)
+                return;
+
+            b.Draw(texture, dest, sourceRect, color);
+        }
+
+        private static Rectangle GetCharacterMarkerRect(Vector2 worldPixel, Rectangle destinationRect, Rectangle sourceMapRect, float iconSize)
+        {
+            Vector2? position = WorldPixelToMapScreen(worldPixel, destinationRect, sourceMapRect);
+            if (position is null)
+                return Rectangle.Empty;
+
+            return new Rectangle(
+                (int)Math.Round(position.Value.X - iconSize / 2f),
+                (int)Math.Round(position.Value.Y - iconSize / 2f),
+                Math.Max(1, (int)Math.Round(iconSize)),
+                Math.Max(1, (int)Math.Round(iconSize))
+            );
+        }
+
+        private static void DrawFarmerMapMarker(SpriteBatch b, Farmer farmer, Vector2 worldPixel, Rectangle destinationRect, Rectangle sourceMapRect, float scale)
+        {
+            Rectangle marker = GetFarmerMarkerRect(worldPixel, destinationRect, sourceMapRect, scale);
+            if (marker.Width <= 0 || marker.Height <= 0)
+                return;
+
+            farmer.FarmerRenderer.drawMiniPortrat(
+                b,
+                new Vector2(marker.X, marker.Y),
+                0.00011f,
+                2f * scale,
+                1,
+                farmer,
+                1f
+            );
+        }
+
+        private static Rectangle GetFarmerMarkerRect(Vector2 worldPixel, Rectangle destinationRect, Rectangle sourceMapRect, float scale)
+        {
+            Vector2? position = WorldPixelToMapScreen(worldPixel, destinationRect, sourceMapRect);
+            if (position is null)
+                return Rectangle.Empty;
+
+            int width = Math.Max(1, (int)Math.Round(32f * scale));
+            int height = Math.Max(1, (int)Math.Round(30f * scale));
+            return new Rectangle(
+                (int)Math.Round(position.Value.X - width / 2f),
+                (int)Math.Round(position.Value.Y - height / 2f),
+                width,
+                height
+            );
+        }
+
+        private static Vector2? WorldPixelToMapScreen(Vector2 worldPixel, Rectangle destinationRect, Rectangle sourceMapRect)
+        {
+            if (worldPixel.X < sourceMapRect.Left || worldPixel.X > sourceMapRect.Right || worldPixel.Y < sourceMapRect.Top || worldPixel.Y > sourceMapRect.Bottom)
+                return null;
+
+            float x = destinationRect.X + (worldPixel.X - sourceMapRect.X) / Math.Max(1, sourceMapRect.Width) * destinationRect.Width;
+            float y = destinationRect.Y + (worldPixel.Y - sourceMapRect.Y) / Math.Max(1, sourceMapRect.Height) * destinationRect.Height;
+            return new Vector2(x, y);
+        }
+
         private void TeleportToPreviewPoint(Point mouse)
         {
             Rectangle clickRect = GetMapInteractionRect();
@@ -1161,6 +1501,13 @@ namespace ThaleTheGreat.Mapster
         {
             previewTexture?.Dispose();
             previewTexture = null;
+        }
+
+        private void DisposeMiniMap()
+        {
+            miniMapTexture?.Dispose();
+            miniMapTexture = null;
+            miniMapLocation = null;
         }
 
         private sealed class MapsterMenu : IClickableMenu

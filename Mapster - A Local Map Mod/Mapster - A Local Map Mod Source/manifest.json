@@ -2,7 +2,7 @@
   "Name": "Mapster - A Local Map Mod",
   "Author": "ThaleTheGreat",
   "Version": "1.2.0",
-  "Description": "Adds an in-game local map preview with a dropdown for loading any installed location.",
+  "Description": "Adds a local map with several options. ",
   "UniqueID": "ThaleTheGreat.Mapster",
   "EntryDll": "Mapster.dll",
   "MinimumApiVersion": "4.0.0",
@@ -12,6 +12,10 @@
   "Dependencies": [
     {
       "UniqueID": "spacechase0.GenericModConfigMenu",
+      "IsRequired": false
+    },
+    {
+      "UniqueID": "Bouhm.NPCMapLocations",
       "IsRequired": false
     }
   ]
