@@ -17,8 +17,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.Json;
 using xTile;
 using xTile.Layers;
 using xTile.ObjectModel;
@@ -34,6 +36,8 @@ public class ModEntry : Mod
   protected bool _gettingKickedOut;
   protected bool _mapChanged;
   protected readonly Dictionary<string, int> _currentDialogueIndex = new Dictionary<string, int>();
+  private Dictionary<string, string> _betterThingsTranslations;
+  private string _betterThingsTranslationLocale;
   protected readonly List<(LightSource Light, Vector2 Position)> _weirdLights = new List<(LightSource, Vector2)>();
   protected readonly List<(object Firefly, Vector2 Tile, object Light)> _lampFireflies = new List<(object, Vector2, object)>();
   private readonly List<ModEntry.FloatingGlow> _floatingGlows = new List<ModEntry.FloatingGlow>();
@@ -66,6 +70,8 @@ public class ModEntry : Mod
     HarmonyPatcher.Hook(new Harmony(this.ModManifest.UniqueID), this.Monitor);
     helper.Events.Input.ButtonPressed += new EventHandler<ButtonPressedEventArgs>(this.Input_ButtonPressed);
     helper.Events.GameLoop.DayStarted += new EventHandler<DayStartedEventArgs>(this.GameLoop_DayStarted);
+    helper.Events.GameLoop.SaveLoaded += new EventHandler<SaveLoadedEventArgs>(this.GameLoop_SaveLoaded);
+    helper.Events.Content.AssetRequested += new EventHandler<AssetRequestedEventArgs>(this.Content_AssetRequested);
     helper.Events.Player.Warped += new EventHandler<WarpedEventArgs>(this.Player_Warped);
   }
 
@@ -1019,10 +1025,128 @@ public class ModEntry : Mod
     return new Color((byte) (60.0 + (Math.Sin((double) num) * 0.5 + 0.5) * 160.0), (byte) (60.0 + (Math.Sin((double) num + 2.0943951606750488) * 0.5 + 0.5) * 160.0), (byte) (60.0 + (Math.Sin((double) num + 4.1887903213500977) * 0.5 + 0.5) * 160.0), (byte) 255);
   }
 
+  private void Content_AssetRequested(object sender, AssetRequestedEventArgs e)
+  {
+    if (!Context.IsWorldReady || !this.IsShadowFestivalToday() || !this.Helper.ModRegistry.IsLoaded("maat.BetterThings"))
+      return;
+
+    if (e.NameWithoutLocale.IsEquivalentTo("Characters/Dialogue/Wizard"))
+      e.Edit(asset => this.AliasBetterThingsFestivalDialogue(asset.AsDictionary<string, string>().Data, "wizard-dialogue-festival"), AssetEditPriority.Late);
+    else if (e.NameWithoutLocale.IsEquivalentTo("Characters/Dialogue/Agatha"))
+      e.Edit(asset => this.AliasBetterThingsFestivalDialogue(asset.AsDictionary<string, string>().Data, "agatha-dialogue-festival-of-mundane"), AssetEditPriority.Late);
+    else if (e.NameWithoutLocale.IsEquivalentTo("Strings/Schedules/Agatha"))
+      e.Edit(asset => this.AliasBetterThingsAgathaScheduleStrings(asset.AsDictionary<string, string>().Data), AssetEditPriority.Late);
+  }
+
+  private void AliasBetterThingsFestivalDialogue(IDictionary<string, string> dialogue, string fallbackTranslationKey)
+  {
+    if (dialogue == null)
+      return;
+
+    if (dialogue.TryGetValue("Custom_FestivalOfTheMundane", out string festivalDialogue) && !string.IsNullOrWhiteSpace(festivalDialogue))
+    {
+      dialogue["Sewer"] = festivalDialogue;
+      return;
+    }
+
+    if (this.TryGetBetterThingsTranslation(fallbackTranslationKey, out festivalDialogue))
+      dialogue["Sewer"] = festivalDialogue;
+  }
+
+  private void AliasBetterThingsAgathaScheduleStrings(IDictionary<string, string> strings)
+  {
+    if (strings == null)
+      return;
+
+    this.CopyBetterThingsTranslation(strings, "agatha-dialogue-festival-of-mundane");
+    this.CopyBetterThingsTranslation(strings, "agatha-spouse-dialogue-festival-of-mundane");
+    this.CopyBetterThingsTranslation(strings, "agatha-dialogue-festival-of-mundane-working");
+    this.CopyBetterThingsTranslation(strings, "agatha-spouse-dialogue-festival-of-mundane-working");
+  }
+
+  private void CopyBetterThingsTranslation(IDictionary<string, string> target, string key)
+  {
+    if (this.TryGetBetterThingsTranslation(key, out string value))
+      target[key] = value;
+  }
+
+  private bool TryGetBetterThingsTranslation(string key, out string value)
+  {
+    value = null;
+
+    Dictionary<string, string> translations = this.GetBetterThingsTranslations();
+    return translations != null && translations.TryGetValue(key, out value) && !string.IsNullOrWhiteSpace(value);
+  }
+
+  private Dictionary<string, string> GetBetterThingsTranslations()
+  {
+    string locale = LocalizedContentManager.CurrentLanguageCode.ToString();
+    if (this._betterThingsTranslations != null && string.Equals(this._betterThingsTranslationLocale, locale, StringComparison.OrdinalIgnoreCase))
+      return this._betterThingsTranslations;
+
+    this._betterThingsTranslationLocale = locale;
+    this._betterThingsTranslations = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+    object modInfo = this.Helper.ModRegistry.Get("maat.BetterThings");
+    string directoryPath = modInfo?.GetType().GetProperty("DirectoryPath")?.GetValue(modInfo) as string;
+    if (string.IsNullOrWhiteSpace(directoryPath))
+      return this._betterThingsTranslations;
+
+    this.ReadBetterThingsTranslationFile(Path.Combine(directoryPath, "i18n", "default.json"), this._betterThingsTranslations);
+    if (!string.Equals(locale, "en", StringComparison.OrdinalIgnoreCase))
+      this.ReadBetterThingsTranslationFile(Path.Combine(directoryPath, "i18n", locale + ".json"), this._betterThingsTranslations);
+
+    return this._betterThingsTranslations;
+  }
+
+  private void ReadBetterThingsTranslationFile(string path, Dictionary<string, string> translations)
+  {
+    if (!File.Exists(path))
+      return;
+
+    try
+    {
+      Dictionary<string, string> fileTranslations = JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText(path), new JsonSerializerOptions
+      {
+        AllowTrailingCommas = true,
+        ReadCommentHandling = JsonCommentHandling.Skip
+      });
+      if (fileTranslations == null)
+        return;
+
+      foreach (KeyValuePair<string, string> pair in fileTranslations)
+      {
+        if (!string.IsNullOrWhiteSpace(pair.Value))
+          translations[pair.Key] = pair.Value;
+      }
+    }
+    catch (Exception ex)
+    {
+      this.Monitor.Log($"Failed reading Better Things translation file '{path}': {ex.Message}", LogLevel.Warn);
+    }
+  }
+
+  private void GameLoop_SaveLoaded(object sender, SaveLoadedEventArgs e)
+  {
+    this.InvalidateBetterThingsFestivalDialogueAssets();
+  }
+
+  private void InvalidateBetterThingsFestivalDialogueAssets()
+  {
+    if (!Context.IsWorldReady || !this.IsShadowFestivalToday() || !this.Helper.ModRegistry.IsLoaded("maat.BetterThings"))
+      return;
+
+    this._betterThingsTranslations = null;
+    this.Helper.GameContent.InvalidateCache("Characters/Dialogue/Wizard");
+    this.Helper.GameContent.InvalidateCache("Characters/Dialogue/Agatha");
+    this.Helper.GameContent.InvalidateCache("Strings/Schedules/Agatha");
+  }
+
   private void GameLoop_DayStarted(object sender, DayStartedEventArgs e)
   {
     this._currentDialogueIndex.Clear();
     PinGame.claimedPrizes?.Clear();
+    this.InvalidateBetterThingsFestivalDialogueAssets();
 
     if (this.IsShadowFestivalTomorrow())
     {
@@ -1067,49 +1191,49 @@ public class ModEntry : Mod
     string[] strArray = str1.Split(' ', StringSplitOptions.None);
     if (strArray.Length >= 2 && strArray[0] == "FestivalDialogue")
     {
-        this.Helper.Input.Suppress(e.Button);
-        bool flag = ((NetFieldBase<Hat, NetRef<Hat>>) Game1.player.hat).Value != null && ModEntry.Data.CalmingHats.Contains(((Item) ((NetFieldBase<Hat, NetRef<Hat>>) Game1.player.hat).Value).Name);
-        if (!strArray[1].StartsWith("BigShadow") && !strArray[1].StartsWith("Snack") && !strArray[1].StartsWith("Festival_AncientDoll") && !flag)
-        {
-          this._gettingKickedOut = true;
-          Game1.playSound("shadowpeep");
-          DelayedAction.playSoundAfterDelay("clubSmash", 1200, null, new Vector2?(), -1, false);
-          Game1.globalFadeToBlack(new Game1.afterFadeFunction(this.AfterFade), 0.045f);
-          Game1.player.CanMove = false;
-          Game1.player.freezePause = 1000;
-        }
-        else
-        {
-          string key = strArray[1];
-          if (!this._currentDialogueIndex.ContainsKey(key))
-            this._currentDialogueIndex[key] = 0;
-          int num = this._currentDialogueIndex[key];
-          string str2 = $"{key}_{num}";
-          string str3 = this.Helper.Translation.Get(str2).ToString();
-          if (str3.Contains(str2))
-          {
-            this._currentDialogueIndex[key] = 0;
-            str3 = this.Helper.Translation.Get(key + "_0").ToString();
-          }
-          Game1.drawObjectDialogue(str3);
-          this._currentDialogueIndex[key]++;
-        }
+      this.Helper.Input.Suppress(e.Button);
+      bool flag = ((NetFieldBase<Hat, NetRef<Hat>>) Game1.player.hat).Value != null && ModEntry.Data.CalmingHats.Contains(((Item) ((NetFieldBase<Hat, NetRef<Hat>>) Game1.player.hat).Value).Name);
+      if (!strArray[1].StartsWith("BigShadow") && !strArray[1].StartsWith("Snack") && !strArray[1].StartsWith("Festival_AncientDoll") && !flag)
+      {
+        this._gettingKickedOut = true;
+        Game1.playSound("shadowpeep");
+        DelayedAction.playSoundAfterDelay("clubSmash", 1200, null, new Vector2?(), -1, false);
+        Game1.globalFadeToBlack(new Game1.afterFadeFunction(this.AfterFade), 0.045f);
+        Game1.player.CanMove = false;
+        Game1.player.freezePause = 1000;
       }
       else
       {
-        if (strArray.Length < 1 || !(strArray[0] == "PinGame"))
-          return;
-        this.Helper.Input.Suppress(e.Button);
-        string str4 = "PinGame.Barker.0";
-        if (PinGame.claimedPrizes != null)
-          str4 = $"PinGame.Barker.{Math.Min(5, PinGame.claimedPrizes.Count)}";
-        Game1.currentLocation.createQuestionDialogue(this.Helper.Translation.Get(str4).ToString(), new Response[2]
+        string key = strArray[1];
+        if (!this._currentDialogueIndex.ContainsKey(key))
+          this._currentDialogueIndex[key] = 0;
+        int num = this._currentDialogueIndex[key];
+        string str2 = $"{key}_{num}";
+        string str3 = this.Helper.Translation.Get(str2).ToString();
+        if (str3.Contains(str2))
         {
-          new Response("Play", this.Helper.Translation.Get("PinGame.Answer.Play").ToString()),
-          new Response("Leave", this.Helper.Translation.Get("PinGame.Answer.Leave").ToString())
-        }, new GameLocation.afterQuestionBehavior(this.OnPinGameAnswer), null);
+          this._currentDialogueIndex[key] = 0;
+          str3 = this.Helper.Translation.Get(key + "_0").ToString();
+        }
+        Game1.drawObjectDialogue(str3);
+        this._currentDialogueIndex[key]++;
       }
     }
+    else
+    {
+      if (strArray.Length < 1 || !(strArray[0] == "PinGame"))
+        return;
+      this.Helper.Input.Suppress(e.Button);
+      string str4 = "PinGame.Barker.0";
+      if (PinGame.claimedPrizes != null)
+        str4 = $"PinGame.Barker.{Math.Min(5, PinGame.claimedPrizes.Count)}";
+      Game1.currentLocation.createQuestionDialogue(this.Helper.Translation.Get(str4).ToString(), new Response[2]
+      {
+        new Response("Play", this.Helper.Translation.Get("PinGame.Answer.Play").ToString()),
+        new Response("Leave", this.Helper.Translation.Get("PinGame.Answer.Leave").ToString())
+      }, new GameLocation.afterQuestionBehavior(this.OnPinGameAnswer), null);
+    }
+  }
 
   private bool IsClickingKrobus(Vector2 grabTile)
   {

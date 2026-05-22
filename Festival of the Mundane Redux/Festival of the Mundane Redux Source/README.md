@@ -64,6 +64,16 @@ The Redux Hat Mouse festival shop can sell:
 
 The mod does **not** replace, restock, or customize Krobus's shop. Krobus's normal shop behavior should remain vanilla.
 
+## Compatibility
+
+### Better Things
+
+If Better Things is installed, the included Content Patcher pack schedules Better Things' Wizard and Agatha into the Redux Fall 27 Sewer festival. The main DLL aliases Better Things' already-loaded `Custom_FestivalOfTheMundane` dialogue to the Sewer festival dialogue lookup for Wizard and Agatha on the Redux festival day. This does not copy Better Things dialogue, assets, maps, sprites, portraits, or code.
+
+### Sewer map edits
+
+The Hat Mouse festival shop interaction accepts a small interaction area around the vendor instead of one exact tile, and the player must face north to trigger the fallback shop interaction. This makes the shop interaction more tolerant of Sewer map edits from compatibility patches while reducing accidental shop opens.
+
 ## Changes from the original mod
 
 ### Updated for Stardew Valley 1.6 and SMAPI 4
@@ -92,19 +102,15 @@ The original mod included a Forest shop filtering hook to remove festival hats f
 
 ### Kept Krobus shop vanilla
 
-Redux will apply festival-specific Krobus dialogue on the festival day, matching the original festival flavor, but it does not replace Krobus's shop stock, or shop logic.
+Redux will apply festival-specific Krobus dialogue on the festival day, matching the original festival flavor, but it does not replace Krobus's shop stock or shop logic.
 
 ### Krobus image
 
-The Redux changes Krobus to load their Trench Coat sprite and portrait during the festival.
+The Redux changes Krobus to load the trench coat sprite and portrait during the festival.
 
 ### Thematics
 
 The Redux changes the song that plays during the festival.
-
-### Safer festival interaction handling
-
-Redux only intercepts action-button clicks while the player is in the Sewer on the actual festival day and no menu is already open. The Hat Mouse festival shop now accepts a small interaction area around the vendor instead of a single exact tile, which makes the shop interaction more tolerant of Sewer map edits from compatibility patches. This prevents festival interaction code from interfering with normal Sewer or shop behavior outside the festival.
 
 ### Build/package cleanup
 
@@ -119,6 +125,12 @@ dotnet build
 ```
 
 The built DLL mod folder should be named `Festival of the Mundane Redux` and contain the compiled `ShadowFestival.dll` along with the manifest, data file, i18n files, and assets required by the mod.
+
+To create a release folder containing both required mod folders, run:
+
+```powershell
+.\package-release.ps1
+```
 
 ## Compatibility notes
 
