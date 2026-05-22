@@ -224,6 +224,31 @@
           "Price": 2000
         }
       }
+    },
+    {
+      "LogName": "Better Things compatibility - Wizard schedule for Redux Festival of the Mundane",
+      "Action": "EditData",
+      "Priority": "Late",
+      "Target": "Characters/schedules/Wizard",
+      "Entries": {
+        "fall_27": "0 Sewer 7 22 2"
+      },
+      "When": {
+        "HasMod |contains=maat.BetterThings": true
+      }
+    },
+    {
+      "LogName": "Better Things compatibility - Agatha schedule for Redux Festival of the Mundane",
+      "Action": "EditData",
+      "Priority": "Late",
+      "Target": "Characters/schedules/Agatha",
+      "Entries": {
+        "fall_27": "0 Sewer 8 22 2 \"Strings\\schedules\\Agatha:agatha-dialogue-festival-of-mundane\"/2000 maat.BetterThings_AgathaHouse 10 17 2 \"Strings\\schedules\\Agatha:agatha-dialogue-festival-of-mundane-working\"/2400 maat.BetterThings_AgathaHouse 14 4 0 Agatha_sleep",
+        "marriage_fall_27": "0 Sewer 8 22 2 \"Strings\\schedules\\Agatha:agatha-spouse-dialogue-festival-of-mundane\"/2000 maat.BetterThings_AgathaHouse 10 17 2 \"Strings\\schedules\\Agatha:agatha-spouse-dialogue-festival-of-mundane-working\"/2400 bed"
+      },
+      "When": {
+        "HasMod |contains=maat.BetterThings": true
+      }
     }
   ]
 }
