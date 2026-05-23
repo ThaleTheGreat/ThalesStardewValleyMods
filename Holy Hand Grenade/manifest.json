@@ -1,7 +1,7 @@
 {
   "Name": "Holy Hand Grenade of Antioch (TrinketTinker)",
   "Author": "ThaleTheLich",
-  "Version": "1.3.0",
+  "Version": "1.3.1",
   "Description": "Adds the Holy Hand Grenade of Antioch trinket which summons the Rabbit of Caerbannog.",
   "UniqueID": "ThaleTheLich.CaerbannogRabbitTrinket",
   "MinimumApiVersion": "4.0.0",
