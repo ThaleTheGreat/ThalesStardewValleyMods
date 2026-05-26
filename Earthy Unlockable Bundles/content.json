@@ -1,0 +1,30 @@
+{
+  "Format": "2.7.0",
+  "Changes": [
+    {
+      "Action": "EditImage",
+      "Target": "UnlockableBundles/ShopTextures/CCBundle",
+      "FromFile": "assets/CCBundle.png"
+    },
+    {
+      "Action": "EditImage",
+      "Target": "UnlockableBundles/UI/BundleBook",
+      "FromFile": "assets/BundleBook.png"
+    },
+    {
+      "Action": "EditImage",
+      "Target": "UnlockableBundles/UI/BundleDiscoveredAnimation",
+      "FromFile": "assets/BundleDiscoveredAnimation.png"
+    },
+    {
+      "Action": "EditImage",
+      "Target": "UnlockableBundles/UI/BundleOverviewBG",
+      "FromFile": "assets/BundleOverviewBG.png"
+    },
+    {
+      "Action": "EditImage",
+      "Target": "UnlockableBundles/UI/BundleOverviewIcon",
+      "FromFile": "assets/BundleOverviewIcon.png"
+    }
+  ]
+}
