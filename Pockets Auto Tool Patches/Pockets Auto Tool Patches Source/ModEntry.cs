@@ -611,7 +611,7 @@ public sealed class ModEntry : Mod
         if (Contains(player.Items, range, item => MatchesAutoToolSelectTool(item, t, Level)))
             return true;
 
-        return !Instance.TryUsePocketProxy(player, item => MatchesAutoToolSelectTool(item, t, Level), insertToolbarSlot: true);
+        return !Instance.TryUsePocketProxy(player, item => MatchesAutoToolSelectTool(item, t, Level), insertToolbarSlot: false);
     }
 
     private static bool AutoToolSelectSetItemPrefix(string name, int range)
@@ -623,7 +623,7 @@ public sealed class ModEntry : Mod
         if (Contains(player.Items, range, item => item.Name.Equals(name, StringComparison.OrdinalIgnoreCase)))
             return true;
 
-        return !Instance.TryUsePocketProxy(player, item => item.Name.Equals(name, StringComparison.OrdinalIgnoreCase), insertToolbarSlot: true);
+        return !Instance.TryUsePocketProxy(player, item => item.Name.Equals(name, StringComparison.OrdinalIgnoreCase), insertToolbarSlot: false);
     }
 
     private static bool AutoToolSelectSetScythePrefix(int range)
@@ -635,13 +635,13 @@ public sealed class ModEntry : Mod
         if (Contains(player.Items, range, MatchesAutoToolSelectScythe))
             return true;
 
-        if (Instance.TryUsePocketProxy(player, MatchesAutoToolSelectScythe, insertToolbarSlot: true))
+        if (Instance.TryUsePocketProxy(player, MatchesAutoToolSelectScythe, insertToolbarSlot: false))
             return false;
 
         if (Contains(player.Items, range, item => item is MeleeWeapon))
             return true;
 
-        return !Instance.TryUsePocketProxy(player, item => item is MeleeWeapon, insertToolbarSlot: true);
+        return !Instance.TryUsePocketProxy(player, item => item is MeleeWeapon, insertToolbarSlot: false);
     }
 
     private static bool AutoToolSelectSetWeaponPrefix(int range)
@@ -658,13 +658,13 @@ public sealed class ModEntry : Mod
         if (Contains(player.Items, range, preferred))
             return true;
 
-        if (Instance.TryUsePocketProxy(player, preferred, insertToolbarSlot: true))
+        if (Instance.TryUsePocketProxy(player, preferred, insertToolbarSlot: false))
             return false;
 
         if (Contains(player.Items, range, MatchesAutoToolSelectScythe))
             return true;
 
-        return !Instance.TryUsePocketProxy(player, MatchesAutoToolSelectScythe, insertToolbarSlot: true);
+        return !Instance.TryUsePocketProxy(player, MatchesAutoToolSelectScythe, insertToolbarSlot: false);
     }
 
     private bool HasActiveProxy(Farmer player)
