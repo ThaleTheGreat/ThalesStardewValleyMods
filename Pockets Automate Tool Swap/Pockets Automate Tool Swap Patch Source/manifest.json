@@ -1,0 +1,22 @@
+{
+    "Name": "Pockets Automate Tool Swap Patch",
+    "Author": "ThaleTheGreat",
+    "Version": "1.0.0",
+    "Description": "Compatibility patch that lets Automate Tool Swap use tools and items stored in Pockets inventories.",
+    "UniqueID": "ThaleTheGreat.PocketsAutomateToolSwapPatch",
+    "EntryDll": "PocketsAutomateToolSwapPatch.dll",
+    "MinimumApiVersion": "4.0.0",
+    "UpdateKeys": [
+        "Nexus:46737"
+    ],
+    "Dependencies": [
+        {
+            "UniqueID": "aedenthorn.Pockets",
+            "IsRequired": true
+        },
+        {
+            "UniqueID": "Trapyy.AutomatetoolSwap",
+            "IsRequired": true
+        }
+    ]
+}
