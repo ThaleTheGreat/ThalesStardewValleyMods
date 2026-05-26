@@ -14,6 +14,7 @@ namespace ThaleTheGreat.Mapster
         public bool ShowNpcMapLocationsOnMiniMap { get; set; } = true;
         public bool ShowNpcMapLocationTooltipsOnMap { get; set; } = true;
         public bool ShowNpcMapLocationTooltipsOnMiniMap { get; set; } = true;
+        public bool ShowMobilePhoneApp { get; set; } = true;
         public bool AnimatePreview { get; set; } = true;
         public int AnimatedPreviewRefreshTicks { get; set; } = 12;
         public bool DebugLogging { get; set; } = false;

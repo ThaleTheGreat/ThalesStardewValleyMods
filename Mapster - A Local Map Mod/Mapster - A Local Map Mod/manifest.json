@@ -1,8 +1,8 @@
 {
   "Name": "Mapster - A Local Map Mod",
   "Author": "ThaleTheGreat",
-  "Version": "1.3.0",
-  "Description": "Adds a local map with several options. ",
+  "Version": "1.4.0",
+  "Description": "Adds an in-game local map preview with a dropdown for loading any installed location.",
   "UniqueID": "ThaleTheGreat.Mapster",
   "EntryDll": "Mapster.dll",
   "MinimumApiVersion": "4.0.0",
@@ -16,6 +16,10 @@
     },
     {
       "UniqueID": "Bouhm.NPCMapLocations",
+      "IsRequired": false
+    },
+    {
+      "UniqueID": "aedenthorn.MobilePhone",
       "IsRequired": false
     }
   ]
