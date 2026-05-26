@@ -1,0 +1,10 @@
+{
+  "Name": "Rock Pickaxe Interaction",
+  "Author": "ThaleTheGreat",
+  "Version": "1.1.0",
+  "Description": "Lets the player interact with Rock using a pickaxe, with configurable friendship effects.",
+  "UniqueID": "ThaleTheGreat.RockPickaxeMod",
+  "EntryDll": "RockPickaxeMod.dll",
+  "MinimumApiVersion": "4.0.0",
+  "UpdateKeys": [ "Nexus:41988" ]
+}
