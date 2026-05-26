@@ -1,0 +1,10 @@
+{
+  "Format": "2.7.0",
+  "Changes": [
+    {
+        "Action": "EditImage",
+        "Target": "MoreStats/Assets/InfoTab",
+        "FromFile": "Assets/InfoTab.png"
+    }
+  ]
+}
