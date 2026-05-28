@@ -1,0 +1,18 @@
+{
+  "config.MoreAffordableItems.name": "More Affordable Items",
+  "config.MoreAffordableItems.description": "Lower Redux Casino prices from the default ten-times Qi Coin cost to the original one-times cost. Example: 1000 Qi Coins becomes 100 Qi Coins.",
+  "config.SpouseRoommateFurnitureAvailability.name": "Spouse and Heart Events",
+  "config.SpouseRoommateFurnitureAvailability.description": "Choose when Spouse and Heart Events items appear in the Casino shop.",
+  "config.OtherCategoriesAvailability.name": "Other Categories",
+  "config.OtherCategoriesAvailability.description": "Choose whether all other enabled categories use their normal unlock rules or are always available.",
+  "config.IncludeMuseumRewardReplacements.name": "Museum Rewards",
+  "config.IncludeMuseumRewardReplacements.description": "Turn Museum Rewards on or off in the Casino shop.",
+  "config.IncludeSecretSpecialItems.name": "Secret and Special Items",
+  "config.IncludeSecretSpecialItems.description": "Turn Secret and Special Items on or off in the Casino shop.",
+  "config.IncludeSpouseHeartEventFurniture.name": "Spouse and Heart Events",
+  "config.IncludeSpouseHeartEventFurniture.description": "Turn Spouse and Heart Events on or off in the Casino shop.",
+  "config.IncludeDesertFestival.name": "Desert Festival",
+  "config.IncludeDesertFestival.description": "Turn Desert Festival furniture, decor, wallpaper, weapons, trinkets, and clothing on or off in the Casino shop.",
+  "config.IncludeCactusSalesmanCactuses.name": "Random Cactus Purchase",
+  "config.IncludeCactusSalesmanCactuses.description": "Turn Random Cactus Purchase on or off in the Casino shop."
+}

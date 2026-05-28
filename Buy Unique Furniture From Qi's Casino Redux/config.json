@@ -1,0 +1,10 @@
+{
+  "MoreAffordableItems": false,
+  "SpouseRoommateFurnitureAvailability": "RelationshipAnd14Hearts",
+  "OtherCategoriesAvailability": "Default",
+  "IncludeMuseumRewardReplacements": true,
+  "IncludeSecretSpecialItems": true,
+  "IncludeSpouseHeartEventFurniture": true,
+  "IncludeDesertFestival": true,
+  "IncludeCactusSalesmanCactuses": true
+}
