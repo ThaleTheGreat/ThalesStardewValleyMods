@@ -45,9 +45,9 @@
     },
     "IncludeCactusSalesmanCactuses": {
       "AllowValues": "true, false",
-      "Default": "true",
+      "Default": "false",
       "Section": "Category Toggles",
-      "Description": "Turn Random Cactus Purchase on or off in the Casino shop."
+      "Description": "Turn Cactus purchases on or off in the Casino shop."
     }
   },
   "Changes": [
@@ -7445,15 +7445,13 @@
       "Entries": {
         "ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Random_Cactus": {
           "Id": "ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Random_Cactus",
-          "ItemId": "RANDOM_ITEMS (F) 1362 1375",
-          "Price": 2500,
-          "MaxItems": 1
+          "ItemId": "(F)FreeCactus",
+          "Price": 2500
         }
       },
       "When": {
-        "OtherCategoriesAvailability": "Always",
-        "MoreAffordableItems": "false",
-        "IncludeCactusSalesmanCactuses": "true"
+        "IncludeCactusSalesmanCactuses": "true",
+        "MoreAffordableItems": "false"
       }
     },
     {
@@ -7466,59 +7464,13 @@
       "Entries": {
         "ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Random_Cactus": {
           "Id": "ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Random_Cactus",
-          "ItemId": "RANDOM_ITEMS (F) 1362 1375",
-          "Price": 250,
-          "MaxItems": 1
+          "ItemId": "(F)FreeCactus",
+          "Price": 250
         }
       },
       "When": {
-        "OtherCategoriesAvailability": "Always",
-        "MoreAffordableItems": "true",
-        "IncludeCactusSalesmanCactuses": "true"
-      }
-    },
-    {
-      "Action": "EditData",
-      "Target": "Data/Shops",
-      "TargetField": [
-        "Casino",
-        "Items"
-      ],
-      "Entries": {
-        "ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Random_Cactus": {
-          "Id": "ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Random_Cactus",
-          "ItemId": "RANDOM_ITEMS (F) 1362 1375",
-          "Price": 2500,
-          "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(F)Cactus\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Random_Cactus Received\"",
-          "MaxItems": 1
-        }
-      },
-      "When": {
-        "OtherCategoriesAvailability": "Default",
-        "MoreAffordableItems": "false",
-        "IncludeCactusSalesmanCactuses": "true"
-      }
-    },
-    {
-      "Action": "EditData",
-      "Target": "Data/Shops",
-      "TargetField": [
-        "Casino",
-        "Items"
-      ],
-      "Entries": {
-        "ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Random_Cactus": {
-          "Id": "ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Random_Cactus",
-          "ItemId": "RANDOM_ITEMS (F) 1362 1375",
-          "Price": 250,
-          "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(F)Cactus\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Random_Cactus Received\"",
-          "MaxItems": 1
-        }
-      },
-      "When": {
-        "OtherCategoriesAvailability": "Default",
-        "MoreAffordableItems": "true",
-        "IncludeCactusSalesmanCactuses": "true"
+        "IncludeCactusSalesmanCactuses": "true",
+        "MoreAffordableItems": "true"
       }
     }
   ]

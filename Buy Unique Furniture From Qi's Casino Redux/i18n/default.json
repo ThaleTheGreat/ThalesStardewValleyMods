@@ -13,6 +13,6 @@
   "config.IncludeSpouseHeartEventFurniture.description": "Turn Spouse and Heart Events on or off in the Casino shop.",
   "config.IncludeDesertFestival.name": "Desert Festival",
   "config.IncludeDesertFestival.description": "Turn Desert Festival furniture, decor, wallpaper, weapons, trinkets, and clothing on or off in the Casino shop.",
-  "config.IncludeCactusSalesmanCactuses.name": "Random Cactus Purchase",
-  "config.IncludeCactusSalesmanCactuses.description": "Turn Random Cactus Purchase on or off in the Casino shop."
+  "config.IncludeCactusSalesmanCactuses.name": "Cactus Purchase",
+  "config.IncludeCactusSalesmanCactuses.description": "Turn Cactus purchases on or off in the Casino shop."
 }
