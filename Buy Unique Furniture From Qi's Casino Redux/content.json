@@ -66,7 +66,6 @@
           "Condition": "PLAYER_HAS_MAIL Current museumCollectedRewardF_1541_1 Received"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1541",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeMuseumRewardReplacements": "true",
@@ -87,7 +86,6 @@
           "Price": 3000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1541",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeMuseumRewardReplacements": "true",
@@ -108,7 +106,6 @@
           "Price": 5000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)2421",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeSecretSpecialItems": "true",
@@ -129,7 +126,6 @@
           "Price": 5000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)2421",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeSecretSpecialItems": "true",
@@ -151,7 +147,6 @@
           "Condition": "PLAYER_HAS_MAIL Current museumCollectedRewardF_1554_1 Received"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1554",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeMuseumRewardReplacements": "true",
@@ -172,7 +167,6 @@
           "Price": 4000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1554",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeMuseumRewardReplacements": "true",
@@ -194,7 +188,6 @@
           "Condition": "PLAYER_HAS_MAIL Current museumCollectedRewardF_1671_1 Received"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1671",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeMuseumRewardReplacements": "true",
@@ -215,7 +208,6 @@
           "Price": 8000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1671",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeMuseumRewardReplacements": "true",
@@ -237,7 +229,6 @@
           "Condition": "PLAYER_HAS_MAIL Current museumCollectedRewardF_1305_1 Received"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1305",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeMuseumRewardReplacements": "true",
@@ -258,7 +249,6 @@
           "Price": 2000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1305",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeMuseumRewardReplacements": "true",
@@ -280,7 +270,6 @@
           "Condition": "PLAYER_HAS_MAIL Current junimoPlush Received"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1733",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeSecretSpecialItems": "true",
@@ -301,7 +290,6 @@
           "Price": 8000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1733",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeSecretSpecialItems": "true",
@@ -323,7 +311,6 @@
           "Condition": "PLAYER_HAS_MAIL Current museumCollectedRewardF_1304_1 Received"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1304",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeMuseumRewardReplacements": "true",
@@ -344,7 +331,6 @@
           "Price": 4000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1304",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeMuseumRewardReplacements": "true",
@@ -366,7 +352,6 @@
           "Condition": "PLAYER_HAS_MAIL Current museumCollectedRewardF_1301_1 Received"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1301",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeMuseumRewardReplacements": "true",
@@ -387,7 +372,6 @@
           "Price": 3000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1301",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeMuseumRewardReplacements": "true",
@@ -409,7 +393,6 @@
           "Condition": "PLAYER_HAS_MAIL Current museumCollectedRewardF_1302_1 Received"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1302",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeMuseumRewardReplacements": "true",
@@ -430,7 +413,6 @@
           "Price": 3000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1302",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeMuseumRewardReplacements": "true",
@@ -452,7 +434,6 @@
           "Condition": "PLAYER_HAS_MAIL Current museumCollectedRewardF_1303_1 Received"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1303",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeMuseumRewardReplacements": "true",
@@ -473,7 +454,6 @@
           "Price": 3000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1303",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeMuseumRewardReplacements": "true",
@@ -495,7 +475,6 @@
           "Condition": "PLAYER_HAS_MAIL Current museumCollectedRewardF_1298_1 Received"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1298",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeMuseumRewardReplacements": "true",
@@ -516,7 +495,6 @@
           "Price": 4000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1298",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeMuseumRewardReplacements": "true",
@@ -538,7 +516,6 @@
           "Condition": "PLAYER_HAS_MAIL Current museumCollectedRewardBO_94_1 Received"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)94",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeMuseumRewardReplacements": "true",
@@ -559,7 +536,6 @@
           "Price": 5000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)94",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeMuseumRewardReplacements": "true",
@@ -581,7 +557,6 @@
           "Condition": "PLAYER_HAS_MAIL Current museumCollectedRewardF_1299_1 Received"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1299",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeMuseumRewardReplacements": "true",
@@ -602,7 +577,6 @@
           "Price": 4000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1299",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeMuseumRewardReplacements": "true",
@@ -624,7 +598,6 @@
           "Condition": "PLAYER_HAS_MAIL Current caughtIridiumKrobus Received"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)2396",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeSecretSpecialItems": "true",
@@ -645,7 +618,6 @@
           "Price": 50000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)2396",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeSecretSpecialItems": "true",
@@ -666,7 +638,6 @@
           "Price": 8000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)2814",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeSecretSpecialItems": "true",
@@ -687,7 +658,6 @@
           "Price": 8000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)2814",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeSecretSpecialItems": "true",
@@ -712,7 +682,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)55",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeSecretSpecialItems": "true",
@@ -736,7 +705,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)55",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeSecretSpecialItems": "true",
@@ -761,7 +729,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)162",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeSecretSpecialItems": "true",
@@ -785,7 +752,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)162",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeSecretSpecialItems": "true",
@@ -810,7 +776,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)155",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeSecretSpecialItems": "true",
@@ -834,7 +799,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)155",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeSecretSpecialItems": "true",
@@ -859,7 +823,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)161",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeSecretSpecialItems": "true",
@@ -883,7 +846,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)161",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeSecretSpecialItems": "true",
@@ -908,7 +870,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)164",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeSecretSpecialItems": "true",
@@ -932,7 +893,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)164",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeSecretSpecialItems": "true",
@@ -957,7 +917,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)160",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeSecretSpecialItems": "true",
@@ -981,7 +940,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)160",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeSecretSpecialItems": "true",
@@ -1006,7 +964,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)280",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeSecretSpecialItems": "true",
@@ -1030,7 +987,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)280",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeSecretSpecialItems": "true",
@@ -1055,7 +1011,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)167",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeSecretSpecialItems": "true",
@@ -1079,7 +1034,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)167",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeSecretSpecialItems": "true",
@@ -1104,7 +1058,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)116",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeSecretSpecialItems": "true",
@@ -1128,7 +1081,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)116",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeSecretSpecialItems": "true",
@@ -1153,7 +1105,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)159",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeSecretSpecialItems": "true",
@@ -1177,7 +1128,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)159",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeSecretSpecialItems": "true",
@@ -1202,7 +1152,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)141",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeSecretSpecialItems": "true",
@@ -1226,7 +1175,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)141",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeSecretSpecialItems": "true",
@@ -1251,7 +1199,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)98",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeSecretSpecialItems": "true",
@@ -1275,7 +1222,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)98",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeSecretSpecialItems": "true",
@@ -1300,7 +1246,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)99",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeSecretSpecialItems": "true",
@@ -1324,7 +1269,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)99",
       "When": {
         "MoreAffordableItems": "false",
         "IncludeSecretSpecialItems": "true",
@@ -1346,7 +1290,6 @@
           "Condition": "PLAYER_HAS_MAIL Current museumCollectedRewardF_1541_1 Received"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1541",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeMuseumRewardReplacements": "true",
@@ -1367,7 +1310,6 @@
           "Price": 300
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1541",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeMuseumRewardReplacements": "true",
@@ -1388,7 +1330,6 @@
           "Price": 500
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)2421",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeSecretSpecialItems": "true",
@@ -1409,7 +1350,6 @@
           "Price": 500
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)2421",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeSecretSpecialItems": "true",
@@ -1431,7 +1371,6 @@
           "Condition": "PLAYER_HAS_MAIL Current museumCollectedRewardF_1554_1 Received"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1554",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeMuseumRewardReplacements": "true",
@@ -1452,7 +1391,6 @@
           "Price": 400
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1554",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeMuseumRewardReplacements": "true",
@@ -1474,7 +1412,6 @@
           "Condition": "PLAYER_HAS_MAIL Current museumCollectedRewardF_1671_1 Received"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1671",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeMuseumRewardReplacements": "true",
@@ -1495,7 +1432,6 @@
           "Price": 800
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1671",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeMuseumRewardReplacements": "true",
@@ -1517,7 +1453,6 @@
           "Condition": "PLAYER_HAS_MAIL Current museumCollectedRewardF_1305_1 Received"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1305",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeMuseumRewardReplacements": "true",
@@ -1538,7 +1473,6 @@
           "Price": 200
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1305",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeMuseumRewardReplacements": "true",
@@ -1560,7 +1494,6 @@
           "Condition": "PLAYER_HAS_MAIL Current junimoPlush Received"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1733",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeSecretSpecialItems": "true",
@@ -1581,7 +1514,6 @@
           "Price": 800
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1733",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeSecretSpecialItems": "true",
@@ -1603,7 +1535,6 @@
           "Condition": "PLAYER_HAS_MAIL Current museumCollectedRewardF_1304_1 Received"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1304",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeMuseumRewardReplacements": "true",
@@ -1624,7 +1555,6 @@
           "Price": 400
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1304",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeMuseumRewardReplacements": "true",
@@ -1646,7 +1576,6 @@
           "Condition": "PLAYER_HAS_MAIL Current museumCollectedRewardF_1301_1 Received"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1301",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeMuseumRewardReplacements": "true",
@@ -1667,7 +1596,6 @@
           "Price": 300
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1301",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeMuseumRewardReplacements": "true",
@@ -1689,7 +1617,6 @@
           "Condition": "PLAYER_HAS_MAIL Current museumCollectedRewardF_1302_1 Received"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1302",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeMuseumRewardReplacements": "true",
@@ -1710,7 +1637,6 @@
           "Price": 300
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1302",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeMuseumRewardReplacements": "true",
@@ -1732,7 +1658,6 @@
           "Condition": "PLAYER_HAS_MAIL Current museumCollectedRewardF_1303_1 Received"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1303",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeMuseumRewardReplacements": "true",
@@ -1753,7 +1678,6 @@
           "Price": 300
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1303",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeMuseumRewardReplacements": "true",
@@ -1775,7 +1699,6 @@
           "Condition": "PLAYER_HAS_MAIL Current museumCollectedRewardF_1298_1 Received"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1298",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeMuseumRewardReplacements": "true",
@@ -1796,7 +1719,6 @@
           "Price": 400
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1298",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeMuseumRewardReplacements": "true",
@@ -1818,7 +1740,6 @@
           "Condition": "PLAYER_HAS_MAIL Current museumCollectedRewardBO_94_1 Received"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)94",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeMuseumRewardReplacements": "true",
@@ -1839,7 +1760,6 @@
           "Price": 500
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)94",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeMuseumRewardReplacements": "true",
@@ -1861,7 +1781,6 @@
           "Condition": "PLAYER_HAS_MAIL Current museumCollectedRewardF_1299_1 Received"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1299",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeMuseumRewardReplacements": "true",
@@ -1882,7 +1801,6 @@
           "Price": 400
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1299",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeMuseumRewardReplacements": "true",
@@ -1904,7 +1822,6 @@
           "Condition": "PLAYER_HAS_MAIL Current caughtIridiumKrobus Received"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)2396",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeSecretSpecialItems": "true",
@@ -1925,7 +1842,6 @@
           "Price": 5000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)2396",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeSecretSpecialItems": "true",
@@ -1946,7 +1862,6 @@
           "Price": 800
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)2814",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeSecretSpecialItems": "true",
@@ -1967,7 +1882,6 @@
           "Price": 800
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)2814",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeSecretSpecialItems": "true",
@@ -1992,7 +1906,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)55",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeSecretSpecialItems": "true",
@@ -2016,7 +1929,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)55",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeSecretSpecialItems": "true",
@@ -2041,7 +1953,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)162",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeSecretSpecialItems": "true",
@@ -2065,7 +1976,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)162",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeSecretSpecialItems": "true",
@@ -2090,7 +2000,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)155",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeSecretSpecialItems": "true",
@@ -2114,7 +2023,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)155",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeSecretSpecialItems": "true",
@@ -2139,7 +2047,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)161",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeSecretSpecialItems": "true",
@@ -2163,7 +2070,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)161",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeSecretSpecialItems": "true",
@@ -2188,7 +2094,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)164",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeSecretSpecialItems": "true",
@@ -2212,7 +2117,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)164",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeSecretSpecialItems": "true",
@@ -2237,7 +2141,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)160",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeSecretSpecialItems": "true",
@@ -2261,7 +2164,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)160",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeSecretSpecialItems": "true",
@@ -2286,7 +2188,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)280",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeSecretSpecialItems": "true",
@@ -2310,7 +2211,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)280",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeSecretSpecialItems": "true",
@@ -2335,7 +2235,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)167",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeSecretSpecialItems": "true",
@@ -2359,7 +2258,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)167",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeSecretSpecialItems": "true",
@@ -2384,7 +2282,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)116",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeSecretSpecialItems": "true",
@@ -2408,7 +2305,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)116",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeSecretSpecialItems": "true",
@@ -2433,7 +2329,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)159",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeSecretSpecialItems": "true",
@@ -2457,7 +2352,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)159",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeSecretSpecialItems": "true",
@@ -2482,7 +2376,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)141",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeSecretSpecialItems": "true",
@@ -2506,7 +2399,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)141",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeSecretSpecialItems": "true",
@@ -2531,7 +2423,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)98",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeSecretSpecialItems": "true",
@@ -2555,7 +2446,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)98",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeSecretSpecialItems": "true",
@@ -2580,7 +2470,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)99",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeSecretSpecialItems": "true",
@@ -2604,7 +2493,6 @@
           ]
         }
       },
-      "LogName": "CasinoRedux Shop Item: (BC)99",
       "When": {
         "MoreAffordableItems": "true",
         "IncludeSecretSpecialItems": "true",
@@ -2625,7 +2513,6 @@
           "Price": 30000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1902",
       "When": {
         "SpouseRoommateFurnitureAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -2646,7 +2533,6 @@
           "Price": 30000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1909",
       "When": {
         "SpouseRoommateFurnitureAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -2667,7 +2553,6 @@
           "Price": 30000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)2058",
       "When": {
         "SpouseRoommateFurnitureAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -2688,7 +2573,6 @@
           "Price": 30000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)2064",
       "When": {
         "SpouseRoommateFurnitureAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -2709,7 +2593,6 @@
           "Price": 30000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)2070",
       "When": {
         "SpouseRoommateFurnitureAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -2730,7 +2613,6 @@
           "Price": 30000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1802",
       "When": {
         "SpouseRoommateFurnitureAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -2751,7 +2633,6 @@
           "Price": 30000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1306",
       "When": {
         "SpouseRoommateFurnitureAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -2772,7 +2653,6 @@
           "Price": 30000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1309",
       "When": {
         "SpouseRoommateFurnitureAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -2793,7 +2673,6 @@
           "Price": 3000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1902",
       "When": {
         "SpouseRoommateFurnitureAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -2814,7 +2693,6 @@
           "Price": 3000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1909",
       "When": {
         "SpouseRoommateFurnitureAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -2835,7 +2713,6 @@
           "Price": 3000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)2058",
       "When": {
         "SpouseRoommateFurnitureAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -2856,7 +2733,6 @@
           "Price": 3000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)2064",
       "When": {
         "SpouseRoommateFurnitureAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -2877,7 +2753,6 @@
           "Price": 3000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)2070",
       "When": {
         "SpouseRoommateFurnitureAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -2898,7 +2773,6 @@
           "Price": 3000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1802",
       "When": {
         "SpouseRoommateFurnitureAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -2919,7 +2793,6 @@
           "Price": 3000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1306",
       "When": {
         "SpouseRoommateFurnitureAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -2940,7 +2813,6 @@
           "Price": 3000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1309",
       "When": {
         "SpouseRoommateFurnitureAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -2962,7 +2834,6 @@
           "Condition": "PLAYER_HEARTS Current Penny 8"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1902",
       "When": {
         "SpouseRoommateFurnitureAvailability": "EightHeartsOnly",
         "MoreAffordableItems": "false",
@@ -2984,7 +2855,6 @@
           "Condition": "PLAYER_HEARTS Current Penny 8"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1909",
       "When": {
         "SpouseRoommateFurnitureAvailability": "EightHeartsOnly",
         "MoreAffordableItems": "false",
@@ -3006,7 +2876,6 @@
           "Condition": "PLAYER_HEARTS Current Penny 8"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)2058",
       "When": {
         "SpouseRoommateFurnitureAvailability": "EightHeartsOnly",
         "MoreAffordableItems": "false",
@@ -3028,7 +2897,6 @@
           "Condition": "PLAYER_HEARTS Current Penny 8"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)2064",
       "When": {
         "SpouseRoommateFurnitureAvailability": "EightHeartsOnly",
         "MoreAffordableItems": "false",
@@ -3050,7 +2918,6 @@
           "Condition": "PLAYER_HEARTS Current Penny 8"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)2070",
       "When": {
         "SpouseRoommateFurnitureAvailability": "EightHeartsOnly",
         "MoreAffordableItems": "false",
@@ -3072,7 +2939,6 @@
           "Condition": "PLAYER_HEARTS Current Leah 8"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1802",
       "When": {
         "SpouseRoommateFurnitureAvailability": "EightHeartsOnly",
         "MoreAffordableItems": "false",
@@ -3094,7 +2960,6 @@
           "Condition": "PLAYER_HEARTS Current Leah 8"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1306",
       "When": {
         "SpouseRoommateFurnitureAvailability": "EightHeartsOnly",
         "MoreAffordableItems": "false",
@@ -3116,7 +2981,6 @@
           "Condition": "PLAYER_HEARTS Current Sam 8"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1309",
       "When": {
         "SpouseRoommateFurnitureAvailability": "EightHeartsOnly",
         "MoreAffordableItems": "false",
@@ -3138,7 +3002,6 @@
           "Condition": "PLAYER_HEARTS Current Penny 8"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1902",
       "When": {
         "SpouseRoommateFurnitureAvailability": "EightHeartsOnly",
         "MoreAffordableItems": "true",
@@ -3160,7 +3023,6 @@
           "Condition": "PLAYER_HEARTS Current Penny 8"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1909",
       "When": {
         "SpouseRoommateFurnitureAvailability": "EightHeartsOnly",
         "MoreAffordableItems": "true",
@@ -3182,7 +3044,6 @@
           "Condition": "PLAYER_HEARTS Current Penny 8"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)2058",
       "When": {
         "SpouseRoommateFurnitureAvailability": "EightHeartsOnly",
         "MoreAffordableItems": "true",
@@ -3204,7 +3065,6 @@
           "Condition": "PLAYER_HEARTS Current Penny 8"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)2064",
       "When": {
         "SpouseRoommateFurnitureAvailability": "EightHeartsOnly",
         "MoreAffordableItems": "true",
@@ -3226,7 +3086,6 @@
           "Condition": "PLAYER_HEARTS Current Penny 8"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)2070",
       "When": {
         "SpouseRoommateFurnitureAvailability": "EightHeartsOnly",
         "MoreAffordableItems": "true",
@@ -3248,7 +3107,6 @@
           "Condition": "PLAYER_HEARTS Current Leah 8"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1802",
       "When": {
         "SpouseRoommateFurnitureAvailability": "EightHeartsOnly",
         "MoreAffordableItems": "true",
@@ -3270,7 +3128,6 @@
           "Condition": "PLAYER_HEARTS Current Leah 8"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1306",
       "When": {
         "SpouseRoommateFurnitureAvailability": "EightHeartsOnly",
         "MoreAffordableItems": "true",
@@ -3292,7 +3149,6 @@
           "Condition": "PLAYER_HEARTS Current Sam 8"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1309",
       "When": {
         "SpouseRoommateFurnitureAvailability": "EightHeartsOnly",
         "MoreAffordableItems": "true",
@@ -3314,7 +3170,6 @@
           "Condition": "PLAYER_HEARTS Current Penny 14"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1902",
       "When": {
         "SpouseRoommateFurnitureAvailability": "FourteenHeartsOnly",
         "MoreAffordableItems": "false",
@@ -3336,7 +3191,6 @@
           "Condition": "PLAYER_HEARTS Current Penny 14"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1909",
       "When": {
         "SpouseRoommateFurnitureAvailability": "FourteenHeartsOnly",
         "MoreAffordableItems": "false",
@@ -3358,7 +3212,6 @@
           "Condition": "PLAYER_HEARTS Current Penny 14"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)2058",
       "When": {
         "SpouseRoommateFurnitureAvailability": "FourteenHeartsOnly",
         "MoreAffordableItems": "false",
@@ -3380,7 +3233,6 @@
           "Condition": "PLAYER_HEARTS Current Penny 14"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)2064",
       "When": {
         "SpouseRoommateFurnitureAvailability": "FourteenHeartsOnly",
         "MoreAffordableItems": "false",
@@ -3402,7 +3254,6 @@
           "Condition": "PLAYER_HEARTS Current Penny 14"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)2070",
       "When": {
         "SpouseRoommateFurnitureAvailability": "FourteenHeartsOnly",
         "MoreAffordableItems": "false",
@@ -3424,7 +3275,6 @@
           "Condition": "PLAYER_HEARTS Current Leah 14"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1802",
       "When": {
         "SpouseRoommateFurnitureAvailability": "FourteenHeartsOnly",
         "MoreAffordableItems": "false",
@@ -3446,7 +3296,6 @@
           "Condition": "PLAYER_HEARTS Current Leah 14"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1306",
       "When": {
         "SpouseRoommateFurnitureAvailability": "FourteenHeartsOnly",
         "MoreAffordableItems": "false",
@@ -3468,7 +3317,6 @@
           "Condition": "PLAYER_HEARTS Current Sam 14"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1309",
       "When": {
         "SpouseRoommateFurnitureAvailability": "FourteenHeartsOnly",
         "MoreAffordableItems": "false",
@@ -3490,7 +3338,6 @@
           "Condition": "PLAYER_HEARTS Current Penny 14"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1902",
       "When": {
         "SpouseRoommateFurnitureAvailability": "FourteenHeartsOnly",
         "MoreAffordableItems": "true",
@@ -3512,7 +3359,6 @@
           "Condition": "PLAYER_HEARTS Current Penny 14"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1909",
       "When": {
         "SpouseRoommateFurnitureAvailability": "FourteenHeartsOnly",
         "MoreAffordableItems": "true",
@@ -3534,7 +3380,6 @@
           "Condition": "PLAYER_HEARTS Current Penny 14"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)2058",
       "When": {
         "SpouseRoommateFurnitureAvailability": "FourteenHeartsOnly",
         "MoreAffordableItems": "true",
@@ -3556,7 +3401,6 @@
           "Condition": "PLAYER_HEARTS Current Penny 14"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)2064",
       "When": {
         "SpouseRoommateFurnitureAvailability": "FourteenHeartsOnly",
         "MoreAffordableItems": "true",
@@ -3578,7 +3422,6 @@
           "Condition": "PLAYER_HEARTS Current Penny 14"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)2070",
       "When": {
         "SpouseRoommateFurnitureAvailability": "FourteenHeartsOnly",
         "MoreAffordableItems": "true",
@@ -3600,7 +3443,6 @@
           "Condition": "PLAYER_HEARTS Current Leah 14"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1802",
       "When": {
         "SpouseRoommateFurnitureAvailability": "FourteenHeartsOnly",
         "MoreAffordableItems": "true",
@@ -3622,7 +3464,6 @@
           "Condition": "PLAYER_HEARTS Current Leah 14"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1306",
       "When": {
         "SpouseRoommateFurnitureAvailability": "FourteenHeartsOnly",
         "MoreAffordableItems": "true",
@@ -3644,7 +3485,6 @@
           "Condition": "PLAYER_HEARTS Current Sam 14"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1309",
       "When": {
         "SpouseRoommateFurnitureAvailability": "FourteenHeartsOnly",
         "MoreAffordableItems": "true",
@@ -3666,7 +3506,6 @@
           "Condition": "PLAYER_NPC_RELATIONSHIP Current Penny Married, PLAYER_HEARTS Current Penny 14"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1902",
       "When": {
         "SpouseRoommateFurnitureAvailability": "RelationshipAnd14Hearts",
         "MoreAffordableItems": "false",
@@ -3688,7 +3527,6 @@
           "Condition": "PLAYER_NPC_RELATIONSHIP Current Penny Married, PLAYER_HEARTS Current Penny 14"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1909",
       "When": {
         "SpouseRoommateFurnitureAvailability": "RelationshipAnd14Hearts",
         "MoreAffordableItems": "false",
@@ -3710,7 +3548,6 @@
           "Condition": "PLAYER_NPC_RELATIONSHIP Current Penny Married, PLAYER_HEARTS Current Penny 14"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)2058",
       "When": {
         "SpouseRoommateFurnitureAvailability": "RelationshipAnd14Hearts",
         "MoreAffordableItems": "false",
@@ -3732,7 +3569,6 @@
           "Condition": "PLAYER_NPC_RELATIONSHIP Current Penny Married, PLAYER_HEARTS Current Penny 14"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)2064",
       "When": {
         "SpouseRoommateFurnitureAvailability": "RelationshipAnd14Hearts",
         "MoreAffordableItems": "false",
@@ -3754,7 +3590,6 @@
           "Condition": "PLAYER_NPC_RELATIONSHIP Current Penny Married, PLAYER_HEARTS Current Penny 14"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)2070",
       "When": {
         "SpouseRoommateFurnitureAvailability": "RelationshipAnd14Hearts",
         "MoreAffordableItems": "false",
@@ -3776,7 +3611,6 @@
           "Condition": "PLAYER_NPC_RELATIONSHIP Current Leah Married, PLAYER_HEARTS Current Leah 14"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1802",
       "When": {
         "SpouseRoommateFurnitureAvailability": "RelationshipAnd14Hearts",
         "MoreAffordableItems": "false",
@@ -3798,7 +3632,6 @@
           "Condition": "PLAYER_NPC_RELATIONSHIP Current Leah Married, PLAYER_HEARTS Current Leah 14"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1306",
       "When": {
         "SpouseRoommateFurnitureAvailability": "RelationshipAnd14Hearts",
         "MoreAffordableItems": "false",
@@ -3820,7 +3653,6 @@
           "Condition": "PLAYER_NPC_RELATIONSHIP Current Sam Married, PLAYER_HEARTS Current Sam 14"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1309",
       "When": {
         "SpouseRoommateFurnitureAvailability": "RelationshipAnd14Hearts",
         "MoreAffordableItems": "false",
@@ -3842,7 +3674,6 @@
           "Condition": "PLAYER_NPC_RELATIONSHIP Current Penny Married, PLAYER_HEARTS Current Penny 14"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1902",
       "When": {
         "SpouseRoommateFurnitureAvailability": "RelationshipAnd14Hearts",
         "MoreAffordableItems": "true",
@@ -3864,7 +3695,6 @@
           "Condition": "PLAYER_NPC_RELATIONSHIP Current Penny Married, PLAYER_HEARTS Current Penny 14"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1909",
       "When": {
         "SpouseRoommateFurnitureAvailability": "RelationshipAnd14Hearts",
         "MoreAffordableItems": "true",
@@ -3886,7 +3716,6 @@
           "Condition": "PLAYER_NPC_RELATIONSHIP Current Penny Married, PLAYER_HEARTS Current Penny 14"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)2058",
       "When": {
         "SpouseRoommateFurnitureAvailability": "RelationshipAnd14Hearts",
         "MoreAffordableItems": "true",
@@ -3908,7 +3737,6 @@
           "Condition": "PLAYER_NPC_RELATIONSHIP Current Penny Married, PLAYER_HEARTS Current Penny 14"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)2064",
       "When": {
         "SpouseRoommateFurnitureAvailability": "RelationshipAnd14Hearts",
         "MoreAffordableItems": "true",
@@ -3930,7 +3758,6 @@
           "Condition": "PLAYER_NPC_RELATIONSHIP Current Penny Married, PLAYER_HEARTS Current Penny 14"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)2070",
       "When": {
         "SpouseRoommateFurnitureAvailability": "RelationshipAnd14Hearts",
         "MoreAffordableItems": "true",
@@ -3952,7 +3779,6 @@
           "Condition": "PLAYER_NPC_RELATIONSHIP Current Leah Married, PLAYER_HEARTS Current Leah 14"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1802",
       "When": {
         "SpouseRoommateFurnitureAvailability": "RelationshipAnd14Hearts",
         "MoreAffordableItems": "true",
@@ -3974,7 +3800,6 @@
           "Condition": "PLAYER_NPC_RELATIONSHIP Current Leah Married, PLAYER_HEARTS Current Leah 14"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1306",
       "When": {
         "SpouseRoommateFurnitureAvailability": "RelationshipAnd14Hearts",
         "MoreAffordableItems": "true",
@@ -3996,7 +3821,6 @@
           "Condition": "PLAYER_NPC_RELATIONSHIP Current Sam Married, PLAYER_HEARTS Current Sam 14"
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1309",
       "When": {
         "SpouseRoommateFurnitureAvailability": "RelationshipAnd14Hearts",
         "MoreAffordableItems": "true",
@@ -4017,7 +3841,6 @@
           "Price": 6000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (W)40",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -4038,7 +3861,6 @@
           "Price": 10000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (TR)MagicHairDye",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -4059,7 +3881,6 @@
           "Price": 6000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (W)25",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -4080,7 +3901,6 @@
           "Price": 10000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)ExoticPalace",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -4101,7 +3921,6 @@
           "Price": 4000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1449",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -4122,7 +3941,6 @@
           "Price": 6000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)PeriodicTable",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -4143,7 +3961,6 @@
           "Price": 6000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (W)35",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -4164,7 +3981,6 @@
           "Price": 2000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (WP)MoreWalls:4",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -4185,7 +4001,6 @@
           "Price": 2000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (WP)MoreWalls:1",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -4206,7 +4021,6 @@
           "Price": 2000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (WP)MoreWalls:5",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -4227,7 +4041,6 @@
           "Price": 2000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (WP)MoreWalls:2",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -4248,7 +4061,6 @@
           "Price": 10000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)RetroTV",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -4269,7 +4081,6 @@
           "Price": 5000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)DustySkull",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -4290,7 +4101,6 @@
           "Price": 6000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (W)42",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -4311,7 +4121,6 @@
           "Price": 3000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)ArtPhoto",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -4332,7 +4141,6 @@
           "Price": 3000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)ArtPhoto2",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -4353,7 +4161,6 @@
           "Price": 6000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (W)37",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -4374,7 +4181,6 @@
           "Price": 4000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)RadioDesk",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -4395,7 +4201,6 @@
           "Price": 3000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)ModelPlanes",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -4416,7 +4221,6 @@
           "Price": 2000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (WP)MoreWalls:3",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -4437,7 +4241,6 @@
           "Price": 6000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (W)39",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -4458,7 +4261,6 @@
           "Price": 4000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)ShortBookcase",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -4479,7 +4281,6 @@
           "Price": 2000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (WP)MoreWalls:7",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -4500,7 +4301,6 @@
           "Price": 6000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (W)36",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -4521,7 +4321,6 @@
           "Price": 6000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (W)38",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -4542,7 +4341,6 @@
           "Price": 10000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1907",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -4563,7 +4361,6 @@
           "Price": 3000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1914",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -4584,7 +4381,6 @@
           "Price": 3000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1915",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -4605,7 +4401,6 @@
           "Price": 3000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1916",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -4626,7 +4421,6 @@
           "Price": 10000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1900",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -4647,7 +4441,6 @@
           "Price": 5000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)PierresSign",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -4668,7 +4461,6 @@
           "Price": 2000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (WP)MoreWalls:6",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -4689,7 +4481,6 @@
           "Price": 5000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)SamsSkateboard",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -4710,7 +4501,6 @@
           "Price": 6000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (W)30",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -4731,7 +4521,6 @@
           "Price": 6000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (W)41",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -4752,7 +4541,6 @@
           "Price": 6000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)ChickenDecal",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -4773,7 +4561,6 @@
           "Price": 600
         }
       },
-      "LogName": "CasinoRedux Shop Item: (W)40",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -4794,7 +4581,6 @@
           "Price": 1000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (TR)MagicHairDye",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -4815,7 +4601,6 @@
           "Price": 600
         }
       },
-      "LogName": "CasinoRedux Shop Item: (W)25",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -4836,7 +4621,6 @@
           "Price": 1000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)ExoticPalace",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -4857,7 +4641,6 @@
           "Price": 400
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1449",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -4878,7 +4661,6 @@
           "Price": 600
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)PeriodicTable",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -4899,7 +4681,6 @@
           "Price": 600
         }
       },
-      "LogName": "CasinoRedux Shop Item: (W)35",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -4920,7 +4701,6 @@
           "Price": 200
         }
       },
-      "LogName": "CasinoRedux Shop Item: (WP)MoreWalls:4",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -4941,7 +4721,6 @@
           "Price": 200
         }
       },
-      "LogName": "CasinoRedux Shop Item: (WP)MoreWalls:1",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -4962,7 +4741,6 @@
           "Price": 200
         }
       },
-      "LogName": "CasinoRedux Shop Item: (WP)MoreWalls:5",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -4983,7 +4761,6 @@
           "Price": 200
         }
       },
-      "LogName": "CasinoRedux Shop Item: (WP)MoreWalls:2",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -5004,7 +4781,6 @@
           "Price": 1000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)RetroTV",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -5025,7 +4801,6 @@
           "Price": 500
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)DustySkull",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -5046,7 +4821,6 @@
           "Price": 600
         }
       },
-      "LogName": "CasinoRedux Shop Item: (W)42",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -5067,7 +4841,6 @@
           "Price": 300
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)ArtPhoto",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -5088,7 +4861,6 @@
           "Price": 300
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)ArtPhoto2",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -5109,7 +4881,6 @@
           "Price": 600
         }
       },
-      "LogName": "CasinoRedux Shop Item: (W)37",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -5130,7 +4901,6 @@
           "Price": 400
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)RadioDesk",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -5151,7 +4921,6 @@
           "Price": 300
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)ModelPlanes",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -5172,7 +4941,6 @@
           "Price": 200
         }
       },
-      "LogName": "CasinoRedux Shop Item: (WP)MoreWalls:3",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -5193,7 +4961,6 @@
           "Price": 600
         }
       },
-      "LogName": "CasinoRedux Shop Item: (W)39",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -5214,7 +4981,6 @@
           "Price": 400
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)ShortBookcase",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -5235,7 +5001,6 @@
           "Price": 200
         }
       },
-      "LogName": "CasinoRedux Shop Item: (WP)MoreWalls:7",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -5256,7 +5021,6 @@
           "Price": 600
         }
       },
-      "LogName": "CasinoRedux Shop Item: (W)36",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -5277,7 +5041,6 @@
           "Price": 600
         }
       },
-      "LogName": "CasinoRedux Shop Item: (W)38",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -5298,7 +5061,6 @@
           "Price": 1000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1907",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -5319,7 +5081,6 @@
           "Price": 300
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1914",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -5340,7 +5101,6 @@
           "Price": 300
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1915",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -5361,7 +5121,6 @@
           "Price": 300
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1916",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -5382,7 +5141,6 @@
           "Price": 1000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1900",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -5403,7 +5161,6 @@
           "Price": 500
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)PierresSign",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -5424,7 +5181,6 @@
           "Price": 200
         }
       },
-      "LogName": "CasinoRedux Shop Item: (WP)MoreWalls:6",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -5445,7 +5201,6 @@
           "Price": 500
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)SamsSkateboard",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -5466,7 +5221,6 @@
           "Price": 600
         }
       },
-      "LogName": "CasinoRedux Shop Item: (W)30",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -5487,7 +5241,6 @@
           "Price": 600
         }
       },
-      "LogName": "CasinoRedux Shop Item: (W)41",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -5508,7 +5261,6 @@
           "Price": 600
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)ChickenDecal",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -5530,7 +5282,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(W)40\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Abby_s_Planchette Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (W)40",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -5552,7 +5303,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(TR)MagicHairDye\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Magic_Hair_Gel Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (TR)MagicHairDye",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -5574,7 +5324,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(W)25\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Alex_s_Bat Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (W)25",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -5596,7 +5345,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(F)ExoticPalace\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Exotic_Palace Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)ExoticPalace",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -5618,7 +5366,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(F)1449\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Classic_Lamp Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1449",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -5640,7 +5387,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(F)PeriodicTable\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Periodic_Table Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)PeriodicTable",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -5662,7 +5408,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(W)35\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Elliott_s_Pencil Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (W)35",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -5684,7 +5429,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(WP)MoreWalls:4\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_116 Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (WP)MoreWalls:4",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -5706,7 +5450,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(WP)MoreWalls:1\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_113 Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (WP)MoreWalls:1",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -5728,7 +5471,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(WP)MoreWalls:5\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_117 Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (WP)MoreWalls:5",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -5750,7 +5492,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(WP)MoreWalls:2\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_114 Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (WP)MoreWalls:2",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -5772,7 +5513,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(F)RetroTV\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Retro_TV Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)RetroTV",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -5794,7 +5534,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(F)DustySkull\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Dusty_Skull Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)DustySkull",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -5816,7 +5555,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(W)42\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Haley_s_Iron Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (W)42",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -5838,7 +5576,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(F)ArtPhoto\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Art_Photo Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)ArtPhoto",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -5860,7 +5597,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(F)ArtPhoto_2\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Art_Photo_2 Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)ArtPhoto2",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -5882,7 +5618,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(W)37\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Harvey_s_Mallet Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (W)37",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -5904,7 +5639,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(F)RadioDesk\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Radio_Desk Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)RadioDesk",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -5926,7 +5660,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(F)ModelPlanes\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Model_Planes Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)ModelPlanes",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -5948,7 +5681,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(WP)MoreWalls:3\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_115 Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (WP)MoreWalls:3",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -5970,7 +5702,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(W)39\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Leah_s_Whittler Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (W)39",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -5992,7 +5723,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(F)ShortBookcase\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Short_Bookcase Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)ShortBookcase",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -6014,7 +5744,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(WP)MoreWalls:7\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_119 Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (WP)MoreWalls:7",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -6036,7 +5765,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(W)36\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Maru_s_Wrench Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (W)36",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -6058,7 +5786,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(W)38\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Penny_s_Fryer Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (W)38",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -6080,7 +5807,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(F)1907\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Strawberry_Decal Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1907",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -6102,7 +5828,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(F)1914\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Night_Sky_Decal_1 Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1914",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -6124,7 +5849,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(F)1915\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Night_Sky_Decal_2 Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1915",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -6146,7 +5870,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(F)1916\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Night_Sky_Decal_3 Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1916",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -6168,7 +5891,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(F)1900\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Pirate_Flag Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1900",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -6190,7 +5912,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(F)PierresSign\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Pierre_s_Sign Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)PierresSign",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -6212,7 +5933,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(WP)MoreWalls:6\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_118 Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (WP)MoreWalls:6",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -6234,7 +5954,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(F)SamsSkateboard\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Sam_s_Skateboard Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)SamsSkateboard",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -6256,7 +5975,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(W)30\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Sam_s_Old_Guitar Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (W)30",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -6278,7 +5996,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(W)41\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Seb_s_Lost_Mace Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (W)41",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -6300,7 +6017,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(F)ChickenDecal\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Chicken_Decal Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)ChickenDecal",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -6322,7 +6038,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(W)40\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Abby_s_Planchette Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (W)40",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -6344,7 +6059,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(TR)MagicHairDye\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Magic_Hair_Gel Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (TR)MagicHairDye",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -6366,7 +6080,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(W)25\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Alex_s_Bat Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (W)25",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -6388,7 +6101,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(F)ExoticPalace\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Exotic_Palace Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)ExoticPalace",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -6410,7 +6122,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(F)1449\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Classic_Lamp Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1449",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -6432,7 +6143,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(F)PeriodicTable\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Periodic_Table Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)PeriodicTable",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -6454,7 +6164,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(W)35\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Elliott_s_Pencil Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (W)35",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -6476,7 +6185,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(WP)MoreWalls:4\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_116 Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (WP)MoreWalls:4",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -6498,7 +6206,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(WP)MoreWalls:1\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_113 Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (WP)MoreWalls:1",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -6520,7 +6227,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(WP)MoreWalls:5\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_117 Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (WP)MoreWalls:5",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -6542,7 +6248,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(WP)MoreWalls:2\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_114 Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (WP)MoreWalls:2",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -6564,7 +6269,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(F)RetroTV\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Retro_TV Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)RetroTV",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -6586,7 +6290,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(F)DustySkull\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Dusty_Skull Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)DustySkull",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -6608,7 +6311,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(W)42\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Haley_s_Iron Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (W)42",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -6630,7 +6332,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(F)ArtPhoto\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Art_Photo Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)ArtPhoto",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -6652,7 +6353,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(F)ArtPhoto_2\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Art_Photo_2 Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)ArtPhoto2",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -6674,7 +6374,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(W)37\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Harvey_s_Mallet Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (W)37",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -6696,7 +6395,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(F)RadioDesk\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Radio_Desk Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)RadioDesk",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -6718,7 +6416,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(F)ModelPlanes\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Model_Planes Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)ModelPlanes",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -6740,7 +6437,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(WP)MoreWalls:3\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_115 Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (WP)MoreWalls:3",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -6762,7 +6458,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(W)39\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Leah_s_Whittler Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (W)39",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -6784,7 +6479,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(F)ShortBookcase\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Short_Bookcase Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)ShortBookcase",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -6806,7 +6500,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(WP)MoreWalls:7\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_119 Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (WP)MoreWalls:7",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -6828,7 +6521,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(W)36\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Maru_s_Wrench Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (W)36",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -6850,7 +6542,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(W)38\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Penny_s_Fryer Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (W)38",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -6872,7 +6563,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(F)1907\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Strawberry_Decal Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1907",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -6894,7 +6584,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(F)1914\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Night_Sky_Decal_1 Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1914",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -6916,7 +6605,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(F)1915\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Night_Sky_Decal_2 Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1915",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -6938,7 +6626,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(F)1916\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Night_Sky_Decal_3 Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1916",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -6960,7 +6647,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(F)1900\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Pirate_Flag Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)1900",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -6982,7 +6668,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(F)PierresSign\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Pierre_s_Sign Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)PierresSign",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -7004,7 +6689,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(WP)MoreWalls:6\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_118 Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (WP)MoreWalls:6",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -7026,7 +6710,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(F)SamsSkateboard\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Sam_s_Skateboard Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)SamsSkateboard",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -7048,7 +6731,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(W)30\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Sam_s_Old_Guitar Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (W)30",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -7070,7 +6752,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(W)41\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Seb_s_Lost_Mace Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (W)41",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -7092,7 +6773,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(F)ChickenDecal\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Chicken_Decal Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (F)ChickenDecal",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -7113,7 +6793,6 @@
           "Price": 6000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (H)AbigailsBow",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -7134,7 +6813,6 @@
           "Price": 10000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (H)TricornHat",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -7155,7 +6833,6 @@
           "Price": 2500
         }
       },
-      "LogName": "CasinoRedux Shop Item: (S)1188",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -7176,7 +6853,6 @@
           "Price": 600
         }
       },
-      "LogName": "CasinoRedux Shop Item: (H)AbigailsBow",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -7197,7 +6873,6 @@
           "Price": 1000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (H)TricornHat",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -7218,7 +6893,6 @@
           "Price": 250
         }
       },
-      "LogName": "CasinoRedux Shop Item: (S)1188",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -7239,7 +6913,6 @@
           "Price": 12000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (H)DarkBallcap",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -7260,7 +6933,6 @@
           "Price": 12000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (H)JojaCap",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -7281,7 +6953,6 @@
           "Price": 12000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (H)LaurelWreathCrown",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -7302,7 +6973,6 @@
           "Price": 8000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (P)9",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -7323,7 +6993,6 @@
           "Price": 8000
         }
       },
-      "LogName": "CasinoRedux Shop Item: (S)SoftEdgePullover",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -7344,7 +7013,6 @@
           "Price": 1200
         }
       },
-      "LogName": "CasinoRedux Shop Item: (H)DarkBallcap",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -7365,7 +7033,6 @@
           "Price": 1200
         }
       },
-      "LogName": "CasinoRedux Shop Item: (H)JojaCap",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -7386,7 +7053,6 @@
           "Price": 1200
         }
       },
-      "LogName": "CasinoRedux Shop Item: (H)LaurelWreathCrown",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -7407,7 +7073,6 @@
           "Price": 800
         }
       },
-      "LogName": "CasinoRedux Shop Item: (P)9",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -7428,7 +7093,6 @@
           "Price": 800
         }
       },
-      "LogName": "CasinoRedux Shop Item: (S)SoftEdgePullover",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -7450,7 +7114,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(H)AbigailsBow\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Abigail_s_Bow Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (H)AbigailsBow",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -7472,7 +7135,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(H)TricornHat\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Tricorn_Hat Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (H)TricornHat",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -7494,7 +7156,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(S)1188\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Goodnight_Shirt Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (S)1188",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -7516,7 +7177,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(H)AbigailsBow\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Abigail_s_Bow Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (H)AbigailsBow",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -7538,7 +7198,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(H)TricornHat\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Tricorn_Hat Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (H)TricornHat",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -7560,7 +7219,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(S)1188\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Goodnight_Shirt Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (S)1188",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -7582,7 +7240,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(H)DarkBallcap\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Dark_Ballcap Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (H)DarkBallcap",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -7604,7 +7261,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(H)JojaCap\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Joja_Cap Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (H)JojaCap",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -7626,7 +7282,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(H)LaurelWreathCrown\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Laurel_Wreath_Crown Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (H)LaurelWreathCrown",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -7648,7 +7303,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(P)9\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Tight_Pants Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (P)9",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -7670,7 +7324,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(S)SoftEdgePullover\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Basic_Pullover_M_Soft_Edge Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (S)SoftEdgePullover",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -7692,7 +7345,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(H)DarkBallcap\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Dark_Ballcap Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (H)DarkBallcap",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -7714,7 +7366,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(H)JojaCap\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Joja_Cap Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (H)JojaCap",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -7736,7 +7387,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(H)LaurelWreathCrown\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Laurel_Wreath_Crown Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (H)LaurelWreathCrown",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -7758,7 +7408,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(P)9\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Tight_Pants Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (P)9",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -7780,7 +7429,6 @@
           "Condition": "ANY \"PLAYER_HAS_ITEM Current \\\"(S)SoftEdgePullover\\\"\" \"PLAYER_HAS_MAIL Current ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux_Bought_Basic_Pullover_M_Soft_Edge Received\""
         }
       },
-      "LogName": "CasinoRedux Shop Item: (S)SoftEdgePullover",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
@@ -7802,7 +7450,6 @@
           "MaxItems": 1
         }
       },
-      "LogName": "CasinoRedux Shop Item: RANDOM_ITEMS (F) 1362 1375",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "false",
@@ -7824,7 +7471,6 @@
           "MaxItems": 1
         }
       },
-      "LogName": "CasinoRedux Shop Item: RANDOM_ITEMS (F) 1362 1375",
       "When": {
         "OtherCategoriesAvailability": "Always",
         "MoreAffordableItems": "true",
@@ -7847,7 +7493,6 @@
           "MaxItems": 1
         }
       },
-      "LogName": "CasinoRedux Shop Item: RANDOM_ITEMS (F) 1362 1375",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "false",
@@ -7870,7 +7515,6 @@
           "MaxItems": 1
         }
       },
-      "LogName": "CasinoRedux Shop Item: RANDOM_ITEMS (F) 1362 1375",
       "When": {
         "OtherCategoriesAvailability": "Default",
         "MoreAffordableItems": "true",
