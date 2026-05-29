@@ -1,0 +1,29 @@
+{
+    "Name": "The Muttering Farmer - Mundane Festival",
+    "Author": "ThaleTheGreat",
+    "Version": "1.0.0",
+    "Description": "Adds Festival of the Mundane-specific mutters for The Muttering Farmer.",
+    "UniqueID": "ThaleTheGreat.TMFMundaneFestival",
+    "MinimumApiVersion": "4.0.0",
+    "UpdateKeys": [
+        "Nexus:46855"
+    ],
+    "ContentPackFor": {
+        "UniqueID": "YunHikari.TheMutteringFarmer",
+        "MinimumVersion": "1.0.9"
+    },
+    "Dependencies": [
+        {
+            "UniqueID": "YunHikari.TheMutteringFarmer",
+            "IsRequired": true
+        },
+        {
+            "UniqueID": "MouseyPounds.ShadowFestival",
+            "IsRequired": true
+        },
+        {
+            "UniqueID": "MouseyPounds.ShadowFestival.Content",
+            "IsRequired": true
+        }
+    ]
+}
