@@ -1,8 +1,8 @@
 {
   "Name": "Star Bull - Red Bull in the Valley",
   "Author": "ThaleTheGreat",
-  "Version": "1.3.4",
-  "Description": "Adds Star Bull (Red Bull-inspired) energy drinks, a themed hat, and a themed vending machine.",
+  "Version": "1.4.0",
+  "Description": "Adds Red Bull energy drinks, a themed hat, and a themed vending machine.",
   "UniqueID": "ThaleTheGreat.StarBull",
   "EntryDll": "StarBull.dll",
   "MinimumApiVersion": "4.0.0",

@@ -119,7 +119,7 @@
         },
         "{{ModId}}_RedEdition": {
           "Name": "Red Bull Red Edition",
-          "DisplayName": "Red Bull Red Edition",
+          "DisplayName": "Red Bull Red (Watermelon)",
           "Description": "Fresh, sweet, juicy watermelon. Incredibly refreshing!",
           "Type": "Basic",
           "Category": -20,
@@ -149,7 +149,7 @@
         },
         "{{ModId}}_YellowEdition": {
           "Name": "Red Bull Yellow Edition",
-          "DisplayName": "Red Bull Yellow Edition",
+          "DisplayName": "Red Bull Yellow (Tropical)",
           "Description": "A vibrant blend of tropical fruits. Vacation in a can!",
           "Type": "Basic",
           "Category": -20,
@@ -176,7 +176,7 @@
         },
         "{{ModId}}_BlueEdition": {
           "Name": "Red Bull Blue Edition",
-          "DisplayName": "Red Bull Blue Edition",
+          "DisplayName": "Red Bull Blue (Berry)",
           "Description": "Deep, authentic blueberry flavor. Fruity yet sophisticated.",
           "Type": "Basic",
           "Category": -20,
@@ -203,7 +203,7 @@
         },
         "{{ModId}}_CoconutEdition": {
           "Name": "Red Bull Coconut Edition",
-          "DisplayName": "Red Bull Coconut Edition",
+          "DisplayName": "Red Bull Coconut (Coconut Berry)",
           "Description": "Unique coconut balanced by tart berry. Creamy yet refreshing!",
           "Type": "Basic",
           "Category": -20,
@@ -234,7 +234,7 @@
         },
         "{{ModId}}_PeachEdition": {
           "Name": "Red Bull Peach Edition",
-          "DisplayName": "Red Bull Peach Edition",
+          "DisplayName": "Red Bull Peach (White Peach)",
           "Description": "Soft, floral, incredibly smooth. Like biting into a perfectly ripe peach.",
           "Type": "Basic",
           "Category": -20,
@@ -261,7 +261,7 @@
         },
         "{{ModId}}_AmberEdition": {
           "Name": "Red Bull Amber Edition",
-          "DisplayName": "Red Bull Amber Edition",
+          "DisplayName": "Red Bull Amber (Strawberry Apricot)",
           "Description": "Sweet strawberry meets tangy apricot. A delightfully balanced crowd favorite!",
           "Type": "Basic",
           "Category": -20,
@@ -292,7 +292,7 @@
         },
         "{{ModId}}_SeaBlueEdition": {
           "Name": "Red Bull Sea Blue Edition",
-          "DisplayName": "Red Bull Sea Blue Edition",
+          "DisplayName": "Red Bull Sea Blue (Juneberry)",
           "Description": "The game-changer! Complex juneberry with blueberry notes.",
           "Type": "Basic",
           "Category": -20,
@@ -319,7 +319,7 @@
         },
         "{{ModId}}_GreenEdition": {
           "Name": "Red Bull Green Edition",
-          "DisplayName": "Red Bull Green Edition",
+          "DisplayName": "Red Bull Green (Dragon Fruit)",
           "Description": "Exotic dragon fruit! Subtle kiwi-pear notes.",
           "Type": "Basic",
           "Category": -20,
@@ -346,8 +346,8 @@
         },
         "{{ModId}}_WinterEdition2025": {
           "Name": "Red Bull Winter Edition",
-          "DisplayName": "Red Bull Winter Edition 2025 (Fuji Apple & Ginger)",
-          "Description": "Limited Edition! Crisp Fuji apple with a gentle ginger kick.",
+          "DisplayName": "Red Bull Winter 2025 (Fuji Apple & Ginger)",
+          "Description": "Limited release! Crisp Fuji apple with a gentle ginger kick.",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -374,8 +374,8 @@
         },
         "{{ModId}}_SummerEdition2026": {
           "Name": "Red Bull Summer Edition 2026",
-          "DisplayName": "Red Bull Summer Edition 2026 (Sudachi-Lime)",
-          "Description": "Limited Edition! Bright sudachi citrus with zesty lime.",
+          "DisplayName": "Red Bull Summer 2026 (Sudachi-Lime)",
+          "Description": "Limited release! Bright sudachi citrus with zesty lime.",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -403,8 +403,8 @@
         },
         "{{ModId}}_SpringEdition2026": {
           "Name": "Red Bull Spring Edition 2026",
-          "DisplayName": "Red Bull Spring Edition 2026",
-          "Description": "Limited Edition! Cherry Sakura flavor from Japan.",
+          "DisplayName": "Red Bull Spring 2026 (Cherry Sakura)",
+          "Description": "Limited release! Cherry Sakura flavor from Japan.",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -432,7 +432,7 @@
         },
         "{{ModId}}_PinkEdition": {
           "Name": "Red Bull Pink Edition",
-          "DisplayName": "Red Bull Pink Edition (Wild Berries)",
+          "DisplayName": "Red Bull Pink (Wild Berries)",
           "Description": "Wild berry blend with a bright, sweet-tart finish.",
           "Type": "Basic",
           "Category": -20,
@@ -459,7 +459,7 @@
         },
         "{{ModId}}_IcedEdition": {
           "Name": "Red Bull Iced Edition",
-          "DisplayName": "Red Bull Iced Edition (Iced Vanilla Berry)",
+          "DisplayName": "Red Bull Iced (Iced Vanilla Berry)",
           "Description": "Vanilla and berry notes with a cool, refreshing finish.",
           "Type": "Basic",
           "Category": -20,
@@ -486,8 +486,8 @@
         },
         "{{ModId}}_SummerEdition2025": {
           "Name": "Red Bull Summer Edition 2025",
-          "DisplayName": "Summer Edition 2025 (White Peach)",
-          "Description": "Limited Edition! Light white-peach flavor with citrusy brightness.",
+          "DisplayName": "Red Bull Summer 2025 (White Peach)",
+          "Description": "Limited release! Light white-peach flavor with citrusy brightness.",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -515,8 +515,8 @@
         },
         "{{ModId}}_SummerEdition2024": {
           "Name": "Red Bull Summer Edition 2024",
-          "DisplayName": "Summer Edition 2024 (Curuba Elderflower)",
-          "Description": "Limited Edition! Exotic curuba with delicate elderflower.",
+          "DisplayName": "Red Bull Summer 2024 (Curuba Elderflower)",
+          "Description": "Limited release! Exotic curuba with delicate elderflower.",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -544,8 +544,8 @@
         },
         "{{ModId}}_SummerEdition2023": {
           "Name": "Red Bull Summer Edition 2023",
-          "DisplayName": "Summer Edition 2023 (Juneberry)",
-          "Description": "Limited Edition! Unique juneberry flavor—sweet, crisp, and bright.",
+          "DisplayName": "Red Bull Summer 2023 (Juneberry)",
+          "Description": "Limited release! Unique juneberry flavor—sweet, crisp, and bright.",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -573,8 +573,8 @@
         },
         "{{ModId}}_SummerEdition2022": {
           "Name": "Red Bull Summer Edition 2022",
-          "DisplayName": "Summer Edition 2022 (Strawberry Apricot)",
-          "Description": "Limited Edition! Strawberry and apricot with a juicy finish.",
+          "DisplayName": "Red Bull Summer 2022 (Strawberry Apricot)",
+          "Description": "Limited release! Strawberry and apricot with a juicy finish.",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -602,8 +602,8 @@
         },
         "{{ModId}}_SummerEdition2021": {
           "Name": "Red Bull Summer Edition 2021",
-          "DisplayName": "Summer Edition 2021 (Dragon Fruit)",
-          "Description": "Limited Edition! Exotic dragon fruit with subtle kiwi-pear notes.",
+          "DisplayName": "Red Bull Summer 2021 (Dragon Fruit)",
+          "Description": "Limited release! Exotic dragon fruit with subtle kiwi-pear notes.",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -631,8 +631,8 @@
         },
         "{{ModId}}_SummerEdition2020": {
           "Name": "Red Bull Summer Edition 2020",
-          "DisplayName": "Summer Edition 2020 (Watermelon)",
-          "Description": "Limited Edition! Sweet watermelon flavor—summer in a can.",
+          "DisplayName": "Red Bull Summer 2020 (Watermelon)",
+          "Description": "Limited release! Sweet watermelon flavor—summer in a can.",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -660,8 +660,8 @@
         },
         "{{ModId}}_WinterEdition2024": {
           "Name": "Red Bull Winter Edition 2024",
-          "DisplayName": "Winter Edition 2024 (Iced Vanilla Berry)",
-          "Description": "Limited Edition! Vanilla with berry notes and an icy finish.",
+          "DisplayName": "Red Bull Winter 2024 (Iced Vanilla Berry)",
+          "Description": "Limited release! Vanilla with berry notes and an icy finish.",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -688,8 +688,8 @@
         },
         "{{ModId}}_WinterEdition2023": {
           "Name": "Red Bull Winter Edition 2023",
-          "DisplayName": "Winter Edition 2023 (Pear Cinnamon)",
-          "Description": "Limited Edition! Sweet pear with warm cinnamon spices.",
+          "DisplayName": "Red Bull Winter 2023 (Pear Cinnamon)",
+          "Description": "Limited release! Sweet pear with warm cinnamon spices.",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -716,8 +716,8 @@
         },
         "{{ModId}}_WinterEdition2022": {
           "Name": "Red Bull Winter Edition 2022",
-          "DisplayName": "Winter Edition 2022 (Fig Apple)",
-          "Description": "Limited Edition! Fig and apple with rich winter sweetness.",
+          "DisplayName": "Red Bull Winter 2022 (Fig Apple)",
+          "Description": "Limited release! Fig and apple with rich winter sweetness.",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -744,8 +744,8 @@
         },
         "{{ModId}}_WinterEdition2021": {
           "Name": "Red Bull Winter Edition 2021",
-          "DisplayName": "Winter Edition 2021 (Pomegranate)",
-          "Description": "Limited Edition! Bold pomegranate with a tart finish.",
+          "DisplayName": "Red Bull Winter 2021 (Pomegranate)",
+          "Description": "Limited release! Bold pomegranate with a tart finish.",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -772,8 +772,8 @@
         },
         "{{ModId}}_WinterEdition2020": {
           "Name": "Red Bull Winter Edition 2020",
-          "DisplayName": "Winter Edition 2020 (Arctic Berry)",
-          "Description": "Limited Edition! Cool arctic berry flavor—crisp and frosty.",
+          "DisplayName": "Red Bull Winter 2020 (Arctic Berry)",
+          "Description": "Limited release! Cool arctic berry flavor—crisp and frosty.",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -800,8 +800,8 @@
         },
         "{{ModId}}_SpringEdition2025": {
           "Name": "Red Bull Spring Edition 2025",
-          "DisplayName": "Spring Edition 2025 (Grapefruit & Blossom)",
-          "Description": "Limited Edition! Bright grapefruit with soft floral blossom notes.",
+          "DisplayName": "Red Bull Spring 2025 (Grapefruit & Blossom)",
+          "Description": "Limited release! Bright grapefruit with soft floral blossom notes.",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -829,8 +829,8 @@
         },
         "{{ModId}}_SpringEdition2024": {
           "Name": "Red Bull Spring Edition 2024",
-          "DisplayName": "Spring Edition 2024 (Waldbeere)",
-          "Description": "Limited Edition! Forest berries with a tart-sweet finish.",
+          "DisplayName": "Red Bull Spring 2024 (Waldbeere)",
+          "Description": "Limited release! Forest berries with a tart-sweet finish.",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -885,7 +885,7 @@
         },
         "{{ModId}}_StarBullMusk": {
           "Name": "Star Bull Monster Musk",
-          "DisplayName": "Star Bull (Monster Musk)",
+          "DisplayName": "Star Bull Monster Musk",
           "Description": "A mysterious arcane blend that makes you irresistible to monsters.",
           "Type": "Basic",
           "Category": -20,
@@ -915,7 +915,7 @@
         },
         "{{ModId}}_StarBullGarlic": {
           "Name": "Star Bull Garlic",
-          "DisplayName": "Star Bull (Oil of Garlic)",
+          "DisplayName": "Star Bull Garlic",
           "Description": "An arcane infusion that wards off enemies with a pungent aura.",
           "Type": "Basic",
           "Category": -20,
