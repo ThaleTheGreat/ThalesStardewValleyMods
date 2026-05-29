@@ -1,0 +1,21 @@
+{
+    "Name": "The Muttering Farmer -Thales Chatter Expansion",
+    "Author": "ThaleTheGreat",
+    "Version": "1.0.0",
+    "Description": "Adds a large amount of chatter for The Muttering Farmer.",
+    "UniqueID": "ThaleTheGreat.TheMutteringFarmerThalesChatterExpansion",
+    "MinimumApiVersion": "4.0.0",
+    "UpdateKeys": [
+        "Nexus:46856"
+    ],
+    "ContentPackFor": {
+        "UniqueID": "YunHikari.TheMutteringFarmer",
+        "MinimumVersion": "1.0.9"
+    },
+    "Dependencies": [
+        {
+            "UniqueID": "YunHikari.TheMutteringFarmer",
+            "IsRequired": true
+        }
+    ]
+}
