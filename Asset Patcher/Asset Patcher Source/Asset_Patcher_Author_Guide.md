@@ -139,6 +139,7 @@ Each entry in `Replacements` describes one file replacement.
 | `TargetMod` | Yes | UniqueID of the mod whose file should be replaced. |
 | `TargetPath` | Yes | Relative path inside the target mod folder. |
 | `FromFile` | Yes | Relative path inside your addon pack to copy from. |
+| `BackupSuffix` | No | Backup suffix inserted before the extension. Defaults to `.original`. |
 | `CreateBackup` | No | Whether to create a backup before replacing. Defaults to `true`. |
 | `ReapplyWhenTargetChanged` | No | Whether to copy again if the target mod updates/restores the file. Defaults to `true`. |
 | `When` | No | Conditions that must match before replacement runs. |
@@ -190,6 +191,7 @@ This replaces `Assets/InfoTab.png` inside the `Xan.MoreStats` mod folder with yo
       "TargetMod": "Xan.MoreStats",
       "TargetPath": "Assets/InfoTab.png",
       "FromFile": "assets/InfoTab.png",
+      "BackupSuffix": ".original",
       "CreateBackup": true,
       "ReapplyWhenTargetChanged": true,
       "When": {
