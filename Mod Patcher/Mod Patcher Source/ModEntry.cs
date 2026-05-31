@@ -19,6 +19,9 @@ internal sealed partial class ModEntry : Mod
     private static IMonitor? StaticMonitor;
     private static bool StaticDebugLogging;
 
+    [ThreadStatic]
+    private static RegisteredPatch? PendingRuntimeVanillaUiPatch;
+
     private ModConfig Config = new();
 
     private Harmony? Harmony;
@@ -364,7 +367,14 @@ internal sealed partial class ModEntry : Mod
             }
 
             if (patch.IsGenerated)
+            {
+                PendingRuntimeVanillaUiPatch = patch;
+
+                if (StaticDebugLogging)
+                    StaticMonitor?.Log($"Prepared runtime vanilla UI patch '{patch.LogName}' for {relativePath}.", LogLevel.Debug);
+
                 return;
+            }
 
             if (!File.Exists(patch.SourcePath))
                 return;
@@ -382,16 +392,23 @@ internal sealed partial class ModEntry : Mod
 
     private static bool Texture2DFromStreamPrefix(GraphicsDevice graphicsDevice, Stream stream, ref Texture2D __result)
     {
+        RegisteredPatch? pendingPatch = PendingRuntimeVanillaUiPatch;
+
         try
         {
-            if (stream is not FileStream fileStream)
-                return true;
+            RegisteredPatch? patch = null;
 
-            string fullPath = Path.GetFullPath(fileStream.Name);
-            RegisteredPatch? patch;
-            lock (Lock)
+            if (stream is FileStream fileStream)
             {
-                PatchesByTargetFullPath.TryGetValue(fullPath, out patch);
+                string fullPath = Path.GetFullPath(fileStream.Name);
+                lock (Lock)
+                {
+                    PatchesByTargetFullPath.TryGetValue(fullPath, out patch);
+                }
+            }
+            else if (pendingPatch is not null)
+            {
+                patch = pendingPatch;
             }
 
             if (patch == null || !patch.IsGenerated)
@@ -411,6 +428,10 @@ internal sealed partial class ModEntry : Mod
         {
             if (StaticDebugLogging)
                 StaticMonitor?.Log($"Failed creating runtime vanilla UI texture: {ex.Message}", LogLevel.Debug);
+        }
+        finally
+        {
+            PendingRuntimeVanillaUiPatch = null;
         }
 
         return true;
