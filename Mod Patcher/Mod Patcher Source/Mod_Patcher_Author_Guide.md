@@ -235,36 +235,42 @@ Yes. If your pack targets one mod, list that mod in `Dependencies` with `"IsRequ
 
 No. Use `ContentPackFor` for Mod Patcher. Use `Dependencies` for the target mod or other required mods.
 
-## Runtime vanilla UI sources
+## Generated vanilla UI sources
 
-Mod Patcher supports runtime vanilla UI sources for cases where a target mod loads a private image but the replacement should inherit the player's active UI recolor.
+Mod Patcher 1.1.0 adds generated vanilla UI sources for cases where a target mod loads a private image but the replacement should inherit the player's active UI recolor.
 
 Use exactly one source field per change: `FromFile` or `FromVanillaUi`.
 
 Supported `FromVanillaUi` values:
 
-```json
-"MenuBox"
-```
+| Value | Description |
+|---|---|
+| `MenuBox` | Generates a PNG using Stardew's vanilla menu box texture. |
 
 Example:
 
 ```json
 {
-  "Action": "PatchMod",
-  "TargetMod": "Example.Mod",
-  "TargetPath": "assets/menu.png",
-  "FromVanillaUi": "MenuBox",
-  "OutputWidth": 64,
-  "OutputHeight": 64
+  "Changes": [
+    {
+      "LogName": "Utility Pocket vanilla recolor HUD",
+      "Action": "PatchMod",
+      "TargetMod": "ModderDrew.UtilityPocket",
+      "TargetPath": "assets/UtilityPocketHUD.png",
+      "FromVanillaUi": "MenuBox",
+      "OutputWidth": 64,
+      "OutputHeight": 64
+    }
+  ]
 }
 ```
 
-Runtime vanilla UI sources are created in memory only. Mod Patcher does not write generated PNGs to disk and does not maintain a generated texture folder. The original target file remains on disk, and Mod Patcher replaces the decoded `Texture2D` at runtime when the target mod loads that file.
+Generated files are written to Mod Patcher's `generated` folder and are used as the runtime replacement file. They are generated from the game's currently loaded UI texture, so recolor mods that affect the vanilla menu texture can affect the result.
+
 
 ## BridgeMods runtime bridge action
 
-Mod Patcher 1.2.2 adds the `BridgeMods` action for data-only compatibility packs that need to bridge live runtime behavior between supported mods. Its bridge kind is `ReflectionProxyBridge`, a generic reflection/proxy bridge which can be extended through source/target declarations. Use `UseCase`, `SourceRole`, `TargetRole`, `Payload`, and `Operation` to describe the bridge generically instead of hardcoding source/target types.
+Mod Patcher 1.2.0 adds the `BridgeMods` action for data-only compatibility packs that need to bridge live runtime behavior between supported mods. Its bridge kind is `ReflectionProxyBridge`, a generic reflection/proxy bridge which can be extended through source/target declarations. Use `UseCase`, `SourceRole`, `TargetRole`, `Payload`, and `Operation` to describe the bridge generically instead of hardcoding source/target types.
 
 `BridgeMods` does not activate unless at least one declared source mod and at least one declared target mod are loaded. All provider/target dependencies can be optional in the content pack manifest for mix-and-match compatibility.
 
