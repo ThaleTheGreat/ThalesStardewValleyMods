@@ -197,7 +197,7 @@ Check these first:
 
 ### The target mod uses raw file loading
 
-Mod Patcher will not catch raw file loading.
+Mod Patcher will not catch raw file loading. Use Asset Patcher for loose files loaded through raw file I/O.
 
 ### The target file is embedded in a DLL
 
@@ -234,3 +234,35 @@ Yes. If your pack targets one mod, list that mod in `Dependencies` with `"IsRequ
 ### Should I put Mod Patcher in Dependencies?
 
 No. Use `ContentPackFor` for Mod Patcher. Use `Dependencies` for the target mod or other required mods.
+
+## Generated vanilla UI sources
+
+Mod Patcher 1.1.0 adds generated vanilla UI sources for cases where a target mod loads a private image but the replacement should inherit the player's active UI recolor.
+
+Use exactly one source field per change: `FromFile` or `FromVanillaUi`.
+
+Supported `FromVanillaUi` values:
+
+| Value | Description |
+|---|---|
+| `MenuBox` | Generates a PNG using Stardew's vanilla menu box texture. |
+
+Example:
+
+```json
+{
+  "Changes": [
+    {
+      "LogName": "Utility Pocket vanilla recolor HUD",
+      "Action": "PatchMod",
+      "TargetMod": "ModderDrew.UtilityPocket",
+      "TargetPath": "assets/UtilityPocketHUD.png",
+      "FromVanillaUi": "MenuBox",
+      "OutputWidth": 64,
+      "OutputHeight": 64
+    }
+  ]
+}
+```
+
+Generated files are written to Mod Patcher's `generated` folder and are used as the runtime replacement file. They are generated from the game's currently loaded UI texture, so recolor mods that affect the vanilla menu texture can affect the result.

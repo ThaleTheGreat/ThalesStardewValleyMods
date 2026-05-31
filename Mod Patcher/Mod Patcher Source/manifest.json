@@ -1,7 +1,7 @@
 {
   "Name": "Mod Patcher",
   "Author": "ThaleTheGreat",
-  "Version": "1.0.0",
+  "Version": "1.1.0",
   "Description": "Runtime framework for patching SMAPI mod-content asset loads through addon packs.",
   "UniqueID": "ThaleTheGreat.ModPatcher",
   "EntryDll": "ModPatcher.dll",

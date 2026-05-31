@@ -16,6 +16,12 @@ internal sealed class AssetPatchChange
     public string TargetPath { get; set; } = "";
 
     public string FromFile { get; set; } = "";
+
+    public string FromVanillaUi { get; set; } = "";
+
+    public int OutputWidth { get; set; } = 64;
+
+    public int OutputHeight { get; set; } = 64;
 }
 
 internal sealed class RegisteredPatch
@@ -31,4 +37,12 @@ internal sealed class RegisteredPatch
     public string SourcePath { get; set; } = "";
 
     public string TargetFullPath { get; set; } = "";
+
+    public string FromVanillaUi { get; set; } = "";
+
+    public int OutputWidth { get; set; } = 64;
+
+    public int OutputHeight { get; set; } = 64;
+
+    public bool IsGenerated => !string.IsNullOrWhiteSpace(this.FromVanillaUi);
 }

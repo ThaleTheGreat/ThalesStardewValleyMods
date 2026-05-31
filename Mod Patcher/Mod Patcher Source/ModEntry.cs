@@ -1,6 +1,10 @@
 using System.Reflection;
 using System.Text.Json;
 using HarmonyLib;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using StardewValley;
+using StardewValley.Menus;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 
@@ -15,6 +19,8 @@ internal sealed class ModEntry : Mod
     private static IMonitor? StaticMonitor;
     private static bool StaticDebugLogging;
 
+    private string GeneratedAssetRoot = "";
+
     private ModConfig Config = new();
 
     private Harmony? Harmony;
@@ -25,6 +31,7 @@ internal sealed class ModEntry : Mod
 
         this.Config = helper.ReadConfig<ModConfig>();
         StaticDebugLogging = this.Config.DebugLogging;
+        this.GeneratedAssetRoot = Path.Combine(helper.DirectoryPath, "generated");
 
         this.LoadChanges();
         this.ApplyHarmonyPatches();
@@ -80,9 +87,18 @@ internal sealed class ModEntry : Mod
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(change.FromFile))
+        bool hasFileSource = !string.IsNullOrWhiteSpace(change.FromFile);
+        bool hasVanillaUiSource = !string.IsNullOrWhiteSpace(change.FromVanillaUi);
+
+        if (hasFileSource == hasVanillaUiSource)
         {
-            this.Monitor.Log($"Ignored change from {pack.Manifest.UniqueID}: FromFile is required.", LogLevel.Warn);
+            this.Monitor.Log($"Ignored change from {pack.Manifest.UniqueID}: exactly one source is required: FromFile or FromVanillaUi.", LogLevel.Warn);
+            return;
+        }
+
+        if (hasVanillaUiSource && !IsSupportedVanillaUi(change.FromVanillaUi))
+        {
+            this.Monitor.Log($"Ignored change from {pack.Manifest.UniqueID}: unsupported FromVanillaUi '{change.FromVanillaUi}'.", LogLevel.Warn);
             return;
         }
 
@@ -92,17 +108,30 @@ internal sealed class ModEntry : Mod
             return;
         }
 
-        if (!IsSafeRelativePath(change.FromFile))
-        {
-            this.Monitor.Log($"Ignored change from {pack.Manifest.UniqueID}: FromFile '{change.FromFile}' is unsafe.", LogLevel.Warn);
-            return;
-        }
+        string sourcePath;
+        string fromVanillaUi = change.FromVanillaUi.Trim();
+        int outputWidth = Math.Clamp(change.OutputWidth, 1, 4096);
+        int outputHeight = Math.Clamp(change.OutputHeight, 1, 4096);
 
-        string sourcePath = Path.GetFullPath(Path.Combine(pack.DirectoryPath, NormalizeForPlatform(change.FromFile)));
-        if (!File.Exists(sourcePath))
+        if (hasFileSource)
         {
-            this.Monitor.Log($"Ignored change from {pack.Manifest.UniqueID}: source file '{change.FromFile}' was not found.", LogLevel.Warn);
-            return;
+            if (!IsSafeRelativePath(change.FromFile))
+            {
+                this.Monitor.Log($"Ignored change from {pack.Manifest.UniqueID}: FromFile '{change.FromFile}' is unsafe.", LogLevel.Warn);
+                return;
+            }
+
+            sourcePath = Path.GetFullPath(Path.Combine(pack.DirectoryPath, NormalizeForPlatform(change.FromFile)));
+            if (!File.Exists(sourcePath))
+            {
+                this.Monitor.Log($"Ignored change from {pack.Manifest.UniqueID}: source file '{change.FromFile}' was not found.", LogLevel.Warn);
+                return;
+            }
+        }
+        else
+        {
+            string generatedFileName = BuildGeneratedFileName(pack.Manifest.UniqueID, change.TargetMod, change.TargetPath, fromVanillaUi, outputWidth, outputHeight);
+            sourcePath = Path.Combine(this.GeneratedAssetRoot, generatedFileName);
         }
 
         string targetModId = change.TargetMod.Trim();
@@ -129,13 +158,37 @@ internal sealed class ModEntry : Mod
             TargetMod = targetModId,
             TargetPath = targetPath,
             SourcePath = sourcePath,
-            TargetFullPath = targetFullPath
+            TargetFullPath = targetFullPath,
+            FromVanillaUi = fromVanillaUi,
+            OutputWidth = outputWidth,
+            OutputHeight = outputHeight
         };
 
         lock (Lock)
             PatchesByTargetFullPath[targetFullPath] = patch;
 
-        this.LogDebug($"Registered patch '{patch.LogName}': {targetFullPath} -> {sourcePath}");
+        if (patch.IsGenerated)
+            this.LogDebug($"Registered generated patch '{patch.LogName}': {targetFullPath} -> {patch.FromVanillaUi} {patch.OutputWidth}x{patch.OutputHeight}");
+        else
+            this.LogDebug($"Registered patch '{patch.LogName}': {targetFullPath} -> {sourcePath}");
+    }
+
+    private static bool IsSupportedVanillaUi(string value)
+    {
+        return string.Equals(value.Trim(), "MenuBox", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string BuildGeneratedFileName(string packId, string targetMod, string targetPath, string sourceKind, int width, int height)
+    {
+        string text = $"{packId}|{targetMod}|{targetPath}|{sourceKind}|{width}|{height}";
+        uint hash = unchecked((uint)StringComparer.OrdinalIgnoreCase.GetHashCode(text));
+        return $"{SanitizeFileName(packId)}_{hash:X8}.png";
+    }
+
+    private static string SanitizeFileName(string value)
+    {
+        char[] invalid = Path.GetInvalidFileNameChars();
+        return new string(value.Select(ch => invalid.Contains(ch) ? '_' : ch).ToArray());
     }
 
     private string? FindInstalledModDirectory(string uniqueId)
@@ -305,7 +358,10 @@ internal sealed class ModEntry : Mod
             }
 
             if (!File.Exists(patch.SourcePath))
-                return;
+            {
+                if (!patch.IsGenerated || !TryGeneratePatchSource(patch))
+                    return;
+            }
 
             if (StaticDebugLogging)
                 StaticMonitor?.Log($"Patched asset '{patch.LogName}': {relativePath} -> {patch.SourcePath}", LogLevel.Debug);
@@ -316,6 +372,64 @@ internal sealed class ModEntry : Mod
         {
             // Never break SMAPI's file lookup if our patch check fails.
         }
+    }
+
+    private static bool TryGeneratePatchSource(RegisteredPatch patch)
+    {
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(patch.SourcePath)!);
+
+            if (string.Equals(patch.FromVanillaUi, "MenuBox", StringComparison.OrdinalIgnoreCase))
+            {
+                GenerateMenuBoxTexture(patch.SourcePath, patch.OutputWidth, patch.OutputHeight);
+                return File.Exists(patch.SourcePath);
+            }
+        }
+        catch (Exception ex)
+        {
+            if (StaticDebugLogging)
+                StaticMonitor?.Log($"Failed generating patch asset '{patch.LogName}': {ex.Message}", LogLevel.Debug);
+        }
+
+        return false;
+    }
+
+    private static void GenerateMenuBoxTexture(string outputPath, int width, int height)
+    {
+        GraphicsDevice graphicsDevice = Game1.graphics.GraphicsDevice;
+        RenderTargetBinding[] previousTargets = graphicsDevice.GetRenderTargets();
+
+        using RenderTarget2D renderTarget = new(graphicsDevice, width, height, false, SurfaceFormat.Color, DepthFormat.None);
+        using SpriteBatch spriteBatch = new(graphicsDevice);
+
+        try
+        {
+            graphicsDevice.SetRenderTarget(renderTarget);
+            graphicsDevice.Clear(Color.Transparent);
+
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone);
+            IClickableMenu.drawTextureBox(
+                spriteBatch,
+                Game1.menuTexture,
+                new Rectangle(0, 256, 60, 60),
+                0,
+                0,
+                width,
+                height,
+                Color.White,
+                1f,
+                false
+            );
+            spriteBatch.End();
+        }
+        finally
+        {
+            graphicsDevice.SetRenderTargets(previousTargets);
+        }
+
+        using FileStream stream = File.Create(outputPath);
+        renderTarget.SaveAsPng(stream, width, height);
     }
 
     private static string NormalizeAssetPath(string path)
