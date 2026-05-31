@@ -1,0 +1,18 @@
+{
+  "Name": "Mod Patcher",
+  "Author": "ThaleTheGreat",
+  "Version": "1.0.0",
+  "Description": "Runtime framework for patching SMAPI mod-content asset loads through addon packs.",
+  "UniqueID": "ThaleTheGreat.ModPatcher",
+  "EntryDll": "ModPatcher.dll",
+  "MinimumApiVersion": "4.0.0",
+  "UpdateKeys": [
+    "Nexus:46927"
+  ],
+  "Dependencies": [
+    {
+      "UniqueID": "spacechase0.GenericModConfigMenu",
+      "IsRequired": false
+    }
+  ]
+}
