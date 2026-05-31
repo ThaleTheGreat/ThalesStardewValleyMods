@@ -10,7 +10,7 @@ using StardewModdingAPI.Events;
 
 namespace ThaleTheGreat.ModPatcher;
 
-internal sealed class ModEntry : Mod
+internal sealed partial class ModEntry : Mod
 {
     private static readonly object Lock = new();
 
@@ -18,8 +18,6 @@ internal sealed class ModEntry : Mod
 
     private static IMonitor? StaticMonitor;
     private static bool StaticDebugLogging;
-
-    private string GeneratedAssetRoot = "";
 
     private ModConfig Config = new();
 
@@ -31,12 +29,13 @@ internal sealed class ModEntry : Mod
 
         this.Config = helper.ReadConfig<ModConfig>();
         StaticDebugLogging = this.Config.DebugLogging;
-        this.GeneratedAssetRoot = Path.Combine(helper.DirectoryPath, "generated");
-
         this.LoadChanges();
         this.ApplyHarmonyPatches();
 
         helper.Events.GameLoop.GameLaunched += this.OnGameLaunched;
+        helper.Events.GameLoop.UpdateTicked += this.OnUpdateTicked;
+        helper.Events.GameLoop.Saving += this.OnSaving;
+        helper.Events.GameLoop.ReturnedToTitle += (_, _) => this.ClearBridgeProxies();
     }
 
     private void LoadChanges()
@@ -46,7 +45,8 @@ internal sealed class ModEntry : Mod
             PatchContentFile? content;
             try
             {
-                content = pack.ReadJsonFile<PatchContentFile>("content.json");
+                content = pack.ReadJsonFile<PatchContentFile>("content.json")
+                    ?? pack.ReadJsonFile<PatchContentFile>("patches.json");
             }
             catch (Exception ex)
             {
@@ -69,6 +69,12 @@ internal sealed class ModEntry : Mod
 
     private void TryRegisterChange(IContentPack pack, AssetPatchChange change)
     {
+        if (string.Equals(change.Action, "BridgeMods", StringComparison.OrdinalIgnoreCase))
+        {
+            this.TryRegisterBridgeChange(pack, change);
+            return;
+        }
+
         if (!string.Equals(change.Action, "PatchMod", StringComparison.OrdinalIgnoreCase))
         {
             this.Monitor.Log($"Ignored change from {pack.Manifest.UniqueID}: unsupported Action '{change.Action}'.", LogLevel.Warn);
@@ -130,8 +136,7 @@ internal sealed class ModEntry : Mod
         }
         else
         {
-            string generatedFileName = BuildGeneratedFileName(pack.Manifest.UniqueID, change.TargetMod, change.TargetPath, fromVanillaUi, outputWidth, outputHeight);
-            sourcePath = Path.Combine(this.GeneratedAssetRoot, generatedFileName);
+            sourcePath = string.Empty;
         }
 
         string targetModId = change.TargetMod.Trim();
@@ -168,7 +173,7 @@ internal sealed class ModEntry : Mod
             PatchesByTargetFullPath[targetFullPath] = patch;
 
         if (patch.IsGenerated)
-            this.LogDebug($"Registered generated patch '{patch.LogName}': {targetFullPath} -> {patch.FromVanillaUi} {patch.OutputWidth}x{patch.OutputHeight}");
+            this.LogDebug($"Registered runtime vanilla UI patch '{patch.LogName}': {targetFullPath} -> {patch.FromVanillaUi} {patch.OutputWidth}x{patch.OutputHeight}");
         else
             this.LogDebug($"Registered patch '{patch.LogName}': {targetFullPath} -> {sourcePath}");
     }
@@ -178,18 +183,6 @@ internal sealed class ModEntry : Mod
         return string.Equals(value.Trim(), "MenuBox", StringComparison.OrdinalIgnoreCase);
     }
 
-    private static string BuildGeneratedFileName(string packId, string targetMod, string targetPath, string sourceKind, int width, int height)
-    {
-        string text = $"{packId}|{targetMod}|{targetPath}|{sourceKind}|{width}|{height}";
-        uint hash = unchecked((uint)StringComparer.OrdinalIgnoreCase.GetHashCode(text));
-        return $"{SanitizeFileName(packId)}_{hash:X8}.png";
-    }
-
-    private static string SanitizeFileName(string value)
-    {
-        char[] invalid = Path.GetInvalidFileNameChars();
-        return new string(value.Select(ch => invalid.Contains(ch) ? '_' : ch).ToArray());
-    }
 
     private string? FindInstalledModDirectory(string uniqueId)
     {
@@ -291,15 +284,28 @@ internal sealed class ModEntry : Mod
             patched++;
         }
 
-        if (patched == 0)
-            this.Monitor.Log("No SMAPI file lookup methods were patched. Asset patches will not run.", LogLevel.Error);
+        MethodInfo? texturePrefix = AccessTools.Method(typeof(ModEntry), nameof(Texture2DFromStreamPrefix));
+        MethodInfo? fromStream = AccessTools.Method(typeof(Texture2D), nameof(Texture2D.FromStream), new[] { typeof(GraphicsDevice), typeof(Stream) });
+        if (texturePrefix == null || fromStream == null)
+        {
+            this.Monitor.Log("Could not find Texture2D.FromStream patch hook. Runtime vanilla UI sources will not run.", LogLevel.Warn);
+        }
         else
-            this.Monitor.Log($"Harmony patch applied to {patched} SMAPI file lookup method(s).", LogLevel.Info);
+        {
+            this.Harmony.Patch(fromStream, prefix: new HarmonyMethod(texturePrefix));
+            patched++;
+        }
+
+        if (patched == 0)
+            this.Monitor.Log("No SMAPI file lookup or texture load methods were patched. Asset patches will not run.", LogLevel.Error);
+        else
+            this.Monitor.Log($"Harmony patch applied to {patched} SMAPI/mod texture lookup method(s).", LogLevel.Info);
     }
 
     private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
     {
         this.RegisterGmcm();
+        this.ApplyBridgeModPatches();
     }
 
     private void RegisterGmcm()
@@ -357,11 +363,11 @@ internal sealed class ModEntry : Mod
                     return;
             }
 
+            if (patch.IsGenerated)
+                return;
+
             if (!File.Exists(patch.SourcePath))
-            {
-                if (!patch.IsGenerated || !TryGeneratePatchSource(patch))
-                    return;
-            }
+                return;
 
             if (StaticDebugLogging)
                 StaticMonitor?.Log($"Patched asset '{patch.LogName}': {relativePath} -> {patch.SourcePath}", LogLevel.Debug);
@@ -374,33 +380,46 @@ internal sealed class ModEntry : Mod
         }
     }
 
-    private static bool TryGeneratePatchSource(RegisteredPatch patch)
+    private static bool Texture2DFromStreamPrefix(GraphicsDevice graphicsDevice, Stream stream, ref Texture2D __result)
     {
         try
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(patch.SourcePath)!);
+            if (stream is not FileStream fileStream)
+                return true;
+
+            string fullPath = Path.GetFullPath(fileStream.Name);
+            RegisteredPatch? patch;
+            lock (Lock)
+            {
+                PatchesByTargetFullPath.TryGetValue(fullPath, out patch);
+            }
+
+            if (patch == null || !patch.IsGenerated)
+                return true;
 
             if (string.Equals(patch.FromVanillaUi, "MenuBox", StringComparison.OrdinalIgnoreCase))
             {
-                GenerateMenuBoxTexture(patch.SourcePath, patch.OutputWidth, patch.OutputHeight);
-                return File.Exists(patch.SourcePath);
+                __result = CreateMenuBoxTexture(graphicsDevice, patch.OutputWidth, patch.OutputHeight);
+
+                if (StaticDebugLogging)
+                    StaticMonitor?.Log($"Patched runtime vanilla UI texture '{patch.LogName}': {patch.FromVanillaUi} {patch.OutputWidth}x{patch.OutputHeight}", LogLevel.Debug);
+
+                return false;
             }
         }
         catch (Exception ex)
         {
             if (StaticDebugLogging)
-                StaticMonitor?.Log($"Failed generating patch asset '{patch.LogName}': {ex.Message}", LogLevel.Debug);
+                StaticMonitor?.Log($"Failed creating runtime vanilla UI texture: {ex.Message}", LogLevel.Debug);
         }
 
-        return false;
+        return true;
     }
 
-    private static void GenerateMenuBoxTexture(string outputPath, int width, int height)
+    private static Texture2D CreateMenuBoxTexture(GraphicsDevice graphicsDevice, int width, int height)
     {
-        GraphicsDevice graphicsDevice = Game1.graphics.GraphicsDevice;
         RenderTargetBinding[] previousTargets = graphicsDevice.GetRenderTargets();
-
-        using RenderTarget2D renderTarget = new(graphicsDevice, width, height, false, SurfaceFormat.Color, DepthFormat.None);
+        RenderTarget2D renderTarget = new(graphicsDevice, width, height, false, SurfaceFormat.Color, DepthFormat.None);
         using SpriteBatch spriteBatch = new(graphicsDevice);
 
         try
@@ -428,8 +447,7 @@ internal sealed class ModEntry : Mod
             graphicsDevice.SetRenderTargets(previousTargets);
         }
 
-        using FileStream stream = File.Create(outputPath);
-        renderTarget.SaveAsPng(stream, width, height);
+        return renderTarget;
     }
 
     private static string NormalizeAssetPath(string path)

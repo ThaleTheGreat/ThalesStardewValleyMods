@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>ModPatcher</AssemblyName>
     <RootNamespace>ThaleTheGreat.ModPatcher</RootNamespace>
-    <Version>1.1.0</Version>
+    <Version>1.2.3</Version>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <ModFolderName>Mod Patcher</ModFolderName>
   </PropertyGroup>

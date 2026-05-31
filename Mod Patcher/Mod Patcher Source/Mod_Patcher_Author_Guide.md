@@ -8,11 +8,11 @@ Mod Patcher does **not** replace files on disk. It redirects the runtime file lo
 
 ## Quick example
 
-Addon packs should use `(MP)` as the folder prefix.
+Addon packs should use `[MP]` as the folder prefix.
 
 ```text
 Mods/
-  (MP) Asset Patch/
+  [MP] Asset Patch/
     manifest.json
     content.json
     assets/
@@ -23,7 +23,7 @@ Mods/
 
 ```json
 {
-  "Name": "(MP) Asset Patch",
+  "Name": "[MP] Asset Patch",
   "Author": "YourName",
   "Version": "1.0.0",
   "Description": "Patches an asset through Mod Patcher.",
@@ -235,17 +235,38 @@ Yes. If your pack targets one mod, list that mod in `Dependencies` with `"IsRequ
 
 No. Use `ContentPackFor` for Mod Patcher. Use `Dependencies` for the target mod or other required mods.
 
-## Generated vanilla UI sources
+## Runtime vanilla UI sources
 
-Mod Patcher 1.1.0 adds generated vanilla UI sources for cases where a target mod loads a private image but the replacement should inherit the player's active UI recolor.
+Mod Patcher supports runtime vanilla UI sources for cases where a target mod loads a private image but the replacement should inherit the player's active UI recolor.
 
 Use exactly one source field per change: `FromFile` or `FromVanillaUi`.
 
 Supported `FromVanillaUi` values:
 
-| Value | Description |
-|---|---|
-| `MenuBox` | Generates a PNG using Stardew's vanilla menu box texture. |
+```json
+"MenuBox"
+```
+
+Example:
+
+```json
+{
+  "Action": "PatchMod",
+  "TargetMod": "Example.Mod",
+  "TargetPath": "assets/menu.png",
+  "FromVanillaUi": "MenuBox",
+  "OutputWidth": 64,
+  "OutputHeight": 64
+}
+```
+
+Runtime vanilla UI sources are created in memory only. Mod Patcher does not write generated PNGs to disk and does not maintain a generated texture folder. The original target file remains on disk, and Mod Patcher replaces the decoded `Texture2D` at runtime when the target mod loads that file.
+
+## BridgeMods runtime bridge action
+
+Mod Patcher 1.2.2 adds the `BridgeMods` action for data-only compatibility packs that need to bridge live runtime behavior between supported mods. Its bridge kind is `ReflectionProxyBridge`, a generic reflection/proxy bridge which can be extended through source/target declarations. Use `UseCase`, `SourceRole`, `TargetRole`, `Payload`, and `Operation` to describe the bridge generically instead of hardcoding source/target types.
+
+`BridgeMods` does not activate unless at least one declared source mod and at least one declared target mod are loaded. All provider/target dependencies can be optional in the content pack manifest for mix-and-match compatibility.
 
 Example:
 
@@ -253,16 +274,40 @@ Example:
 {
   "Changes": [
     {
-      "LogName": "Utility Pocket vanilla recolor HUD",
-      "Action": "PatchMod",
-      "TargetMod": "ModderDrew.UtilityPocket",
-      "TargetPath": "assets/UtilityPocketHUD.png",
-      "FromVanillaUi": "MenuBox",
-      "OutputWidth": 64,
-      "OutputHeight": 64
+      "Action": "BridgeMods",
+      "Name": "Pockets Auto Tool Patches",
+      "RequireAnySource": [
+        "aedenthorn.Pockets",
+        "ModderDrew.UtilityBelt",
+        "ModderDrew.UtilityPocket"
+      ],
+      "RequireAnyTarget": [
+        "Trapyy.AutomatetoolSwap",
+        "aedenthorn.ToolSmartSwitch",
+        "lolmaj.AutoToolSelect"
+      ],
+      "Sources": [
+        { "ModID": "aedenthorn.Pockets", "Kind": "InventoryProvider" },
+        { "ModID": "ModderDrew.UtilityBelt", "Kind": "InventoryProvider" },
+        { "ModID": "ModderDrew.UtilityPocket", "Kind": "SingleItemProvider" }
+      ],
+      "Targets": [
+        { "ModID": "Trapyy.AutomatetoolSwap", "Kind": "ToolSelector" },
+        { "ModID": "aedenthorn.ToolSmartSwitch", "Kind": "ToolSelector" },
+        { "ModID": "lolmaj.AutoToolSelect", "Kind": "ToolSelector" }
+      ],
+      "Bridge": {
+        "Kind": "ReflectionProxyBridge",
+        "UseCase": "RuntimeProxy",
+        "SourceRole": "Provider",
+        "TargetRole": "Consumer",
+        "Payload": "Item",
+        "Operation": "TemporaryProxy",
+        "ProxyMode": "HiddenAppendedSlot",
+        "SyncBack": true,
+        "Cleanup": "AfterUse"
+      }
     }
   ]
 }
 ```
-
-Generated files are written to Mod Patcher's `generated` folder and are used as the runtime replacement file. They are generated from the game's currently loaded UI texture, so recolor mods that affect the vanilla menu texture can affect the result.
