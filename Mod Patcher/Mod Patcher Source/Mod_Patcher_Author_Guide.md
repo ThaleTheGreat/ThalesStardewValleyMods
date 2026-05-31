@@ -197,7 +197,7 @@ Check these first:
 
 ### The target mod uses raw file loading
 
-Mod Patcher will not catch raw file loading. Use Asset Patcher for loose files loaded through raw file I/O.
+Mod Patcher will not catch raw file loading.
 
 ### The target file is embedded in a DLL
 
