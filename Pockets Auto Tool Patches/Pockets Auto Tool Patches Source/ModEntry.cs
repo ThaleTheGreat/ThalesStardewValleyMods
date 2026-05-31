@@ -21,11 +21,16 @@ public sealed class ModEntry : Mod
     private const string AutomateToolSwapId = "Trapyy.AutomatetoolSwap";
     private const string ToolSmartSwitchId = "aedenthorn.ToolSmartSwitch";
     private const string AutoToolSelectId = "lolmaj.AutoToolSelect";
+    private const string UtilityBeltId = "ModderDrew.UtilityBelt";
+    private const string UtilityPocketId = "ModderDrew.UtilityPocket";
     private const string PocketsModDataKey = "aedenthorn.Pockets/pocket";
 
     private readonly List<PendingProxyItem> pendingProxyItems = new();
+    private readonly List<IPocketProvider> pocketProviders = new();
     private Harmony? harmony;
     private PocketsBridge? pockets;
+    private UtilityBeltBridge? utilityBelt;
+    private UtilityPocketBridge? utilityPocket;
     private MethodInfo? toolSmartSwitchSmartSwitchMethod;
     private MethodInfo? toolSmartSwitchSwitchForTerrainFeatureMethod;
     private MethodInfo? toolSmartSwitchGetToolsMethod;
@@ -47,23 +52,49 @@ public sealed class ModEntry : Mod
 
     private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
     {
-        if (!Helper.ModRegistry.IsLoaded(PocketsId))
-            return;
-
         bool automateToolSwapLoaded = Helper.ModRegistry.IsLoaded(AutomateToolSwapId);
         bool toolSmartSwitchLoaded = Helper.ModRegistry.IsLoaded(ToolSmartSwitchId);
         bool autoToolSelectLoaded = Helper.ModRegistry.IsLoaded(AutoToolSelectId);
         if (!automateToolSwapLoaded && !toolSmartSwitchLoaded && !autoToolSelectLoaded)
             return;
 
-        pockets = PocketsBridge.TryCreate(Monitor);
-        if (pockets is null)
+        harmony = new Harmony(ModManifest.UniqueID);
+
+        if (Helper.ModRegistry.IsLoaded(PocketsId))
         {
-            Monitor.Log("Could not find Pockets internals. Compatibility patch was not applied.", LogLevel.Warn);
-            return;
+            pockets = PocketsBridge.TryCreate(Monitor);
+            if (pockets is not null)
+                pocketProviders.Add(pockets);
+            else
+                Monitor.Log("Could not find Pockets internals. Pockets compatibility was not applied.", LogLevel.Warn);
         }
 
-        harmony = new Harmony(ModManifest.UniqueID);
+        if (Helper.ModRegistry.IsLoaded(UtilityBeltId))
+        {
+            utilityBelt = UtilityBeltBridge.TryCreate(Monitor);
+            if (utilityBelt is not null)
+            {
+                pocketProviders.Add(utilityBelt);
+                PatchUtilityBeltCapture();
+            }
+            else
+                Monitor.Log("Could not find Utility Belt internals. Utility Belt compatibility was not applied.", LogLevel.Warn);
+        }
+
+        if (Helper.ModRegistry.IsLoaded(UtilityPocketId))
+        {
+            utilityPocket = UtilityPocketBridge.TryCreate(Monitor);
+            if (utilityPocket is not null)
+            {
+                pocketProviders.Add(utilityPocket);
+                PatchUtilityPocketCapture();
+            }
+            else
+                Monitor.Log("Could not find Utility Pocket internals. Utility Pocket compatibility was not applied.", LogLevel.Warn);
+        }
+
+        if (pocketProviders.Count == 0)
+            return;
 
         if (automateToolSwapLoaded)
             PatchAutomateToolSwap();
@@ -73,6 +104,46 @@ public sealed class ModEntry : Mod
 
         if (autoToolSelectLoaded)
             PatchAutoToolSelect();
+    }
+
+    private void PatchUtilityBeltCapture()
+    {
+        if (harmony is null || utilityBelt?.ModEntryType is null)
+            return;
+
+        MethodInfo? onSaveLoaded = AccessTools.Method(utilityBelt.ModEntryType, "OnSaveLoaded");
+        MethodInfo? onUpdateTicked = AccessTools.Method(utilityBelt.ModEntryType, "OnUpdateTicked");
+        HarmonyMethod capture = new(typeof(ModEntry), nameof(UtilityBeltCapturePostfix));
+
+        if (onSaveLoaded is not null)
+            harmony.Patch(onSaveLoaded, postfix: capture);
+        if (onUpdateTicked is not null)
+            harmony.Patch(onUpdateTicked, postfix: capture);
+    }
+
+    private void PatchUtilityPocketCapture()
+    {
+        if (harmony is null || utilityPocket?.ModEntryType is null)
+            return;
+
+        MethodInfo? onLoading = AccessTools.Method(utilityPocket.ModEntryType, "OnLoading");
+        MethodInfo? onUpdateTicked = AccessTools.Method(utilityPocket.ModEntryType, "OnUpdateTicked");
+        HarmonyMethod capture = new(typeof(ModEntry), nameof(UtilityPocketCapturePostfix));
+
+        if (onLoading is not null)
+            harmony.Patch(onLoading, postfix: capture);
+        if (onUpdateTicked is not null)
+            harmony.Patch(onUpdateTicked, postfix: capture);
+    }
+
+    private static void UtilityBeltCapturePostfix(object __instance)
+    {
+        Instance.utilityBelt?.Capture(__instance);
+    }
+
+    private static void UtilityPocketCapturePostfix(object __instance)
+    {
+        Instance.utilityPocket?.Capture(__instance);
     }
 
 
@@ -194,7 +265,7 @@ public sealed class ModEntry : Mod
 
     private static bool SetToolPrefix(Farmer player, Type toolType, string aux = "", bool anyTool = false)
     {
-        if (!Context.IsWorldReady || player is null || Instance.pockets is null)
+        if (!Context.IsWorldReady || player is null || !Instance.HasPocketProviders())
             return true;
 
         if (Contains(player.Items, player.maxItems.Value, item => MatchesTool(item, toolType, aux, anyTool)))
@@ -205,7 +276,7 @@ public sealed class ModEntry : Mod
 
     private static bool SetItemPrefix(Farmer player, string category, string item = "", string crops = "Both", int aux = 0)
     {
-        if (!Context.IsWorldReady || player is null || Instance.pockets is null)
+        if (!Context.IsWorldReady || player is null || !Instance.HasPocketProviders())
             return true;
 
         if (Contains(player.Items, player.maxItems.Value, candidate => MatchesItem(candidate, category, item, crops, aux)))
@@ -216,7 +287,7 @@ public sealed class ModEntry : Mod
 
     private static bool ToolSmartSwitchPrefix(Farmer f, Type? type, Dictionary<int, Tool> tools, ref bool __result)
     {
-        if (!Context.IsWorldReady || f is null || Instance.pockets is null)
+        if (!Context.IsWorldReady || f is null || !Instance.HasPocketProviders())
             return true;
 
         if (MatchesToolSmartSwitch(f.CurrentTool, type))
@@ -275,7 +346,7 @@ public sealed class ModEntry : Mod
 
     private static bool ShouldRunToolSmartSwitchHoldingToolBypass(Farmer? player, bool requireCropSwitch)
     {
-        if (!Context.IsWorldReady || player is null || Instance.pockets is null || Instance.toolSmartSwitchConfigField is null)
+        if (!Context.IsWorldReady || player is null || !Instance.HasPocketProviders() || Instance.toolSmartSwitchConfigField is null)
             return false;
 
         if (player.CurrentTool is not null || !Instance.HasAnyPocketTool(player))
@@ -293,10 +364,10 @@ public sealed class ModEntry : Mod
 
     private bool HasAnyPocketTool(Farmer player)
     {
-        if (pockets is null)
+        if (!HasPocketProviders())
             return false;
 
-        foreach (PocketInventory pocketInventory in pockets.GetPocketInventories(player))
+        foreach (PocketInventory pocketInventory in GetPocketInventories(player))
         {
             foreach (Item? item in pocketInventory.Items)
             {
@@ -306,6 +377,20 @@ public sealed class ModEntry : Mod
         }
 
         return false;
+    }
+
+    private bool HasPocketProviders()
+    {
+        return pocketProviders.Count > 0;
+    }
+
+    private IEnumerable<PocketInventory> GetPocketInventories(Farmer player)
+    {
+        foreach (IPocketProvider provider in pocketProviders)
+        {
+            foreach (PocketInventory inventory in provider.GetPocketInventories(player))
+                yield return inventory;
+        }
     }
 
     private static bool GetBoolProperty(object instance, string name)
@@ -334,7 +419,7 @@ public sealed class ModEntry : Mod
 
     private static bool ShouldRunAutoToolSelectUseBypass(Farmer? player)
     {
-        if (!Context.IsWorldReady || !Context.CanPlayerMove || player is null || Instance.pockets is null)
+        if (!Context.IsWorldReady || !Context.CanPlayerMove || player is null || !Instance.HasPocketProviders())
             return false;
 
         if (Game1.activeClickableMenu is not null || Game1.fadeToBlack)
@@ -541,10 +626,10 @@ public sealed class ModEntry : Mod
 
     private bool HasMatchingPocketItem(Farmer player, Predicate<Item> predicate)
     {
-        if (pockets is null)
+        if (!HasPocketProviders())
             return false;
 
-        foreach (PocketInventory pocketInventory in pockets.GetPocketInventories(player))
+        foreach (PocketInventory pocketInventory in GetPocketInventories(player))
         {
             foreach (Item? item in pocketInventory.Items)
             {
@@ -605,49 +690,49 @@ public sealed class ModEntry : Mod
     private static bool AutoToolSelectSetToolPrefix(Type t, int range, int Level)
     {
         Farmer player = Game1.player;
-        if (!Context.IsWorldReady || player is null || Instance.pockets is null)
+        if (!Context.IsWorldReady || player is null || !Instance.HasPocketProviders())
             return true;
 
         if (Contains(player.Items, range, item => MatchesAutoToolSelectTool(item, t, Level)))
             return true;
 
-        return !Instance.TryUsePocketProxy(player, item => MatchesAutoToolSelectTool(item, t, Level), insertToolbarSlot: false);
+        return !Instance.TryUsePocketProxy(player, item => MatchesAutoToolSelectTool(item, t, Level), insertToolbarSlot: true);
     }
 
     private static bool AutoToolSelectSetItemPrefix(string name, int range)
     {
         Farmer player = Game1.player;
-        if (!Context.IsWorldReady || player is null || Instance.pockets is null)
+        if (!Context.IsWorldReady || player is null || !Instance.HasPocketProviders())
             return true;
 
         if (Contains(player.Items, range, item => item.Name.Equals(name, StringComparison.OrdinalIgnoreCase)))
             return true;
 
-        return !Instance.TryUsePocketProxy(player, item => item.Name.Equals(name, StringComparison.OrdinalIgnoreCase), insertToolbarSlot: false);
+        return !Instance.TryUsePocketProxy(player, item => item.Name.Equals(name, StringComparison.OrdinalIgnoreCase), insertToolbarSlot: true);
     }
 
     private static bool AutoToolSelectSetScythePrefix(int range)
     {
         Farmer player = Game1.player;
-        if (!Context.IsWorldReady || player is null || Instance.pockets is null)
+        if (!Context.IsWorldReady || player is null || !Instance.HasPocketProviders())
             return true;
 
         if (Contains(player.Items, range, MatchesAutoToolSelectScythe))
             return true;
 
-        if (Instance.TryUsePocketProxy(player, MatchesAutoToolSelectScythe, insertToolbarSlot: false))
+        if (Instance.TryUsePocketProxy(player, MatchesAutoToolSelectScythe, insertToolbarSlot: true))
             return false;
 
         if (Contains(player.Items, range, item => item is MeleeWeapon))
             return true;
 
-        return !Instance.TryUsePocketProxy(player, item => item is MeleeWeapon, insertToolbarSlot: false);
+        return !Instance.TryUsePocketProxy(player, item => item is MeleeWeapon, insertToolbarSlot: true);
     }
 
     private static bool AutoToolSelectSetWeaponPrefix(int range)
     {
         Farmer player = Game1.player;
-        if (!Context.IsWorldReady || player is null || Instance.pockets is null)
+        if (!Context.IsWorldReady || player is null || !Instance.HasPocketProviders())
             return true;
 
         if (player.currentLocation is Farm || player.currentLocation.IsGreenhouse)
@@ -658,13 +743,13 @@ public sealed class ModEntry : Mod
         if (Contains(player.Items, range, preferred))
             return true;
 
-        if (Instance.TryUsePocketProxy(player, preferred, insertToolbarSlot: false))
+        if (Instance.TryUsePocketProxy(player, preferred, insertToolbarSlot: true))
             return false;
 
         if (Contains(player.Items, range, MatchesAutoToolSelectScythe))
             return true;
 
-        return !Instance.TryUsePocketProxy(player, MatchesAutoToolSelectScythe, insertToolbarSlot: false);
+        return !Instance.TryUsePocketProxy(player, MatchesAutoToolSelectScythe, insertToolbarSlot: true);
     }
 
     private bool HasActiveProxy(Farmer player)
@@ -674,12 +759,12 @@ public sealed class ModEntry : Mod
 
     private bool TryUsePocketProxy(Farmer player, Predicate<Item> predicate, bool playSound = false, bool insertToolbarSlot = false)
     {
-        if (pockets is null)
+        if (!HasPocketProviders())
             return false;
 
         TemporarySlot? temporarySlot = null;
 
-        foreach (PocketInventory pocketInventory in pockets.GetPocketInventories(player))
+        foreach (PocketInventory pocketInventory in GetPocketInventories(player))
         {
             for (int slot = 0; slot < pocketInventory.Items.Count; slot++)
             {
@@ -1035,7 +1120,196 @@ public sealed class ModEntry : Mod
         public IList<Item?> Items { get; }
     }
 
-    private sealed class PocketsBridge
+    private interface IPocketProvider
+    {
+        IEnumerable<PocketInventory> GetPocketInventories(Farmer player);
+    }
+
+    private sealed class SingleItemList : IList<Item?>
+    {
+        private readonly Func<Item?> getter;
+        private readonly Action<Item?> setter;
+
+        public SingleItemList(Func<Item?> getter, Action<Item?> setter)
+        {
+            this.getter = getter;
+            this.setter = setter;
+        }
+
+        public Item? this[int index]
+        {
+            get
+            {
+                ValidateIndex(index);
+                return getter();
+            }
+            set
+            {
+                ValidateIndex(index);
+                setter(value);
+            }
+        }
+
+        public int Count => 1;
+        public bool IsReadOnly => false;
+        public void Add(Item? item) => throw new NotSupportedException();
+        public void Clear() => setter(null);
+        public bool Contains(Item? item) => ReferenceEquals(getter(), item);
+        public void CopyTo(Item?[] array, int arrayIndex) => array[arrayIndex] = getter();
+        public IEnumerator<Item?> GetEnumerator()
+        {
+            yield return getter();
+        }
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        public int IndexOf(Item? item) => ReferenceEquals(getter(), item) ? 0 : -1;
+        public void Insert(int index, Item? item) => throw new NotSupportedException();
+        public bool Remove(Item? item)
+        {
+            if (!ReferenceEquals(getter(), item))
+                return false;
+
+            setter(null);
+            return true;
+        }
+        public void RemoveAt(int index)
+        {
+            ValidateIndex(index);
+            setter(null);
+        }
+
+        private static void ValidateIndex(int index)
+        {
+            if (index != 0)
+                throw new ArgumentOutOfRangeException(nameof(index));
+        }
+    }
+
+    private sealed class UtilityBeltBridge : IPocketProvider
+    {
+        private readonly IMonitor monitor;
+        private readonly FieldInfo pocketManagerField;
+        private readonly MethodInfo getActivePocketsMethod;
+        private readonly PropertyInfo pocketItemProperty;
+        private object? modEntryInstance;
+
+        private UtilityBeltBridge(IMonitor monitor, Type modEntryType, FieldInfo pocketManagerField, MethodInfo getActivePocketsMethod, PropertyInfo pocketItemProperty)
+        {
+            this.monitor = monitor;
+            ModEntryType = modEntryType;
+            this.pocketManagerField = pocketManagerField;
+            this.getActivePocketsMethod = getActivePocketsMethod;
+            this.pocketItemProperty = pocketItemProperty;
+        }
+
+        public Type ModEntryType { get; }
+
+        public static UtilityBeltBridge? TryCreate(IMonitor monitor)
+        {
+            Type? modEntryType = AccessTools.TypeByName("UtilityBelt.ModEntry");
+            Type? managerType = AccessTools.TypeByName("UtilityBelt.PocketManager");
+            Type? stateType = AccessTools.TypeByName("UtilityBelt.PocketState");
+            if (modEntryType is null || managerType is null || stateType is null)
+                return null;
+
+            FieldInfo? pocketManagerField = AccessTools.Field(modEntryType, "PocketManager");
+            MethodInfo? getActivePockets = AccessTools.Method(managerType, "GetActivePockets");
+            PropertyInfo? itemProperty = AccessTools.Property(stateType, "Item");
+            if (pocketManagerField is null || getActivePockets is null || itemProperty is null)
+                return null;
+
+            return new UtilityBeltBridge(monitor, modEntryType, pocketManagerField, getActivePockets, itemProperty);
+        }
+
+        public void Capture(object instance)
+        {
+            modEntryInstance = instance;
+        }
+
+        public IEnumerable<PocketInventory> GetPocketInventories(Farmer player)
+        {
+            if (modEntryInstance is null)
+                yield break;
+
+            object? manager = pocketManagerField.GetValue(modEntryInstance);
+            if (manager is null)
+                yield break;
+
+            IEnumerable? pocketStates;
+            try
+            {
+                pocketStates = getActivePocketsMethod.Invoke(manager, Array.Empty<object>()) as IEnumerable;
+            }
+            catch (Exception ex)
+            {
+                monitor.Log($"Could not read Utility Belt pockets while preparing tool swap compatibility: {ex.GetBaseException().Message}", LogLevel.Warn);
+                yield break;
+            }
+
+            if (pocketStates is null)
+                yield break;
+
+            foreach (object pocketState in pocketStates)
+            {
+                yield return new PocketInventory(new SingleItemList(
+                    () => pocketItemProperty.GetValue(pocketState) as Item,
+                    item => pocketItemProperty.SetValue(pocketState, item)
+                ));
+            }
+        }
+    }
+
+    private sealed class UtilityPocketBridge : IPocketProvider
+    {
+        private readonly FieldInfo pocketManagerField;
+        private readonly FieldInfo pocketedItemField;
+        private object? modEntryInstance;
+
+        private UtilityPocketBridge(Type modEntryType, FieldInfo pocketManagerField, FieldInfo pocketedItemField)
+        {
+            ModEntryType = modEntryType;
+            this.pocketManagerField = pocketManagerField;
+            this.pocketedItemField = pocketedItemField;
+        }
+
+        public Type ModEntryType { get; }
+
+        public static UtilityPocketBridge? TryCreate(IMonitor monitor)
+        {
+            Type? modEntryType = AccessTools.TypeByName("FoodPocket.ModEntry");
+            Type? managerType = AccessTools.TypeByName("UtilityPocket.PocketManager");
+            if (modEntryType is null || managerType is null)
+                return null;
+
+            FieldInfo? pocketManagerField = AccessTools.Field(modEntryType, "pocketManager");
+            FieldInfo? pocketedItemField = AccessTools.Field(managerType, "pocketedItem");
+            if (pocketManagerField is null || pocketedItemField is null)
+                return null;
+
+            return new UtilityPocketBridge(modEntryType, pocketManagerField, pocketedItemField);
+        }
+
+        public void Capture(object instance)
+        {
+            modEntryInstance = instance;
+        }
+
+        public IEnumerable<PocketInventory> GetPocketInventories(Farmer player)
+        {
+            if (modEntryInstance is null)
+                yield break;
+
+            object? manager = pocketManagerField.GetValue(modEntryInstance);
+            if (manager is null)
+                yield break;
+
+            yield return new PocketInventory(new SingleItemList(
+                () => pocketedItemField.GetValue(manager) as Item,
+                item => pocketedItemField.SetValue(manager, item)
+            ));
+        }
+    }
+
+    private sealed class PocketsBridge : IPocketProvider
     {
         private readonly IMonitor monitor;
         private readonly Type modEntryType;
