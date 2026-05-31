@@ -1,0 +1,272 @@
+{
+  "Format": "1.0.0",
+  "Changes": [
+    {
+      "Action": "BridgeMods",
+      "Name": "Pockets Auto Tool Patches",
+      "RequireAnySource": [
+        "aedenthorn.Pockets",
+        "ModderDrew.UtilityBelt",
+        "ModderDrew.UtilityPocket"
+      ],
+      "RequireAnyTarget": [
+        "Trapyy.AutomatetoolSwap",
+        "aedenthorn.ToolSmartSwitch",
+        "lolmaj.AutoToolSelect"
+      ],
+      "Sources": [
+        {
+          "UniqueID": "aedenthorn.Pockets",
+          "Kind": "InventoryProvider",
+          "ProviderID": "Pockets",
+          "Type": "Pockets.ModEntry",
+          "Rules": {
+            "PocketDictionaryProperty": "PocketDict",
+            "ConfigField": "Config",
+            "InventoryDictionaryField": "InventoryDict",
+            "DefaultInventoryDictionaryField": "DefaultInventoryDict",
+            "DeserializeInventoryMethod": "MakeInventoryFromXML",
+            "ModDataKey": "aedenthorn.Pockets/pocket",
+            "PlayerClothingSlots": [
+              "pantsItem",
+              "shirtItem"
+            ],
+            "DefinitionSlotsProperty": "PocketSlots",
+            "DefinitionClothesTypeProperty": "ClothesType",
+            "DefaultPocketsProperty": "DefaultPockets",
+            "GlobalDefaultPocketsProperty": "GlobalDefaultPockets"
+          }
+        },
+        {
+          "UniqueID": "ModderDrew.UtilityBelt",
+          "Kind": "InventoryProvider",
+          "ProviderID": "UtilityBelt",
+          "Type": "UtilityBelt.ModEntry",
+          "Rules": {
+            "PocketManagerField": "pocketManager",
+            "ManagerType": "UtilityBelt.PocketManager",
+            "PocketStateType": "UtilityBelt.PocketState",
+            "GetActivePocketsMethod": "GetActivePockets",
+            "PocketItemProperty": "Item"
+          }
+        },
+        {
+          "UniqueID": "ModderDrew.UtilityPocket",
+          "Kind": "SingleItemProvider",
+          "ProviderID": "UtilityPocket",
+          "Type": "UtilityPocket.ModEntry",
+          "Rules": {
+            "PocketManagerField": "pocketManager",
+            "ManagerType": "UtilityPocket.PocketManager",
+            "PocketedItemField": "pocketedItem"
+          }
+        }
+      ],
+      "Targets": [
+        {
+          "UniqueID": "Trapyy.AutomatetoolSwap",
+          "Kind": "ToolSelector",
+          "TargetID": "AutomateToolSwap",
+          "Type": "Core.InventoryHandler",
+          "PatchMethods": [
+            {
+              "Name": "SetTool",
+              "BridgeMethod": "MatchTool",
+              "WhenInventoryHasMatch": "RunOriginal",
+              "WhenSourceHasMatch": "UseProxyAndSkipOriginal"
+            },
+            {
+              "Name": "SetItem",
+              "BridgeMethod": "MatchItem",
+              "WhenInventoryHasMatch": "RunOriginal",
+              "WhenSourceHasMatch": "UseProxyAndSkipOriginal"
+            }
+          ]
+        },
+        {
+          "UniqueID": "aedenthorn.ToolSmartSwitch",
+          "Kind": "ToolSelector",
+          "TargetID": "ToolSmartSwitch",
+          "Type": "ToolSmartSwitch.ModEntry",
+          "PatchMethods": [
+            {
+              "Name": "SwitchToolType",
+              "BridgeMethod": "MatchToolSmartSwitch",
+              "WhenInventoryHasMatch": "RunOriginal",
+              "WhenSourceHasMatch": "UseProxySetResultTrueAndSkipOriginal"
+            },
+            {
+              "DeclaringType": "StardewValley.Game1",
+              "Name": "pressUseToolButton",
+              "Priority": "First",
+              "BridgeMethod": "ToolSmartSwitchHoldingToolBypass",
+              "WhenSourceHasToolAndHoldingToolRequired": "InvokeSmartSwitch"
+            },
+            {
+              "DeclaringType": "StardewValley.TerrainFeatures.HoeDirt",
+              "Name": "performUseAction",
+              "Priority": "First",
+              "BridgeMethod": "ToolSmartSwitchCropBypass",
+              "WhenSourceHasToolAndCropSwitchEnabled": "InvokeSwitchForTerrainFeature"
+            }
+          ],
+          "Reflection": {
+            "ConfigField": "Config",
+            "SmartSwitchMethod": "SmartSwitch",
+            "SwitchForTerrainFeatureMethod": "SwitchForTerrainFeature",
+            "GetToolsMethod": "GetTools",
+            "RequiredConfigBools": [
+              "ModEnabled",
+              "SwitchEnabled",
+              "HoldingTool"
+            ],
+            "CropConfigBool": "SwitchForCrops"
+          }
+        },
+        {
+          "UniqueID": "lolmaj.AutoToolSelect",
+          "Kind": "ToolSelector",
+          "TargetID": "AutoToolSelect",
+          "Type": "AutoToolSelect.AutoToolSelectMod",
+          "PatchMethods": [
+            {
+              "Name": "SetTool",
+              "BridgeMethod": "MatchAutoToolSelectTool",
+              "WhenInventoryHasMatch": "RunOriginal",
+              "WhenSourceHasMatch": "UseProxyAndSkipOriginal"
+            },
+            {
+              "Name": "SetItem",
+              "BridgeMethod": "MatchName",
+              "WhenInventoryHasMatch": "RunOriginal",
+              "WhenSourceHasMatch": "UseProxyAndSkipOriginal"
+            },
+            {
+              "Name": "SetScythe",
+              "BridgeMethod": "MatchScytheThenWeaponFallback",
+              "WhenInventoryHasMatch": "RunOriginal",
+              "WhenSourceHasMatch": "UseProxyAndSkipOriginal"
+            },
+            {
+              "Name": "SetWeapon",
+              "BridgeMethod": "MatchWeaponThenScytheFallback",
+              "WhenInventoryHasMatch": "RunOriginal",
+              "WhenSourceHasMatch": "UseProxyAndSkipOriginal"
+            },
+            {
+              "DeclaringType": "StardewValley.Game1",
+              "Name": "pressUseToolButton",
+              "Priority": "First",
+              "BridgeMethod": "AutoToolSelectUseButtonBypass",
+              "WhenActiveAndCurrentItemIsNotTool": "SelectMatchingProxyForCurrentTarget"
+            }
+          ],
+          "Reflection": {
+            "ConfigField": "Config",
+            "ToggleField": "togglemod",
+            "ButtonPressedField": "buttonPressed",
+            "ConfigBools": [
+              "CheckWholeBackpack",
+              "RideHorseCursor",
+              "CursorOverToolHitLocation",
+              "IfNoneToolChooseWeapon",
+              "HoeSelect",
+              "PickaxeOverWateringCan"
+            ]
+          }
+        }
+      ],
+      "Bridge": {
+        "Kind": "ReflectionProxyBridge",
+        "UseCase": "RuntimeProxy",
+        "SourceRole": "Provider",
+        "TargetRole": "Consumer",
+        "Payload": "Item",
+        "Operation": "TemporaryProxy",
+        "ProxyMode": "HiddenAppendedSlot",
+        "PreferMainInventory": true,
+        "SyncBack": true,
+        "Cleanup": {
+          "Mode": "AfterUse",
+          "MinimumTicks": 8,
+          "AlsoCleanupOnSaving": true,
+          "AlsoCleanupOnReturnedToTitle": true
+        },
+        "MatchingRules": {
+          "Tool": {
+            "ExactRuntimeType": true,
+            "MeleeWeaponAuxScytheNames": [
+              "Scythe",
+              "ScytheOnly"
+            ],
+            "AnyToolTypes": [
+              "StardewValley.Tools.Axe",
+              "StardewValley.Tools.Pickaxe",
+              "StardewValley.Tools.Hoe"
+            ]
+          },
+          "AutoToolSelectScythe": {
+            "NameContains": "Scythe"
+          },
+          "ItemCategories": {
+            "Trash": {
+              "CategoryFromAux": true,
+              "NameMustNotContainArgument": "item"
+            },
+            "Fertilizer": {
+              "CategoryFromAux": true,
+              "NameMustNotContainArgument": "item"
+            },
+            "Minerals": {
+              "Category": -15,
+              "NameContainsArgument": "item",
+              "MinimumStack": 5
+            },
+            "Cask": {
+              "Category": -26,
+              "NameContainsAny": [
+                "Cheese",
+                "Wine"
+              ]
+            },
+            "Seed": {
+              "Category": -74,
+              "MustNotHaveContextTag": "tree_seed_item"
+            },
+            "Crops": {
+              "FruitCategory": -79,
+              "VegetableCategory": -75
+            },
+            "Dehydratable": {
+              "FruitCategory": -79,
+              "MushroomCategory": -81,
+              "ExcludedNames": [
+                "Red Mushroom"
+              ]
+            },
+            "Oil Maker": {
+              "AllowedItems": [
+                {
+                  "Name": "Truffle",
+                  "Category": -17
+                },
+                {
+                  "Name": "Sunflower",
+                  "Category": -80
+                },
+                {
+                  "Name": "Sunflower Seeds",
+                  "Category": -74
+                },
+                {
+                  "Name": "Corn",
+                  "Category": -75
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  ]
+}
