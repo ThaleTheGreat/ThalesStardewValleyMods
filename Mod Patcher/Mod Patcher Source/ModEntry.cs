@@ -1,4 +1,6 @@
 using System.Reflection;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using HarmonyLib;
 using Microsoft.Xna.Framework;
@@ -19,10 +21,9 @@ internal sealed partial class ModEntry : Mod
     private static IMonitor? StaticMonitor;
     private static bool StaticDebugLogging;
 
-    private static readonly Dictionary<string, Texture2D> RuntimeTextureCache = new(StringComparer.OrdinalIgnoreCase);
+    private static string? CachedMenuBoxSignature;
 
-    [ThreadStatic]
-    private static RegisteredPatch? PendingRuntimeVanillaUiPatch;
+    private string GeneratedAssetRoot = "";
 
     private ModConfig Config = new();
 
@@ -34,7 +35,7 @@ internal sealed partial class ModEntry : Mod
 
         this.Config = helper.ReadConfig<ModConfig>();
         StaticDebugLogging = this.Config.DebugLogging;
-        this.DeleteLegacyGeneratedFolder();
+        this.GeneratedAssetRoot = Path.Combine(helper.DirectoryPath, "generated");
 
         this.LoadChanges();
         this.ApplyHarmonyPatches();
@@ -42,11 +43,7 @@ internal sealed partial class ModEntry : Mod
         helper.Events.GameLoop.GameLaunched += this.OnGameLaunched;
         helper.Events.GameLoop.UpdateTicked += this.OnUpdateTicked;
         helper.Events.GameLoop.Saving += this.OnSaving;
-        helper.Events.GameLoop.ReturnedToTitle += (_, _) =>
-        {
-            this.ClearBridgeProxies();
-            ClearRuntimeTextureCache();
-        };
+        helper.Events.GameLoop.ReturnedToTitle += (_, _) => this.ClearBridgeProxies();
     }
 
     private void LoadChanges()
@@ -147,7 +144,8 @@ internal sealed partial class ModEntry : Mod
         }
         else
         {
-            sourcePath = string.Empty;
+            string generatedFileName = BuildGeneratedFileName(pack.Manifest.UniqueID, change.TargetMod, change.TargetPath, fromVanillaUi, outputWidth, outputHeight);
+            sourcePath = Path.Combine(this.GeneratedAssetRoot, generatedFileName);
         }
 
         string targetModId = change.TargetMod.Trim();
@@ -192,6 +190,32 @@ internal sealed partial class ModEntry : Mod
     private static bool IsSupportedVanillaUi(string value)
     {
         return string.Equals(value.Trim(), "MenuBox", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string BuildGeneratedFileName(string packId, string targetMod, string targetPath, string sourceKind, int width, int height)
+    {
+        string text = $"{packId}|{targetMod}|{targetPath}|{sourceKind}|{width}|{height}";
+        return $"{SanitizeFileName(packId)}_{BuildStableHash(text)}.png";
+    }
+
+    private static string BuildGeneratedFileName(RegisteredPatch patch)
+    {
+        string sourceSignature = GetGeneratedSourceSignature(patch);
+        string text = $"{patch.PackId}|{patch.TargetMod}|{patch.TargetPath}|{patch.FromVanillaUi}|{patch.OutputWidth}|{patch.OutputHeight}|{sourceSignature}";
+        return $"{SanitizeFileName(patch.PackId)}_{BuildStableHash(text)}.png";
+    }
+
+    private static string BuildStableHash(string text)
+    {
+        byte[] data = Encoding.UTF8.GetBytes(text.ToUpperInvariant());
+        byte[] hash = SHA256.HashData(data);
+        return Convert.ToHexString(hash, 0, 8);
+    }
+
+    private static string SanitizeFileName(string value)
+    {
+        char[] invalid = Path.GetInvalidFileNameChars();
+        return new string(value.Select(ch => invalid.Contains(ch) ? '_' : ch).ToArray());
     }
 
     private string? FindInstalledModDirectory(string uniqueId)
@@ -294,22 +318,10 @@ internal sealed partial class ModEntry : Mod
             patched++;
         }
 
-        MethodInfo? texturePrefix = AccessTools.Method(typeof(ModEntry), nameof(Texture2DFromStreamPrefix));
-        MethodInfo? fromStream = AccessTools.Method(typeof(Texture2D), nameof(Texture2D.FromStream), new[] { typeof(GraphicsDevice), typeof(Stream) });
-        if (texturePrefix == null || fromStream == null)
-        {
-            this.Monitor.Log("Could not find Texture2D.FromStream. Runtime vanilla UI sources will not run.", LogLevel.Warn);
-        }
-        else
-        {
-            this.Harmony.Patch(fromStream, prefix: new HarmonyMethod(texturePrefix));
-            patched++;
-        }
-
         if (patched == 0)
-            this.Monitor.Log("No SMAPI file lookup or texture load methods were patched. Asset patches will not run.", LogLevel.Error);
+            this.Monitor.Log("No SMAPI file lookup methods were patched. Asset patches will not run.", LogLevel.Error);
         else
-            this.Monitor.Log($"Harmony patch applied to {patched} SMAPI/mod texture lookup method(s).", LogLevel.Info);
+            this.Monitor.Log($"Harmony patch applied to {patched} SMAPI file lookup method(s).", LogLevel.Info);
     }
 
     private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
@@ -374,17 +386,13 @@ internal sealed partial class ModEntry : Mod
             }
 
             if (patch.IsGenerated)
-            {
-                PendingRuntimeVanillaUiPatch = patch;
-
-                if (StaticDebugLogging)
-                    StaticMonitor?.Log($"Prepared runtime vanilla UI patch '{patch.LogName}' for {relativePath}.", LogLevel.Debug);
-
-                return;
-            }
+                UpdateGeneratedPatchSourcePath(patch);
 
             if (!File.Exists(patch.SourcePath))
-                return;
+            {
+                if (!patch.IsGenerated || !TryGeneratePatchSource(patch))
+                    return;
+            }
 
             if (StaticDebugLogging)
                 StaticMonitor?.Log($"Patched asset '{patch.LogName}': {relativePath} -> {patch.SourcePath}", LogLevel.Debug);
@@ -397,74 +405,83 @@ internal sealed partial class ModEntry : Mod
         }
     }
 
-    private static bool Texture2DFromStreamPrefix(GraphicsDevice graphicsDevice, Stream stream, ref Texture2D __result)
+    private static void UpdateGeneratedPatchSourcePath(RegisteredPatch patch)
     {
-        RegisteredPatch? patch = ResolveRuntimeVanillaUiPatch(stream);
-        if (patch == null)
-            return true;
+        string? generatedRoot = Path.GetDirectoryName(patch.SourcePath);
+        if (string.IsNullOrWhiteSpace(generatedRoot))
+            return;
+
+        patch.SourcePath = Path.Combine(generatedRoot, BuildGeneratedFileName(patch));
+    }
+
+    private static string GetGeneratedSourceSignature(RegisteredPatch patch)
+    {
+        if (string.Equals(patch.FromVanillaUi, "MenuBox", StringComparison.OrdinalIgnoreCase))
+            return GetMenuBoxSignature();
+
+        return "unknown";
+    }
+
+    private static string GetMenuBoxSignature()
+    {
+        if (!string.IsNullOrWhiteSpace(CachedMenuBoxSignature))
+            return CachedMenuBoxSignature;
 
         try
         {
+            Texture2D menuTexture = Game1.menuTexture;
+            Rectangle sourceRect = new(0, 256, 60, 60);
+            Color[] pixels = new Color[sourceRect.Width * sourceRect.Height];
+            menuTexture.GetData(0, sourceRect, pixels, 0, pixels.Length);
+
+            byte[] bytes = new byte[pixels.Length * 4];
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                int offset = i * 4;
+                bytes[offset] = pixels[i].R;
+                bytes[offset + 1] = pixels[i].G;
+                bytes[offset + 2] = pixels[i].B;
+                bytes[offset + 3] = pixels[i].A;
+            }
+
+            byte[] hash = SHA256.HashData(bytes);
+            CachedMenuBoxSignature = Convert.ToHexString(hash, 0, 8);
+        }
+        catch
+        {
+            CachedMenuBoxSignature = "MenuBox";
+        }
+
+        return CachedMenuBoxSignature;
+    }
+
+    private static bool TryGeneratePatchSource(RegisteredPatch patch)
+    {
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(patch.SourcePath)!);
+
             if (string.Equals(patch.FromVanillaUi, "MenuBox", StringComparison.OrdinalIgnoreCase))
             {
-                __result = GetOrCreateRuntimeMenuBoxTexture(graphicsDevice, patch);
-
-                if (StaticDebugLogging)
-                    StaticMonitor?.Log($"Patched runtime vanilla UI texture '{patch.LogName}': {patch.FromVanillaUi} {patch.OutputWidth}x{patch.OutputHeight}", LogLevel.Debug);
-
-                return false;
+                GenerateMenuBoxTexture(patch.SourcePath, patch.OutputWidth, patch.OutputHeight);
+                return File.Exists(patch.SourcePath);
             }
         }
         catch (Exception ex)
         {
             if (StaticDebugLogging)
-                StaticMonitor?.Log($"Failed creating runtime vanilla UI texture for '{patch.LogName}': {ex.Message}", LogLevel.Debug);
-        }
-        finally
-        {
-            PendingRuntimeVanillaUiPatch = null;
+                StaticMonitor?.Log($"Failed generating patch asset '{patch.LogName}': {ex.Message}", LogLevel.Debug);
         }
 
-        return true;
+        return false;
     }
 
-    private static RegisteredPatch? ResolveRuntimeVanillaUiPatch(Stream stream)
+    private static void GenerateMenuBoxTexture(string outputPath, int width, int height)
     {
-        if (stream is FileStream fileStream)
-        {
-            string fullPath = Path.GetFullPath(fileStream.Name);
-            lock (Lock)
-            {
-                if (PatchesByTargetFullPath.TryGetValue(fullPath, out RegisteredPatch? patch) && patch.IsGenerated)
-                    return patch;
-            }
-        }
-
-        return PendingRuntimeVanillaUiPatch?.IsGenerated == true ? PendingRuntimeVanillaUiPatch : null;
-    }
-
-    private static Texture2D GetOrCreateRuntimeMenuBoxTexture(GraphicsDevice graphicsDevice, RegisteredPatch patch)
-    {
-        string key = $"{patch.PackId}|{patch.TargetMod}|{patch.TargetPath}|{patch.FromVanillaUi}|{patch.OutputWidth}|{patch.OutputHeight}";
-
-        lock (Lock)
-        {
-            if (RuntimeTextureCache.TryGetValue(key, out Texture2D? cached))
-                return cached;
-        }
-
-        Texture2D created = CreateMenuBoxTexture(graphicsDevice, patch.OutputWidth, patch.OutputHeight);
-
-        lock (Lock)
-            RuntimeTextureCache[key] = created;
-
-        return created;
-    }
-
-    private static Texture2D CreateMenuBoxTexture(GraphicsDevice graphicsDevice, int width, int height)
-    {
+        GraphicsDevice graphicsDevice = Game1.graphics.GraphicsDevice;
         RenderTargetBinding[] previousTargets = graphicsDevice.GetRenderTargets();
-        RenderTarget2D renderTarget = new(graphicsDevice, width, height, false, SurfaceFormat.Color, DepthFormat.None);
+
+        using RenderTarget2D renderTarget = new(graphicsDevice, width, height, false, SurfaceFormat.Color, DepthFormat.None);
         using SpriteBatch spriteBatch = new(graphicsDevice);
 
         try
@@ -492,32 +509,8 @@ internal sealed partial class ModEntry : Mod
             graphicsDevice.SetRenderTargets(previousTargets);
         }
 
-        return renderTarget;
-    }
-
-    private static void ClearRuntimeTextureCache()
-    {
-        lock (Lock)
-        {
-            foreach (Texture2D texture in RuntimeTextureCache.Values)
-                texture.Dispose();
-
-            RuntimeTextureCache.Clear();
-        }
-    }
-
-    private void DeleteLegacyGeneratedFolder()
-    {
-        string path = Path.Combine(this.Helper.DirectoryPath, "generated");
-        try
-        {
-            if (Directory.Exists(path))
-                Directory.Delete(path, recursive: true);
-        }
-        catch (Exception ex)
-        {
-            this.LogDebug($"Could not remove legacy generated folder: {ex.Message}");
-        }
+        using FileStream stream = File.Create(outputPath);
+        renderTarget.SaveAsPng(stream, width, height);
     }
 
     private static string NormalizeAssetPath(string path)

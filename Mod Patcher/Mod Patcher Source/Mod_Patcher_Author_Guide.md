@@ -235,9 +235,9 @@ Yes. If your pack targets one mod, list that mod in `Dependencies` with `"IsRequ
 
 No. Use `ContentPackFor` for Mod Patcher. Use `Dependencies` for the target mod or other required mods.
 
-## Runtime vanilla UI sources
+## Generated vanilla UI sources
 
-Mod Patcher supports runtime vanilla UI sources for cases where a target mod loads a private image but the replacement should inherit the player's active UI recolor.
+Mod Patcher 1.1.0 adds generated vanilla UI sources for cases where a target mod loads a private image but the replacement should inherit the player's active UI recolor.
 
 Use exactly one source field per change: `FromFile` or `FromVanillaUi`.
 
@@ -245,7 +245,7 @@ Supported `FromVanillaUi` values:
 
 | Value | Description |
 |---|---|
-| `MenuBox` | Creates an in-memory texture using Stardew's vanilla menu box texture. |
+| `MenuBox` | Generates a PNG using Stardew's vanilla menu box texture. |
 
 Example:
 
@@ -265,7 +265,7 @@ Example:
 }
 ```
 
-`FromVanillaUi` textures are generated in memory for the current game session. Mod Patcher does not write generated vanilla UI PNGs to disk. It also removes the legacy `generated` folder if present. The source is created from the game's currently loaded UI texture, so recolor mods that affect the vanilla menu texture can affect the result.
+Generated files are written to Mod Patcher's `generated` folder and are used as the runtime replacement file. The generated filename uses a stable patch key plus a fingerprint of the active vanilla UI texture, so switching UI recolor mods creates the correct variant and switching back reuses the previously generated variant instead of creating duplicates.
 
 
 ## BridgeMods runtime bridge action
@@ -317,4 +317,3 @@ Example:
   ]
 }
 ```
-
