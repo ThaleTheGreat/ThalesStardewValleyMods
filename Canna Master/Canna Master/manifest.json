@@ -1,0 +1,37 @@
+{
+    "Name": "[CP] Canna Master",
+    "Author": "ThaleTheGreat",
+    "Version": "1.0.0",
+    "Description": "Optional process-matched cannabis crop and artisan machine compatibility for supported cannabis mods.",
+    "UniqueID": "ThaleTheGreat.CannaMaster",
+    "MinimumApiVersion": "4.0.0",
+    "UpdateKeys": [
+        "Nexus:46929"
+    ],
+    "ContentPackFor": {
+        "UniqueID": "Pathoschild.ContentPatcher",
+        "MinimumVersion": "2.0.0"
+    },
+    "Dependencies": [
+        {
+            "UniqueID": "yourdorkbrains.CannaCafeItems",
+            "IsRequired": false
+        },
+        {
+            "UniqueID": "BongWater.StonerValleyCP",
+            "IsRequired": false
+        },
+        {
+            "UniqueID": "b42ti0n.CP.LitW",
+            "IsRequired": false
+        },
+        {
+            "UniqueID": "Raspb3rryfields.NaturesBounty",
+            "IsRequired": false
+        },
+        {
+            "UniqueID": "PPJA.cannabiskit",
+            "IsRequired": false
+        }
+    ]
+}
