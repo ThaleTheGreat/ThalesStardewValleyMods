@@ -1,0 +1,16 @@
+{
+  "Format": "1.0.0",
+  "Changes": [
+    {
+      "Action": "PatchRuntime",
+      "Name": "Non Destructive NPCs Redux",
+      "Type": "StardewValley.GameLocation",
+      "Method": "characterDestroyObjectWithinRectangle",
+      "PatchAllOverloads": true,
+      "Prefix": {
+        "Return": false,
+        "SkipOriginal": true
+      }
+    }
+  ]
+}

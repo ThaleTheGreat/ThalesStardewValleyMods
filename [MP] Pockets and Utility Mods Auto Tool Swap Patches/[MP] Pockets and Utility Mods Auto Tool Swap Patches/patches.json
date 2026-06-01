@@ -1,0 +1,30 @@
+{
+  "Format": "1.0.0",
+  "Changes": [
+    {
+      "Action": "PatchRuntime",
+      "Name": "Pockets Auto Tool Patches",
+      "RequireAnySource": [
+        "aedenthorn.Pockets",
+        "ModderDrew.UtilityBelt",
+        "ModderDrew.UtilityPocket"
+      ],
+      "RequireAnyTarget": [
+        "Trapyy.AutomatetoolSwap",
+        "aedenthorn.ToolSmartSwitch",
+        "lolmaj.AutoToolSelect"
+      ],
+      "Bridge": {
+        "ProxyMode": "HiddenAppendedSlot",
+        "PreferMainInventory": true,
+        "SyncBack": true,
+        "Cleanup": {
+          "Mode": "AfterUse",
+          "MinimumTicks": 8,
+          "AlsoCleanupOnSaving": true,
+          "AlsoCleanupOnReturnedToTitle": true
+        }
+      }
+    }
+  ]
+}

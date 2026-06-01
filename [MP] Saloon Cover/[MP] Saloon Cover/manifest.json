@@ -1,0 +1,21 @@
+{
+  "Name": "[MP] Saloon Cover",
+  "Author": "ThaleTheGreat",
+  "Version": "2.0.1",
+  "Description": "Adds a vanilla bouncer inside the Stardrop Saloon with configurable cover charge time, price, and days.",
+  "UniqueID": "ThaleTheGreat.SaloonCover",
+  "MinimumApiVersion": "4.0.0",
+  "UpdateKeys": [
+    "Nexus:46345"
+  ],
+  "ContentPackFor": {
+    "UniqueID": "ThaleTheGreat.ModPatcher",
+    "MinimumVersion": "1.3.0"
+  },
+  "Dependencies": [
+    {
+      "UniqueID": "spacechase0.GenericModConfigMenu",
+      "IsRequired": false
+    }
+  ]
+}

@@ -1,22 +1,21 @@
 {
-    "Name": "[MP] Universal UI Recolor for More Stats",
-    "Author": "ThaleTheGreat",
-    "Version": "2.1.0",
-    "Description": "Universal UI Recolor for More Stats.",
-    "UniqueID": "ThaleTheGreat.UniveralUIMoreStats",
-    "MinimumApiVersion": "4.0.0",
-    "UpdateKeys": [
-        "Nexus:46926"
-    ],
-    "ContentPackFor": {
-        "UniqueID": "ThaleTheGreat.ModPatcher",
-        "MinimumVersion": "1.2.0"
-    },
-    "Dependencies": [
-        {
-            "UniqueID": "Xan.MoreStats",
-            "IsRequired": true
-        }
-    ]
-
+  "Name": "[MP] Universal UI Recolor for More Stats",
+  "Author": "ThaleTheGreat",
+  "Version": "2.2.1",
+  "Description": "Universal UI Recolor for More Stats.",
+  "UniqueID": "ThaleTheGreat.UniversalUIMoreStats",
+  "MinimumApiVersion": "4.0.0",
+  "UpdateKeys": [
+    "Nexus:46926"
+  ],
+  "ContentPackFor": {
+    "UniqueID": "ThaleTheGreat.ModPatcher",
+    "MinimumVersion": "1.3.0"
+  },
+  "Dependencies": [
+    {
+      "UniqueID": "Xan.MoreStats",
+      "IsRequired": true
+    }
+  ]
 }
