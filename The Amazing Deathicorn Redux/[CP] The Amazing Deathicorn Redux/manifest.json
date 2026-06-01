@@ -1,9 +1,12 @@
 {
   "Name": "[CP] The Amazing Deathicorn Redux",
   "Author": "ThaleTheGreat",
-  "Version": "2.0.0",
-  "Description": "External Content Patcher asset layer for The Amazing Deathicorn Redux.",
+  "Version": "2.0.1",
+  "Description": "Content Patcher asset layer for The Amazing Deathicorn Redux.",
   "UniqueID": "ThaleTheGreat.TheAmazingDeathicornRedux.CP",
+  "UpdateKeys": [
+    "Nexus:42786"
+  ],
   "ContentPackFor": {
     "UniqueID": "Pathoschild.ContentPatcher"
   },
@@ -12,8 +15,5 @@
       "UniqueID": "ThaleTheGreat.TheAmazingDeathicornRedux",
       "IsRequired": false
     }
-  ],
-  "UpdateKeys": [
-    "Nexus:42786"
   ]
 }
