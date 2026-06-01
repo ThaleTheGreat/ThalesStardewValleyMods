@@ -1,0 +1,254 @@
+{
+  "Format": "2.9.0",
+  "Changes": [
+    {
+      "Action": "Load",
+      "Target": "Mods/MouseyPounds.ShadowFestival/Data",
+      "FromFile": "data.json"
+    },
+    {
+      "Action": "Load",
+      "Target": "Mods/MouseyPounds.ShadowFestival/GlowOrb",
+      "FromFile": "assets/GlowOrb.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Mods/MouseyPounds.ShadowFestival/Goblin_Nose",
+      "FromFile": "assets/Goblin_Nose.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "{{ModId}}/GlowOrb",
+      "FromFile": "assets/GlowOrb.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "{{ModId}}/Goblin_Nose",
+      "FromFile": "assets/Goblin_Nose.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "{{ModId}}/ShadowFestivalHats",
+      "FromFile": "assets/ShadowFestivalHats.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "{{ModId}}/DinoBoots",
+      "FromFile": "assets/DinoBoots.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "{{ModId}}/DinoBootsColor",
+      "FromFile": "assets/DinoBootsColor.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "{{ModId}}/DinoShirt",
+      "FromFile": "assets/DinoShirt.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "{{ModId}}/DinoShirtAlt",
+      "FromFile": "assets/DinoShirtAlt.png"
+    },
+    {
+      "Action": "Load",
+      "Target": "Maps/Sewer",
+      "FromFile": "assets/Sewer.tbin",
+      "When": {
+        "Season": "fall",
+        "Day": "27"
+      }
+    },
+    {
+      "Action": "EditData",
+      "Target": "Data/Hats",
+      "Entries": {
+        "MouseyPounds.ShadowFestival.ImposingMask": "Imposing Mask/It gives off an imposing aura, yet is oddly calming to those of the shadows./false/true//Imposing Mask/0/{{ModId}}\\ShadowFestivalHats",
+        "MouseyPounds.ShadowFestival.ShamanicMask": "Shamanic Mask/It's imbued with an ancient magic that endears you to those of the shadow./false/true//Shamanic Mask/1/{{ModId}}\\ShadowFestivalHats",
+        "MouseyPounds.ShadowFestival.ShadyMask": "Shady Mask/You'll surely blend in with those of shadow in this./false/true//Shady Mask/2/{{ModId}}\\ShadowFestivalHats",
+        "MouseyPounds.ShadowFestival.ShadyBowedMask": "Shady Bowed Mask/The bow gives this creepy mask an oddly cute look that may placate those of the shadow./false/true//Shady Bowed Mask/3/{{ModId}}\\ShadowFestivalHats",
+        "MouseyPounds.ShadowFestival.StrangeBunHat": "Strange Bun Hat/A festive hat with a slightly disconcerting odor./true/false//Strange Bun Hat/4/{{ModId}}\\ShadowFestivalHats"
+      }
+    },
+    {
+      "Action": "EditData",
+      "Target": "Data/Boots",
+      "Entries": {
+        "MouseyPounds.ShadowFestival.DinosaurBootsGreen": "Dinosaur Boots - Green/Clomp around like a prehistoric menace!/0/1/1/0/Dinosaur Boots - Green/{{ModId}}\\DinoBootsColor/0/{{ModId}}\\DinoBoots",
+        "MouseyPounds.ShadowFestival.DinosaurBootsRed": "Dinosaur Boots - Red/Clomp around like a prehistoric menace!/0/1/1/1/Dinosaur Boots - Red/{{ModId}}\\DinoBootsColor/1/{{ModId}}\\DinoBoots"
+      }
+    },
+    {
+      "Action": "EditData",
+      "Target": "Data/Shirts",
+      "Entries": {
+        "MouseyPounds.ShadowFestival.DinosaurShirt": {
+          "Name": "DinosaurShirt",
+          "DisplayName": "Dinosaur Shirt",
+          "Description": "A matching shirt for a complete dinosaur suit. Rawr!",
+          "Price": 1000,
+          "Texture": "{{ModId}}/DinoShirt",
+          "SpriteIndex": 0,
+          "CanBeDyed": false,
+          "HasSleeves": true
+        },
+        "MouseyPounds.ShadowFestival.DinosaurShirtAlt": {
+          "Name": "DinosaurShirtAlt",
+          "DisplayName": "Dinosaur Shirt (Alternate)",
+          "Description": "A matching shirt for a complete dinosaur suit. Rawr!",
+          "Price": 1000,
+          "Texture": "{{ModId}}/DinoShirtAlt",
+          "SpriteIndex": 0,
+          "CanBeDyed": false,
+          "HasSleeves": true
+        }
+      }
+    },
+    {
+      "Action": "EditData",
+      "Target": "Data/Mail",
+      "Entries": {
+        "Wizard_ShadowFestival": "Greetings @,^^As you might know, supernatural activity always increases near Spirit's Eve. The Shadow people even have their own celebration. If you can access the sewers, their 'Festival of the Mundane' will be happening all day. You probably won't run into much trouble, although it might be good to find a disguise once you're in there just to be safe.^^ - M.Rasmodius"
+      }
+    },
+    {
+      "Action": "EditData",
+      "Target": "Characters/Dialogue/Krobus",
+      "When": {
+        "Season": "fall",
+        "Day": "27"
+      },
+      "Entries": {
+        "fall_27": "Hi friend. Welcome to the 'Festival of the Mundane'.#b#Make sure to keep a Shadow disguise on when talking to the others.#b#The rodent of unusual cuteness is selling more masks if you need them.",
+        "fall_27_2": "Hi friend. Welcome to the 'Festival of the Mundane'.#b#Make sure to keep a Shadow disguise on when talking to the others.#b#The rodent of unusual cuteness is selling more masks if you need them.",
+        "spring_27": "Hi friend. Welcome to the 'Festival of the Mundane'.#b#Make sure to keep a Shadow disguise on when talking to the others.#b#The rodent of unusual cuteness is selling more masks if you need them.",
+        "summer_27": "Hi friend. Welcome to the 'Festival of the Mundane'.#b#Make sure to keep a Shadow disguise on when talking to the others.#b#The rodent of unusual cuteness is selling more masks if you need them.",
+        "winter_27": "Hi friend. Welcome to the 'Festival of the Mundane'.#b#Make sure to keep a Shadow disguise on when talking to the others.#b#The rodent of unusual cuteness is selling more masks if you need them.",
+        "Mon": "Hi friend. Welcome to the 'Festival of the Mundane'.#b#Make sure to keep a Shadow disguise on when talking to the others.#b#The rodent of unusual cuteness is selling more masks if you need them.",
+        "Tue": "Hi friend. Welcome to the 'Festival of the Mundane'.#b#Make sure to keep a Shadow disguise on when talking to the others.#b#The rodent of unusual cuteness is selling more masks if you need them.",
+        "Wed": "Hi friend. Welcome to the 'Festival of the Mundane'.#b#Make sure to keep a Shadow disguise on when talking to the others.#b#The rodent of unusual cuteness is selling more masks if you need them.",
+        "Thu": "Hi friend. Welcome to the 'Festival of the Mundane'.#b#Make sure to keep a Shadow disguise on when talking to the others.#b#The rodent of unusual cuteness is selling more masks if you need them.",
+        "Fri": "Hi friend. Welcome to the 'Festival of the Mundane'.#b#Make sure to keep a Shadow disguise on when talking to the others.#b#The rodent of unusual cuteness is selling more masks if you need them.",
+        "Sat": "Hi friend. Welcome to the 'Festival of the Mundane'.#b#Make sure to keep a Shadow disguise on when talking to the others.#b#The rodent of unusual cuteness is selling more masks if you need them.",
+        "Sun": "Hi friend. Welcome to the 'Festival of the Mundane'.#b#Make sure to keep a Shadow disguise on when talking to the others.#b#The rodent of unusual cuteness is selling more masks if you need them.",
+        "default": "Hi friend. Welcome to the 'Festival of the Mundane'.#b#Make sure to keep a Shadow disguise on when talking to the others.#b#The rodent of unusual cuteness is selling more masks if you need them."
+      }
+    },
+    {
+      "Action": "EditData",
+      "Target": "Strings/StringsFromCSFiles",
+      "When": {
+        "Season": "fall",
+        "Day": "27"
+      },
+      "Entries": {
+        "NPC.cs.3990": "A human visitor? This is most unusual...#b#I am Krobus and you have come during our 'Festival of the Mundane'.#b#Make sure to keep a Shadow disguise on when talking to the others.#b#The rodent of unusual cuteness is selling more masks if you need them.#b#And I sell a variety of rare and exotic goods, even outside of this festival"
+      }
+    },
+    {
+      "Action": "EditData",
+      "Target": "Data/Shops",
+      "TargetField": [
+        "HatMouse",
+        "Items"
+      ],
+      "When": {
+        "Season": "fall",
+        "Day": "27"
+      },
+      "Entries": {
+        "ShadowFestival_DeluxeCowboyHat": {
+          "Id": "ShadowFestival_DeluxeCowboyHat",
+          "ItemId": "(H)37",
+          "Price": 5000
+        },
+        "ShadowFestival_DeluxePirateHat": {
+          "Id": "ShadowFestival_DeluxePirateHat",
+          "ItemId": "(H)38",
+          "Price": 5000
+        },
+        "ShadowFestival_DinosaurHat": {
+          "Id": "ShadowFestival_DinosaurHat",
+          "ItemId": "(H)43",
+          "Price": 10000
+        },
+        "ShadowFestival_ImposingMask": {
+          "Id": "ShadowFestival_ImposingMask",
+          "ItemId": "(H)MouseyPounds.ShadowFestival.ImposingMask",
+          "Price": 750
+        },
+        "ShadowFestival_ShamanicMask": {
+          "Id": "ShadowFestival_ShamanicMask",
+          "ItemId": "(H)MouseyPounds.ShadowFestival.ShamanicMask",
+          "Price": 750
+        },
+        "ShadowFestival_ShadyMask": {
+          "Id": "ShadowFestival_ShadyMask",
+          "ItemId": "(H)MouseyPounds.ShadowFestival.ShadyMask",
+          "Price": 750
+        },
+        "ShadowFestival_ShadyBowedMask": {
+          "Id": "ShadowFestival_ShadyBowedMask",
+          "ItemId": "(H)MouseyPounds.ShadowFestival.ShadyBowedMask",
+          "Price": 750
+        },
+        "ShadowFestival_StrangeBunHat": {
+          "Id": "ShadowFestival_StrangeBunHat",
+          "ItemId": "(H)MouseyPounds.ShadowFestival.StrangeBunHat",
+          "Price": 500
+        },
+        "ShadowFestival_DinoBootsGreen": {
+          "Id": "ShadowFestival_DinoBootsGreen",
+          "ItemId": "(B)MouseyPounds.ShadowFestival.DinosaurBootsGreen",
+          "Price": 1500
+        },
+        "ShadowFestival_DinoBootsRed": {
+          "Id": "ShadowFestival_DinoBootsRed",
+          "ItemId": "(B)MouseyPounds.ShadowFestival.DinosaurBootsRed",
+          "Price": 1500
+        },
+        "ShadowFestival_DinosaurShirt": {
+          "Id": "ShadowFestival_DinosaurShirt",
+          "ItemId": "(S)MouseyPounds.ShadowFestival.DinosaurShirt",
+          "Price": 2000
+        },
+        "ShadowFestival_DinosaurShirtAlt": {
+          "Id": "ShadowFestival_DinosaurShirtAlt",
+          "ItemId": "(S)MouseyPounds.ShadowFestival.DinosaurShirtAlt",
+          "Price": 2000
+        },
+        "ShadowFestival_DinosaurPants": {
+          "Id": "ShadowFestival_DinosaurPants",
+          "ItemId": "(P)5",
+          "Price": 2000
+        }
+      }
+    },
+    {
+      "LogName": "Better Things compatibility - Wizard schedule for Redux Festival of the Mundane",
+      "Action": "EditData",
+      "Priority": "Late",
+      "Target": "Characters/schedules/Wizard",
+      "Entries": {
+        "fall_27": "0 Sewer 7 22 2"
+      },
+      "When": {
+        "HasMod |contains=maat.BetterThings": true
+      }
+    },
+    {
+      "LogName": "Better Things compatibility - Agatha schedule for Redux Festival of the Mundane",
+      "Action": "EditData",
+      "Priority": "Late",
+      "Target": "Characters/schedules/Agatha",
+      "Entries": {
+        "fall_27": "0 Sewer 8 22 2 \"Strings\\schedules\\Agatha:agatha-dialogue-festival-of-mundane\"/2000 maat.BetterThings_AgathaHouse 10 17 2 \"Strings\\schedules\\Agatha:agatha-dialogue-festival-of-mundane-working\"/2400 maat.BetterThings_AgathaHouse 14 4 0 Agatha_sleep",
+        "marriage_fall_27": "0 Sewer 8 22 2 \"Strings\\schedules\\Agatha:agatha-spouse-dialogue-festival-of-mundane\"/2000 maat.BetterThings_AgathaHouse 10 17 2 \"Strings\\schedules\\Agatha:agatha-spouse-dialogue-festival-of-mundane-working\"/2400 bed"
+      },
+      "When": {
+        "HasMod |contains=maat.BetterThings": true
+      }
+    }
+  ]
+}

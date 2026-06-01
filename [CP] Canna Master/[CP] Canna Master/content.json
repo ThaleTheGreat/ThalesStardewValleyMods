@@ -1,0 +1,890 @@
+{
+  "Format": "2.7.0",
+  "Changes": [
+    {
+      "LogName": "Tag Canna Cafe Items harvested products for Canna Master",
+      "Action": "EditData",
+      "Target": "Data/Objects",
+      "Entries": {
+        "(O)yourdorkbrains.CannaCafeItems_Cannabis": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_canna"
+          ]
+        },
+        "(O)yourdorkbrains.CannaCafeItems_LavenderHaze": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_canna"
+          ]
+        },
+        "(O)yourdorkbrains.CannaCafeItems_Hemp": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_canna",
+            "canna_master_hemp"
+          ]
+        }
+      },
+      "When": {
+        "HasMod |contains=yourdorkbrains.CannaCafeItems": true
+      }
+    },
+    {
+      "LogName": "Tag Stoner Valley harvested products for Canna Master",
+      "Action": "EditData",
+      "Target": "Data/Objects",
+      "Entries": {
+        "(O)BongWater.StonerValleyCP_StardropDreamz": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_stoner"
+          ]
+        },
+        "(O)BongWater.StonerValleyCP_TheChristmasSpecial": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_stoner"
+          ]
+        },
+        "(O)BongWater.StonerValleyCP_BirthdayCakeKush": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_stoner"
+          ]
+        },
+        "(O)BongWater.StonerValleyCP_SourDiesel": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_stoner"
+          ]
+        },
+        "(O)BongWater.StonerValleyCP_EasterOG": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_stoner"
+          ]
+        },
+        "(O)BongWater.StonerValleyCP_ZombieHaze": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_stoner"
+          ]
+        },
+        "(O)BongWater.StonerValleyCP_MoonlightJellyGelato": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_stoner"
+          ]
+        }
+      },
+      "When": {
+        "HasMod |contains=BongWater.StonerValleyCP": true
+      }
+    },
+    {
+      "LogName": "Tag Lost in the Woods harvested products for Canna Master",
+      "Action": "EditData",
+      "Target": "Data/Objects",
+      "Entries": {
+        "(O)b42ti0n.CP.LitW_CreativeFlower": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_MedicalFlower": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_BurnoutFlower": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_CannabisItem": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_AlienCookies": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_AlienKush": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_AlienTechnology": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_AmnesiaHaze": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_AnimalCookies": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_BayPlatinumCookies": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_BigBud": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_BlackberryKush": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_BlueDream": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_ChocolateDiesel": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_CookiesandCream": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_Ditchweed": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_Dogshit": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_DoubleDiesel": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_FaceOffOG": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_FireOG": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_FruityPebblesOG": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_Gelato": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_GirlScoutCookies": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_GorillaHaze": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_Hemp": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw",
+            "canna_master_hemp"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_IceCreamCake": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_JellyBeanz": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_LemonadeOG": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_LemonCherryGelato": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_LemonOG": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_Masterkush": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_NorthernLights": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_OGEddy": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_OGKushBreath": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_OGKush": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_PlatinumCookies": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_PrairieOGKush": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_PurpleMiteri": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_PurplePunch": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_PurpleUrkle": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_QiPurpleKush": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_SinMintCookies": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_Budzilla": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_SourBubble": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_SourDiesel": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_SourPatchKids": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_StrawberriesandCream": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_StrawberryJelly": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_StrawberryLemonade": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_SuperLemonHaze": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_SuperSilverHaze": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_TheHemperor": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw",
+            "canna_master_hemp"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_TriangleKush": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_WhiteWidow": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_YobaKush": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_ZuzuCityDiesel": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_ZombiePunch": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_BlueChristmas": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        },
+        "(O)b42ti0n.CP.LitW_Cannabis": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_litw"
+          ]
+        }
+      },
+      "When": {
+        "HasMod |contains=b42ti0n.CP.LitW": true
+      }
+    },
+    {
+      "LogName": "Tag Nature's Bounty harvested products for Canna Master",
+      "Action": "EditData",
+      "Target": "Data/Objects",
+      "Entries": {
+        "(O)Raspb3rryfields.NaturesBounty_Bud": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_nature"
+          ]
+        },
+        "(O)Raspb3rryfields.NaturesBounty_HempFiber": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_nature",
+            "canna_master_hemp"
+          ]
+        }
+      },
+      "When": {
+        "HasMod |contains=Raspb3rryfields.NaturesBounty": true
+      }
+    },
+    {
+      "LogName": "Tag Cannabis Kit harvested products for Canna Master",
+      "Action": "EditData",
+      "Target": "Data/Objects",
+      "Entries": {
+        "(O)PPJA.cannabiskit_Shit_Weed": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_ck"
+          ]
+        },
+        "(O)PPJA.cannabiskit_Blue_Dream": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_ck"
+          ]
+        },
+        "(O)PPJA.cannabiskit_Cookies_and_Cream": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_ck"
+          ]
+        },
+        "(O)PPJA.cannabiskit_Green_Dream": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_ck"
+          ]
+        },
+        "(O)PPJA.cannabiskit_Purple_Haze": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_ck"
+          ]
+        },
+        "(O)PPJA.cannabiskit_Orange_Sherbert": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_ck"
+          ]
+        },
+        "(O)PPJA.cannabiskit_Northern_Lights": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_ck"
+          ]
+        },
+        "(O)PPJA.cannabiskit_OG_Kush": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_ck"
+          ]
+        },
+        "(O)PPJA.cannabiskit_Super_Silver": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_ck"
+          ]
+        },
+        "(O)PPJA.cannabiskit_Sour_Diesel": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_ck"
+          ]
+        },
+        "(O)PPJA.cannabiskit_Strawberry_Cough": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_ck"
+          ]
+        },
+        "(O)PPJA.cannabiskit_White_Widow": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_ck"
+          ]
+        },
+        "(O)PPJA.cannabiskit_Tobacco": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_ck"
+          ]
+        },
+        "(O)PPJA.cannabiskit_Hemp": {
+          "ContextTags": [
+            "canna_master_raw_product",
+            "canna_master_source_ck",
+            "canna_master_hemp"
+          ]
+        }
+      },
+      "When": {
+        "HasMod |contains=PPJA.cannabiskit": true
+      }
+    },
+    {
+      "LogName": "Canna Cafe keg accepts Canna Master raw products",
+      "Action": "EditData",
+      "Target": "Data/Machines",
+      "TargetField": [
+        "(BC)12",
+        "OutputRules"
+      ],
+      "Entries": {
+        "CannaMaster_GenericCannaKeg": {
+          "Id": "CannaMaster_GenericCannaKeg",
+          "Triggers": [
+            {
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredTags": [
+                "canna_master_raw_product"
+              ],
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "yourdorkbrains.CannaCafeItems_cannainfusedliquor",
+              "ItemId": "yourdorkbrains.CannaCafeItems_cannainfusedliquor",
+              "MinStack": 1,
+              "MaxStack": 1,
+              "CopyQuality": true,
+              "CopyPrice": true
+            }
+          ],
+          "MinutesUntilReady": 1000
+        }
+      },
+      "When": {
+        "HasMod |contains=yourdorkbrains.CannaCafeItems": true
+      }
+    },
+    {
+      "LogName": "Canna Cafe oil maker accepts Canna Master raw products",
+      "Action": "EditData",
+      "Target": "Data/Machines",
+      "TargetField": [
+        "(BC)19",
+        "OutputRules"
+      ],
+      "Entries": {
+        "CannaMaster_GenericCannaOil": {
+          "Id": "CannaMaster_GenericCannaOil",
+          "Triggers": [
+            {
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredTags": [
+                "canna_master_raw_product"
+              ],
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "yourdorkbrains.CannaCafeItems_cbdoil",
+              "ItemId": "yourdorkbrains.CannaCafeItems_cbdoil",
+              "MinStack": 1,
+              "MaxStack": 1,
+              "CopyQuality": true,
+              "CopyPrice": true
+            }
+          ],
+          "MinutesUntilReady": 500
+        }
+      },
+      "When": {
+        "HasMod |contains=yourdorkbrains.CannaCafeItems": true
+      }
+    },
+    {
+      "LogName": "Stoner Valley Pacc-Packer accepts Canna Master raw products",
+      "Action": "EditData",
+      "Target": "Data/Machines",
+      "TargetField": [
+        "(BC)BongWater.StonerValleyCP_PaccPacker",
+        "OutputRules"
+      ],
+      "Entries": {
+        "CannaMaster_GenericStonerPacc": {
+          "Id": "CannaMaster_GenericStonerPacc",
+          "Triggers": [
+            {
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredTags": [
+                "canna_master_raw_product"
+              ],
+              "RequiredCount": 3
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "BongWater.StonerValleyCP_JarofStardropDreamz",
+              "ItemId": "BongWater.StonerValleyCP_JarofStardropDreamz",
+              "MinStack": 1,
+              "MaxStack": 1,
+              "CopyQuality": true,
+              "CopyPrice": true,
+              "ObjectDisplayName": "Jar of Mixed Cannabis"
+            }
+          ],
+          "MinutesUntilReady": 60
+        }
+      },
+      "When": {
+        "HasMod |contains=BongWater.StonerValleyCP": true
+      }
+    },
+    {
+      "LogName": "Stoner Valley Auto-Wrapper accepts Canna Master raw products",
+      "Action": "EditData",
+      "Target": "Data/Machines",
+      "TargetField": [
+        "(BC)BongWater.StonerValleyCP_AutoWrapper",
+        "OutputRules"
+      ],
+      "Entries": {
+        "CannaMaster_GenericStonerWrapper": {
+          "Id": "CannaMaster_GenericStonerWrapper",
+          "Triggers": [
+            {
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredTags": [
+                "canna_master_raw_product"
+              ],
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "BongWater.StonerValleyCP_StardropDreamzBlunt",
+              "ItemId": "BongWater.StonerValleyCP_StardropDreamzBlunt",
+              "MinStack": 1,
+              "MaxStack": 1,
+              "CopyQuality": true,
+              "CopyPrice": true,
+              "ObjectDisplayName": "Mixed Cannabis Blunt"
+            }
+          ],
+          "MinutesUntilReady": 30
+        }
+      },
+      "When": {
+        "HasMod |contains=BongWater.StonerValleyCP": true
+      }
+    },
+    {
+      "LogName": "Lost in the Woods Grinder accepts Canna Master raw products",
+      "Action": "EditData",
+      "Target": "Data/Machines",
+      "TargetField": [
+        "(BC)b42ti0n.CP.LitW_Grinder",
+        "OutputRules"
+      ],
+      "Entries": {
+        "CannaMaster_GenericLitWGrinder": {
+          "Id": "CannaMaster_GenericLitWGrinder",
+          "Triggers": [
+            {
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredTags": [
+                "canna_master_raw_product"
+              ],
+              "RequiredCount": 3
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "b42ti0n.CP.LitW_GroundCannabisCreative",
+              "ItemId": "b42ti0n.CP.LitW_GroundCannabisCreative",
+              "MinStack": 1,
+              "MaxStack": 1,
+              "CopyQuality": true,
+              "CopyPrice": true,
+              "ObjectDisplayName": "Ground Cannabis",
+              "PriceModifiers": [
+                {
+                  "Modification": "Multiply",
+                  "Amount": 3
+                }
+              ]
+            }
+          ],
+          "MinutesUntilReady": 30
+        }
+      },
+      "When": {
+        "HasMod |contains=b42ti0n.CP.LitW": true
+      }
+    },
+    {
+      "LogName": "Lost in the Woods Rolling Bench accepts Canna Master hemp products",
+      "Action": "EditData",
+      "Target": "Data/Machines",
+      "TargetField": [
+        "(BC)b42ti0n.CP.LitW_RollingBench",
+        "OutputRules"
+      ],
+      "Entries": {
+        "CannaMaster_GenericLitWRollingHemp": {
+          "Id": "CannaMaster_GenericLitWRollingHemp",
+          "Triggers": [
+            {
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredTags": [
+                "canna_master_hemp"
+              ],
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "b42ti0n.CP.LitW_CBDJoint",
+              "ItemId": "b42ti0n.CP.LitW_CBDJoint",
+              "MinStack": 1,
+              "MaxStack": 1,
+              "CopyQuality": true,
+              "CopyPrice": true,
+              "ObjectDisplayName": "CBD Joint",
+              "PriceModifiers": [
+                {
+                  "Modification": "Multiply",
+                  "Amount": 3.75
+                }
+              ]
+            }
+          ],
+          "MinutesUntilReady": 20
+        }
+      },
+      "When": {
+        "HasMod |contains=b42ti0n.CP.LitW": true
+      }
+    },
+    {
+      "LogName": "Lost in the Woods Distillation Station accepts Canna Master hemp products",
+      "Action": "EditData",
+      "Target": "Data/Machines",
+      "TargetField": [
+        "(BC)b42ti0n.CP.LitW_DistillationStation",
+        "OutputRules"
+      ],
+      "Entries": {
+        "CannaMaster_GenericLitWDistillHemp": {
+          "Id": "CannaMaster_GenericLitWDistillHemp",
+          "Triggers": [
+            {
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredTags": [
+                "canna_master_hemp"
+              ],
+              "RequiredCount": 1
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "b42ti0n.CP.LitW_CBDOil",
+              "ItemId": "b42ti0n.CP.LitW_CBDOil",
+              "MinStack": 1,
+              "MaxStack": 1,
+              "CopyQuality": true,
+              "CopyPrice": true,
+              "ObjectDisplayName": "CBD Oil",
+              "PriceModifiers": [
+                {
+                  "Modification": "Multiply",
+                  "Amount": 3.75
+                }
+              ]
+            }
+          ],
+          "MinutesUntilReady": 60
+        }
+      },
+      "When": {
+        "HasMod |contains=b42ti0n.CP.LitW": true
+      }
+    },
+    {
+      "LogName": "Cannabis Kit dehydrator accepts Canna Master raw products",
+      "Action": "EditData",
+      "Target": "Data/Machines",
+      "TargetField": [
+        "(BC)Dehydrator",
+        "OutputRules"
+      ],
+      "Entries": {
+        "CannaMaster_GenericCKDehydrator": {
+          "Id": "CannaMaster_GenericCKDehydrator",
+          "Triggers": [
+            {
+              "Trigger": "ItemPlacedInMachine",
+              "RequiredTags": [
+                "canna_master_raw_product"
+              ],
+              "RequiredCount": 5
+            }
+          ],
+          "OutputItem": [
+            {
+              "Id": "PPJA.cannabiskit_Dried_Shit_Weed",
+              "ItemId": "PPJA.cannabiskit_Dried_Shit_Weed",
+              "MinStack": 5,
+              "MaxStack": 5,
+              "CopyQuality": true,
+              "CopyPrice": true,
+              "ObjectDisplayName": "Dried Cannabis"
+            }
+          ],
+          "MinutesUntilReady": 180
+        }
+      },
+      "When": {
+        "HasMod |contains=PPJA.cannabiskit": true
+      }
+    }
+  ]
+}

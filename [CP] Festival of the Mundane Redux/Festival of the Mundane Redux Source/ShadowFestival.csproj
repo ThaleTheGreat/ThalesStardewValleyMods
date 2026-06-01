@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <AssemblyName>ShadowFestival</AssemblyName>
+    <RootNamespace>ShadowFestival</RootNamespace>
+    <OutputType>Library</OutputType>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>10.0</LangVersion>
+    <Version>3.2.1</Version>
+    <ModFolderName>Festival of the Mundane Redux</ModFolderName>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="4.3.0" PrivateAssets="all" />
+    <PackageReference Include="Lib.Harmony" Version="2.3.3" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="GameLocationExtensionsCompat.cs" />
+    <Compile Include="HarmonyPatcher.cs" />
+    <Compile Include="ModData.cs" />
+    <Compile Include="ModEntry.cs" />
+    <Compile Include="PinGame.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="manifest.json" CopyToOutputDirectory="Always" />
+    <Content Include="i18n\**\*" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="data.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="assets\Goblin_Nose.png" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="assets\GlowOrb.png" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="LICENSE" CopyToOutputDirectory="Always" />
+  </ItemGroup>
+</Project>
