@@ -1,7 +1,7 @@
 {
   "Name": "GMCM Advanced Search",
   "Author": "ThaleTheGreat",
-  "Version": "1.2.0",
+  "Version": "1.2.1",
   "Description": "Search GMCM config options by option label, tooltip, field ID, and config key.",
   "UniqueID": "ThaleTheGreat.GMCMAdvancedSearch",
   "EntryDll": "GMCMAdvancedSearch.dll",

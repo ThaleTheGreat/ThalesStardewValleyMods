@@ -1,0 +1,18 @@
+{
+  "Name": "Warp Master Framework",
+  "Author": "ThaleTheGreat",
+  "Version": "1.1.1",
+  "Description": "Visual warp editor.",
+  "UniqueID": "ThaleTheGreat.WarpMasterFramework",
+  "EntryDll": "WarpMasterFramework.dll",
+  "MinimumApiVersion": "4.0.0",
+  "UpdateKeys": [
+    "Nexus:0000"
+  ],
+  "Dependencies": [
+    {
+      "UniqueID": "spacechase0.GenericModConfigMenu",
+      "IsRequired": false
+    }
+  ]
+}
