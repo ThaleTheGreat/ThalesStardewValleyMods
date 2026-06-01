@@ -3,6 +3,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <RootNamespace>TheAmazingDeathicornRedux</RootNamespace>
     <AssemblyName>TheAmazingDeathicornRedux</AssemblyName>
+    <ModFolderName>The Amazing Deathicorn Redux</ModFolderName>
     <LangVersion>10.0</LangVersion>
     <Nullable>enable</Nullable>
     <NoWarn>$(NoWarn);CS8600;CS8601;CS8604;CS8605;CS8625;CS8629</NoWarn>

@@ -2,6 +2,7 @@
   <PropertyGroup>
     <AssemblyName>WarpMasterFramework</AssemblyName>
     <RootNamespace>WarpMasterFramework</RootNamespace>
+    <ModFolderName>Warp Master Framework</ModFolderName>
     <Version>1.4.1</Version>
     <TargetFramework>net6.0</TargetFramework>
     <LangVersion>latest</LangVersion>
