@@ -1,7 +1,7 @@
 {
   "Name": "Mine Level Indicators",
   "Author": "ThaleTheGreat",
-  "Version": "1.1.1",
+  "Version": "1.2.1",
   "Description": "Shows optional infested and mushroom mine level indicators in the HUD.",
   "UniqueID": "ThaleTheGreat.MineLevelIndicators",
   "EntryDll": "MineLevelIndicators.dll",
