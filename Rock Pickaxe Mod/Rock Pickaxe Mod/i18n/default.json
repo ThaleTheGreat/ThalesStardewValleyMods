@@ -1,7 +1,0 @@
-{
-  "dialogue.already-pickaxed": "Rock has already been pickaxed today.",
-  "dialogue.likes-pickaxe": "Rock seems happy!",
-  "dialogue.dislikes-pickaxe": "Rock looks upset...",
-  "gmcm.rock-likes-pickaxe.name": "Rock Likes Pickaxe",
-  "gmcm.rock-likes-pickaxe.tooltip": "When enabled, Rock gains 5 friendship once per day when you click on them with a pickaxe. When disabled, Rock loses 30 friendship once per day instead."
-}
