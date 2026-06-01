@@ -43,7 +43,20 @@ internal sealed partial class ModEntry : Mod
         helper.Events.GameLoop.GameLaunched += this.OnGameLaunched;
         helper.Events.GameLoop.UpdateTicked += this.OnUpdateTicked;
         helper.Events.GameLoop.Saving += this.OnSaving;
-        helper.Events.GameLoop.ReturnedToTitle += (_, _) => this.ClearBridgeProxies();
+        helper.Events.Player.Warped += this.OnInteractionWarped;
+        helper.Events.Display.RenderedWorld += this.OnInteractionRenderedWorld;
+        helper.Events.GameLoop.ReturnedToTitle += (_, _) =>
+        {
+            this.ClearBridgeProxies();
+            this.UsedInteractionKeysToday.Clear();
+            this.PendingInteractions.Clear();
+        };
+        helper.Events.GameLoop.DayStarted += (_, _) =>
+        {
+            this.UsedInteractionKeysToday.Clear();
+            this.PendingInteractions.Clear();
+        };
+        helper.Events.Input.ButtonPressed += this.OnInteractionButtonPressed;
     }
 
     private void LoadChanges()
@@ -53,12 +66,11 @@ internal sealed partial class ModEntry : Mod
             PatchContentFile? content;
             try
             {
-                content = pack.ReadJsonFile<PatchContentFile>("content.json")
-                    ?? pack.ReadJsonFile<PatchContentFile>("patches.json");
+                content = pack.ReadJsonFile<PatchContentFile>("patches.json");
             }
             catch (Exception ex)
             {
-                this.Monitor.Log($"Failed reading content.json from {pack.Manifest.UniqueID}: {ex.Message}", LogLevel.Error);
+                this.Monitor.Log($"Failed reading patches.json from {pack.Manifest.UniqueID}: {ex.Message}", LogLevel.Error);
                 continue;
             }
 
@@ -77,13 +89,19 @@ internal sealed partial class ModEntry : Mod
 
     private void TryRegisterChange(IContentPack pack, AssetPatchChange change)
     {
-        if (string.Equals(change.Action, "BridgeMods", StringComparison.OrdinalIgnoreCase))
+        if (IsPatchRuntimeAction(change.Action))
         {
-            this.TryRegisterBridgeChange(pack, change);
+            this.TryRegisterRuntimeChange(pack, change);
             return;
         }
 
-        if (!string.Equals(change.Action, "PatchMod", StringComparison.OrdinalIgnoreCase))
+        if (IsPatchInteractionAction(change.Action))
+        {
+            this.TryRegisterInteractionChange(pack, change);
+            return;
+        }
+
+        if (!IsPatchModAction(change.Action))
         {
             this.Monitor.Log($"Ignored change from {pack.Manifest.UniqueID}: unsupported Action '{change.Action}'.", LogLevel.Warn);
             return;
@@ -145,7 +163,7 @@ internal sealed partial class ModEntry : Mod
         else
         {
             string generatedFileName = BuildGeneratedFileName(pack.Manifest.UniqueID, change.TargetMod, change.TargetPath, fromVanillaUi, outputWidth, outputHeight);
-            sourcePath = Path.Combine(this.GeneratedAssetRoot, generatedFileName);
+            sourcePath = Path.Combine(this.GeneratedAssetRoot, SanitizeFileName(pack.Manifest.UniqueID), generatedFileName);
         }
 
         string targetModId = change.TargetMod.Trim();
@@ -187,6 +205,21 @@ internal sealed partial class ModEntry : Mod
             this.LogDebug($"Registered patch '{patch.LogName}': {targetFullPath} -> {sourcePath}");
     }
 
+    private static bool IsPatchModAction(string action)
+    {
+        return string.Equals(action, "PatchMod", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsPatchRuntimeAction(string action)
+    {
+        return string.Equals(action, "PatchRuntime", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsPatchInteractionAction(string action)
+    {
+        return string.Equals(action, "PatchInteraction", StringComparison.OrdinalIgnoreCase);
+    }
+
     private static bool IsSupportedVanillaUi(string value)
     {
         return string.Equals(value.Trim(), "MenuBox", StringComparison.OrdinalIgnoreCase);
@@ -195,14 +228,14 @@ internal sealed partial class ModEntry : Mod
     private static string BuildGeneratedFileName(string packId, string targetMod, string targetPath, string sourceKind, int width, int height)
     {
         string text = $"{packId}|{targetMod}|{targetPath}|{sourceKind}|{width}|{height}";
-        return $"{SanitizeFileName(packId)}_{BuildStableHash(text)}.png";
+        return $"{SanitizeFileName(targetMod)}_{BuildStableHash(text)}.png";
     }
 
     private static string BuildGeneratedFileName(RegisteredPatch patch)
     {
         string sourceSignature = GetGeneratedSourceSignature(patch);
         string text = $"{patch.PackId}|{patch.TargetMod}|{patch.TargetPath}|{patch.FromVanillaUi}|{patch.OutputWidth}|{patch.OutputHeight}|{sourceSignature}";
-        return $"{SanitizeFileName(patch.PackId)}_{BuildStableHash(text)}.png";
+        return $"{SanitizeFileName(patch.TargetMod)}_{BuildStableHash(text)}.png";
     }
 
     private static string BuildStableHash(string text)
@@ -327,7 +360,7 @@ internal sealed partial class ModEntry : Mod
     private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
     {
         this.RegisterGmcm();
-        this.ApplyBridgeModPatches();
+        this.ApplyRuntimePatches();
     }
 
     private void RegisterGmcm()
@@ -349,6 +382,8 @@ internal sealed partial class ModEntry : Mod
                 this.Helper.WriteConfig(this.Config);
             }
         );
+
+        this.RegisterInteractionGmcm(gmcm);
 
         gmcm.AddBoolOption(
             this.ModManifest,
