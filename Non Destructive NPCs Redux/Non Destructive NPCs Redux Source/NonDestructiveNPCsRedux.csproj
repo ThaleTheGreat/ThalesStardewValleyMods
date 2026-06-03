@@ -8,6 +8,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <ModFolderName>Non Destructive NPCs Redux</ModFolderName>
   </PropertyGroup>
 
   <ItemGroup>

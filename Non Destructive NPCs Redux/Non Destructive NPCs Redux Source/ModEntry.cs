@@ -13,12 +13,12 @@ internal sealed class ModEntry : Mod
     public override void Entry(IModHelper helper)
     {
         Harmony harmony = new(this.ModManifest.UniqueID);
-        PatchObjectDestruction(harmony);
-        PatchCollisionMethods(harmony);
+        PatchLocationDestroyMethods(harmony);
+        PatchLocationCollisionMethods(harmony);
         PatchPassableMethods(harmony);
     }
 
-    private static void PatchObjectDestruction(Harmony harmony)
+    private static void PatchLocationDestroyMethods(Harmony harmony)
     {
         foreach (MethodInfo method in AccessTools.GetDeclaredMethods(typeof(GameLocation)))
         {
@@ -33,19 +33,21 @@ internal sealed class ModEntry : Mod
         }
     }
 
-    private static void PatchCollisionMethods(Harmony harmony)
+    private static void PatchLocationCollisionMethods(Harmony harmony)
     {
         foreach (MethodInfo method in AccessTools.GetDeclaredMethods(typeof(GameLocation)))
         {
             if (method.ReturnType != typeof(bool))
                 continue;
 
-            if (method.Name == nameof(GameLocation.isCollidingPosition)
-                || method.Name.StartsWith("isTileOccupied", StringComparison.OrdinalIgnoreCase)
-                || method.Name.StartsWith("isTilePassable", StringComparison.OrdinalIgnoreCase))
+            if (method.Name == nameof(GameLocation.isCollidingPosition))
             {
-                harmony.Patch(method, postfix: new HarmonyMethod(typeof(ModEntry), nameof(AllowNpcThroughProtectedPlantings)));
+                harmony.Patch(method, postfix: new HarmonyMethod(typeof(ModEntry), nameof(AllowNpcThroughProtectedPlantingsByRectangle)));
+                continue;
             }
+
+            if (method.Name.StartsWith("isTileOccupied", StringComparison.OrdinalIgnoreCase))
+                harmony.Patch(method, postfix: new HarmonyMethod(typeof(ModEntry), nameof(AllowNpcThroughProtectedPlantingsByTile)));
         }
     }
 
@@ -56,7 +58,7 @@ internal sealed class ModEntry : Mod
             foreach (MethodInfo method in AccessTools.GetDeclaredMethods(type))
             {
                 if (method.ReturnType == typeof(bool) && method.Name.Equals("isPassable", StringComparison.OrdinalIgnoreCase))
-                    harmony.Patch(method, postfix: new HarmonyMethod(typeof(ModEntry), nameof(ForceProtectedPlantingsPassable)));
+                    harmony.Patch(method, postfix: new HarmonyMethod(typeof(ModEntry), nameof(AllowProtectedPlantingPassableForNpc)));
             }
         }
     }
@@ -72,41 +74,36 @@ internal sealed class ModEntry : Mod
         return false;
     }
 
-    private static void AllowNpcThroughProtectedPlantings(GameLocation __instance, ref bool __result, object[] __args)
+    private static void AllowNpcThroughProtectedPlantingsByRectangle(GameLocation __instance, ref bool __result, object[] __args)
     {
-        if (!__result || !ArgsAreForNpc(__args))
+        if (!__result || !ArgsAreForNpc(__args) || !TryGetRectangle(__args, out Rectangle rectangle))
             return;
 
-        if (TryGetRectangle(__args, out Rectangle rectangle))
+        foreach (Vector2 tile in GetTiles(rectangle))
         {
-            foreach (Vector2 tile in GetTiles(rectangle))
+            if (IsProtectedPlanting(__instance, tile))
             {
-                if (IsProtectedPlanting(__instance, tile))
-                {
-                    __result = false;
-                    return;
-                }
-            }
-
-            return;
-        }
-
-        if (TryGetTile(__args, out Vector2 tileAt))
-        {
-            if (IsProtectedPlanting(__instance, tileAt))
                 __result = false;
+                return;
+            }
         }
     }
 
-    private static void ForceProtectedPlantingsPassable(object __instance, ref bool __result)
+    private static void AllowNpcThroughProtectedPlantingsByTile(GameLocation __instance, ref bool __result, object[] __args)
     {
-        if (__instance is Tree or FruitTree or Bush)
-        {
-            __result = true;
+        if (!__result || !ArgsAreForNpc(__args) || !TryGetTile(__args, out Vector2 tile))
             return;
-        }
 
-        if (__instance is SObject obj && IsTreeSeedOrSaplingObject(obj))
+        if (IsProtectedPlanting(__instance, tile))
+            __result = false;
+    }
+
+    private static void AllowProtectedPlantingPassableForNpc(object __instance, ref bool __result, object[] __args)
+    {
+        if (!ArgsAreForNpc(__args))
+            return;
+
+        if (__instance is Tree or FruitTree or Bush || __instance is SObject obj && IsTreeSeedOrSaplingObject(obj))
             __result = true;
     }
 
@@ -166,13 +163,15 @@ internal sealed class ModEntry : Mod
 
     private static bool ArgsAreForNpc(object[] args)
     {
+        bool foundNpc = false;
+
         foreach (object? arg in args)
         {
             if (arg is Farmer)
                 return false;
 
             if (arg is NPC)
-                return true;
+                foundNpc = true;
 
             if (arg is Character character)
             {
@@ -180,11 +179,11 @@ internal sealed class ModEntry : Mod
                     return false;
 
                 if (character is NPC)
-                    return true;
+                    foundNpc = true;
             }
         }
 
-        return false;
+        return foundNpc;
     }
 
     private static bool IsProtectedPlanting(GameLocation location, Vector2 tile)
@@ -204,7 +203,7 @@ internal sealed class ModEntry : Mod
         string qualifiedItemId = obj.QualifiedItemId ?? string.Empty;
         string name = obj.Name ?? string.Empty;
         string displayName = obj.DisplayName ?? string.Empty;
-        string search = string.Join("\n", itemId, qualifiedItemId, name, displayName);
+        string search = string.Join('\n', itemId, qualifiedItemId, name, displayName);
 
         return itemId is "309" or "310" or "311" or "292" or "891"
             || search.Contains("Acorn", StringComparison.OrdinalIgnoreCase)
