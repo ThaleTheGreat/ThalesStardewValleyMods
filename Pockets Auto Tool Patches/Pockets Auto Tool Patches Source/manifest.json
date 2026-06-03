@@ -1,0 +1,26 @@
+{
+  "Name": "Pockets Auto Tool Patches",
+  "Author": "ThaleTheGreat",
+  "Version": "1.0.0",
+  "Description": "Lets supported auto-tool mods use tools stored in Pockets.",
+  "UniqueID": "ThaleTheGreat.PocketsAutoToolPatches",
+  "EntryDll": "PocketsAutoToolPatches.dll",
+  "MinimumApiVersion": "4.0.0",
+  "UpdateKeys": [
+    "Nexus:47128"
+  ],
+  "Dependencies": [
+    {
+      "UniqueID": "aedenthorn.Pockets",
+      "IsRequired": true
+    },
+    {
+      "UniqueID": "Trapyy.AutomatetoolSwap",
+      "IsRequired": false
+    },
+    {
+      "UniqueID": "aedenthorn.ToolSmartSwitch",
+      "IsRequired": false
+    }
+  ]
+}
