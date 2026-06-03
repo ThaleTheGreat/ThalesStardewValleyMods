@@ -1,0 +1,12 @@
+{
+  "Name": "Non Destructive NPCs Redux",
+  "Author": "ThaleTheGreat",
+  "Version": "2.1.0",
+  "Description": "NPCs no longer destroy placed objects in their paths.",
+  "UniqueID": "ThaleTheGreat.NonDestructiveNPCsRedux",
+  "EntryDll": "NonDestructiveNPCsRedux.dll",
+  "MinimumApiVersion": "4.0.0",
+  "UpdateKeys": [
+    "Nexus:42667"
+  ]
+}
