@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <LangVersion>10.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>UniversalUIMoreStats</AssemblyName>
+    <RootNamespace>ThaleTheGreat.UniversalUIMoreStats</RootNamespace>
+    <Version>2.2.1</Version>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <ModFolderName>Universal UI Recolor for More Stats</ModFolderName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="4.3.0" PrivateAssets="all" />
+    <PackageReference Include="Lib.Harmony" Version="2.3.6" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="manifest.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="LICENSE" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

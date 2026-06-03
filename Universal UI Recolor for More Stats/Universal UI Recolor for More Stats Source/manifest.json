@@ -1,0 +1,18 @@
+{
+    "Name": "Universal UI Recolor for More Stats",
+    "Author": "ThaleTheGreat",
+    "Version": "2.1.0",
+    "Description": "Universal UI Recolor for More Stats.",
+    "UniqueID": "ThaleTheGreat.UniversalUIMoreStats",
+    "EntryDll": "UniversalUIMoreStats.dll",
+    "MinimumApiVersion": "4.0.0",
+    "UpdateKeys": [
+        "Nexus:41487"
+    ],
+    "Dependencies": [
+        {
+            "UniqueID": "Xan.MoreStats",
+            "IsRequired": true
+        }
+    ]
+}
