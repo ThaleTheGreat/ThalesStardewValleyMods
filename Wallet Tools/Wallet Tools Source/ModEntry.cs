@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using HarmonyLib;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
@@ -26,6 +27,7 @@ public sealed class ModEntry : Mod
     private const string PowerPrefix = "ThaleTheGreat.WalletTools_";
     private const string ToolTexturePath = "TileSheets/tools";
     private const string RuntimeToolMarker = "ThaleTheGreat.WalletTools/RuntimeTool";
+    private const string RuntimeToolKindMarker = "ThaleTheGreat.WalletTools/RuntimeToolKind";
 
     private static ModEntry? Instance;
 
@@ -35,9 +37,13 @@ public sealed class ModEntry : Mod
     private Harmony Harmony = null!;
     private bool SuppressInventoryConversion;
     private bool GmcmRegistered;
+    private IGenericModConfigMenuApi? GmcmApi;
+    private IMobilePhoneApi? MobilePhoneApi;
     private bool GmcmMissingLogged;
     private bool ToolSmartSwitchPatched;
     private bool ToolSmartSwitchPatchAttempted;
+    private bool AutomateToolSwapPatched;
+    private bool AutomateToolSwapPatchAttempted;
     private readonly Dictionary<WalletToolKind, Tool> ToolSmartSwitchToolCache = new();
     private readonly List<BlacksmithExposure> ActiveBlacksmithExposures = new();
 
@@ -53,7 +59,6 @@ public sealed class ModEntry : Mod
         helper.Events.GameLoop.DayEnding += OnDayEnding;
         helper.Events.GameLoop.Saving += OnSaving;
         helper.Events.GameLoop.UpdateTicked += OnUpdateTicked;
-        helper.Events.Input.ButtonPressed += OnButtonPressed;
         helper.Events.Player.InventoryChanged += OnInventoryChanged;
 
         Harmony = new Harmony(ModManifest.UniqueID);
@@ -122,7 +127,10 @@ public sealed class ModEntry : Mod
     private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
     {
         RegisterGmcm();
+        RegisterMobilePhoneApp();
         PatchToolSmartSwitch();
+        PatchAutomateToolSwap();
+        WarnIfNoSwitchModLoaded();
     }
 
     private void PatchBlacksmithToolUpgradeFlow()
@@ -176,6 +184,44 @@ public sealed class ModEntry : Mod
         ToolSmartSwitchPatched = true;
     }
 
+    private void PatchAutomateToolSwap()
+    {
+        if (AutomateToolSwapPatched || AutomateToolSwapPatchAttempted)
+            return;
+
+        AutomateToolSwapPatchAttempted = true;
+
+        Type? inventoryHandler = AccessTools.TypeByName("Core.InventoryHandler");
+        if (inventoryHandler is null)
+            return;
+
+        MethodInfo? setTool = AccessTools.Method(
+            inventoryHandler,
+            "SetTool",
+            new[] { typeof(Farmer), typeof(Type), typeof(string), typeof(bool) }
+        );
+        MethodInfo? postfix = AccessTools.Method(typeof(ModEntry), nameof(AutomateToolSwapSetToolPostfix));
+
+        if (setTool is null || postfix is null)
+            return;
+
+        Harmony.Patch(setTool, postfix: new HarmonyMethod(postfix));
+        AutomateToolSwapPatched = true;
+    }
+
+    private void WarnIfNoSwitchModLoaded()
+    {
+        if (ToolSmartSwitchPatched || AutomateToolSwapPatched)
+            return;
+
+        Monitor.Log("Wallet Tools did not detect Tool Smart Switch or AutomateToolSwap. Using Wallet Tools fallback switching logic.", LogLevel.Info);
+    }
+
+    private static void AutomateToolSwapSetToolPostfix(Farmer player, Type toolType, string aux = "", bool anyTool = false)
+    {
+        Instance?.TrySupplyRequestedWalletTool(player, toolType, anyTool);
+    }
+
     private static void ToolSmartSwitchGetToolsPostfix(Farmer f, ref Dictionary<int, Tool> __result)
     {
         Instance?.AddWalletToolsToToolSmartSwitch(f, __result);
@@ -186,13 +232,45 @@ public sealed class ModEntry : Mod
         return Instance?.TrySwitchToolSmartSwitchWalletTool(f, which) != true;
     }
 
+    private void RegisterMobilePhoneApp()
+    {
+        MobilePhoneApi = Helper.ModRegistry.GetApi<IMobilePhoneApi>("aedenthorn.MobilePhone");
+        if (MobilePhoneApi is null)
+            return;
+
+        try
+        {
+            Texture2D icon = Helper.ModContent.Load<Texture2D>("assets/MobilePhone.png");
+            MobilePhoneApi.AddApp(ModManifest.UniqueID, "Wallet Tools", OpenConfigFromMobilePhone, icon);
+        }
+        catch (Exception ex)
+        {
+            Monitor.Log($"Failed to register Wallet Tools Mobile Phone app: {ex.Message}", LogLevel.Warn);
+        }
+    }
+
+    private void OpenConfigFromMobilePhone()
+    {
+        MobilePhoneApi?.SetPhoneOpened(false);
+        MobilePhoneApi?.SetAppRunning(false);
+
+        GmcmApi ??= Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
+        if (GmcmApi is null)
+        {
+            Game1.addHUDMessage(new HUDMessage("Generic Mod Config Menu is not installed.", HUDMessage.error_type));
+            return;
+        }
+
+        GmcmApi.OpenModMenu(ModManifest);
+    }
+
     private void RegisterGmcm()
     {
         if (GmcmRegistered)
             return;
 
-        IGenericModConfigMenuApi? gmcm = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
-        if (gmcm is null)
+        GmcmApi = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
+        if (GmcmApi is null)
         {
             if (!GmcmMissingLogged)
             {
@@ -204,27 +282,27 @@ public sealed class ModEntry : Mod
 
         try
         {
-            gmcm.Unregister(ModManifest);
-            gmcm.Register(ModManifest, reset: () => Config = new ModConfig(), save: () => Helper.WriteConfig(Config));
+            GmcmApi.Unregister(ModManifest);
+            GmcmApi.Register(ModManifest, reset: () => Config = new ModConfig(), save: () => Helper.WriteConfig(Config));
 
-            AddBool(gmcm, nameof(Config.ModEnabled), () => Config.ModEnabled, value => Config.ModEnabled = value, "Mod Enabled", "Enables or disables Wallet Tools.");
-            AddBool(gmcm, nameof(Config.SwitchEnabled), () => Config.SwitchEnabled, value => Config.SwitchEnabled = value, "Switch Enabled", "Enables or disables automatic wallet tool switching.");
-            gmcm.AddKeybindList(ModManifest, () => Config.ToggleSwitchKey, value => Config.ToggleSwitchKey = value, () => "Toggle Button", () => "Optional hotkey to toggle automatic wallet tool switching.", nameof(Config.ToggleSwitchKey));
+            AddBool(GmcmApi, nameof(Config.ModEnabled), () => Config.ModEnabled, value => Config.ModEnabled = value, "Mod Enabled", "Enables or disables Wallet Tools.");
+            AddBool(GmcmApi, nameof(Config.WalletAxe), () => Config.WalletAxe, value => Config.WalletAxe = value, "Wallet Axe", "Move the axe into the wallet when found in inventory.");
+            AddBool(GmcmApi, nameof(Config.WalletPickaxe), () => Config.WalletPickaxe, value => Config.WalletPickaxe = value, "Wallet Pickaxe", "Move the pickaxe into the wallet when found in inventory.");
+            AddBool(GmcmApi, nameof(Config.WalletHoe), () => Config.WalletHoe, value => Config.WalletHoe = value, "Wallet Hoe", "Move the hoe into the wallet when found in inventory.");
+            AddBool(GmcmApi, nameof(Config.WalletWateringCan), () => Config.WalletWateringCan, value => Config.WalletWateringCan = value, "Wallet Watering Can", "Move the watering can into the wallet when found in inventory.");
+            AddBool(GmcmApi, nameof(Config.WalletPan), () => Config.WalletPan, value => Config.WalletPan = value, "Wallet Pan", "Move the copper pan into the wallet when found in inventory.");
 
-            AddBool(gmcm, nameof(Config.WalletAxe), () => Config.WalletAxe, value => Config.WalletAxe = value, "Wallet Axe", "Move the axe into the wallet when found in inventory.");
-            AddBool(gmcm, nameof(Config.WalletPickaxe), () => Config.WalletPickaxe, value => Config.WalletPickaxe = value, "Wallet Pickaxe", "Move the pickaxe into the wallet when found in inventory.");
-            AddBool(gmcm, nameof(Config.WalletHoe), () => Config.WalletHoe, value => Config.WalletHoe = value, "Wallet Hoe", "Move the hoe into the wallet when found in inventory.");
-            AddBool(gmcm, nameof(Config.WalletWateringCan), () => Config.WalletWateringCan, value => Config.WalletWateringCan = value, "Wallet Watering Can", "Move the watering can into the wallet when found in inventory.");
-            AddBool(gmcm, nameof(Config.WalletPan), () => Config.WalletPan, value => Config.WalletPan = value, "Wallet Pan", "Move the copper pan into the wallet when found in inventory.");
+            AddBool(GmcmApi, nameof(Config.FallbackSwitchEnabled), () => Config.FallbackSwitchEnabled, value => Config.FallbackSwitchEnabled = value, "Fallback Switching", "Use Wallet Tools' built-in switching only when Tool Smart Switch and AutomateToolSwap are not installed.");
+            AddBool(GmcmApi, nameof(Config.FallbackSwitchForObjects), () => Config.FallbackSwitchForObjects, value => Config.FallbackSwitchForObjects = value, "Fallback: Objects", "Fallback switches to axe, pickaxe, or hoe for matching objects.");
+            AddBool(GmcmApi, nameof(Config.FallbackSwitchForTrees), () => Config.FallbackSwitchForTrees, value => Config.FallbackSwitchForTrees = value, "Fallback: Trees", "Fallback switches to axe, pickaxe, or hoe for trees and saplings.");
+            AddBool(GmcmApi, nameof(Config.FallbackSwitchForResourceClumps), () => Config.FallbackSwitchForResourceClumps, value => Config.FallbackSwitchForResourceClumps = value, "Fallback: Clumps", "Fallback switches to axe or pickaxe for resource clumps.");
+            AddBool(GmcmApi, nameof(Config.FallbackSwitchForCrops), () => Config.FallbackSwitchForCrops, value => Config.FallbackSwitchForCrops = value, "Fallback: Crops", "Fallback switches to hoe for forage crops that require hoe use.");
+            AddBool(GmcmApi, nameof(Config.FallbackSwitchForPan), () => Config.FallbackSwitchForPan, value => Config.FallbackSwitchForPan = value, "Fallback: Pan", "Fallback switches to the copper pan near panning spots.");
+            AddBool(GmcmApi, nameof(Config.FallbackSwitchForWateringCan), () => Config.FallbackSwitchForWateringCan, value => Config.FallbackSwitchForWateringCan = value, "Fallback: Watering Can", "Fallback switches to the watering can for refills, pet bowls, and volcano lava.");
+            AddBool(GmcmApi, nameof(Config.FallbackSwitchForWatering), () => Config.FallbackSwitchForWatering, value => Config.FallbackSwitchForWatering = value, "Fallback: Watering", "Fallback switches to the watering can for dry tilled dirt.");
+            AddBool(GmcmApi, nameof(Config.FallbackSwitchForTilling), () => Config.FallbackSwitchForTilling, value => Config.FallbackSwitchForTilling = value, "Fallback: Tilling", "Fallback switches to the hoe for diggable tiles.");
 
-            AddBool(gmcm, nameof(Config.SwitchForObjects), () => Config.SwitchForObjects, value => Config.SwitchForObjects = value, "Switch For Objects", "Switches to axe, pickaxe, or hoe for matching objects.");
-            AddBool(gmcm, nameof(Config.SwitchForTrees), () => Config.SwitchForTrees, value => Config.SwitchForTrees = value, "Switch For Trees", "Switches to axe, pickaxe, or hoe for trees and saplings.");
-            AddBool(gmcm, nameof(Config.SwitchForResourceClumps), () => Config.SwitchForResourceClumps, value => Config.SwitchForResourceClumps = value, "Switch For Clumps", "Switches to axe or pickaxe for resource clumps.");
-            AddBool(gmcm, nameof(Config.SwitchForCrops), () => Config.SwitchForCrops, value => Config.SwitchForCrops = value, "Switch For Crops", "Switches to hoe for forage crops that require hoe use.");
-            AddBool(gmcm, nameof(Config.SwitchForPan), () => Config.SwitchForPan, value => Config.SwitchForPan = value, "Switch To Pan", "Switches to the copper pan near panning spots.");
-            AddBool(gmcm, nameof(Config.SwitchForWateringCan), () => Config.SwitchForWateringCan, value => Config.SwitchForWateringCan = value, "Switch To Watering Can", "Switches to the watering can for refills, pet bowls, and volcano lava.");
-            AddBool(gmcm, nameof(Config.SwitchForWatering), () => Config.SwitchForWatering, value => Config.SwitchForWatering = value, "Switch For Watering", "Switches to the watering can for dry tilled dirt.");
-            AddBool(gmcm, nameof(Config.SwitchForTilling), () => Config.SwitchForTilling, value => Config.SwitchForTilling = value, "Switch For Tilling", "Switches to the hoe for diggable tiles.");
+
 
             GmcmRegistered = true;
             Monitor.Log("Registered Wallet Tools options with Generic Mod Config Menu.", LogLevel.Info);
@@ -270,19 +348,6 @@ public sealed class ModEntry : Mod
             RestoreTemporaryTool(Game1.player);
     }
 
-    private void OnButtonPressed(object? sender, ButtonPressedEventArgs e)
-    {
-        if (!Context.IsWorldReady || !Config.ModEnabled)
-            return;
-
-        if (Config.ToggleSwitchKey.JustPressed())
-        {
-            Config.SwitchEnabled = !Config.SwitchEnabled;
-            Helper.WriteConfig(Config);
-            Game1.addHUDMessage(new HUDMessage(Config.SwitchEnabled ? "Wallet Tools Enabled" : "Wallet Tools Disabled", HUDMessage.newQuest_type));
-        }
-    }
-
     private void OnInventoryChanged(object? sender, InventoryChangedEventArgs e)
     {
         if (SuppressInventoryConversion || !Context.IsWorldReady || e.Player.UniqueMultiplayerID != Game1.player.UniqueMultiplayerID || ActiveBlacksmithExposures.Count > 0)
@@ -318,7 +383,7 @@ public sealed class ModEntry : Mod
                     continue;
 
                 int slot = player.Items.Count;
-                MarkRuntimeTool(tool);
+                MarkRuntimeTool(tool, kind);
                 player.Items.Add(tool);
                 ActiveBlacksmithExposures.Add(new BlacksmithExposure(slot, null, kind, tool));
             }
@@ -601,45 +666,106 @@ public sealed class ModEntry : Mod
         return Enum.IsDefined(typeof(WalletToolKind), raw) ? (WalletToolKind)raw : null;
     }
 
-    private bool TryPrepareWalletToolUse(Farmer player)
+    private bool TrySupplyRequestedWalletTool(Farmer player, Type toolType, bool anyTool)
     {
-        if (PendingToolUse is not null || !Config.ModEnabled || !Config.SwitchEnabled || Game1.fadeToBlack || !Context.CanPlayerMove)
+        if (PendingToolUse is not null || !Config.ModEnabled || IsToolUpgradeLocation(player.currentLocation))
             return false;
 
-        if (!TryGetDesiredTool(player, out WalletToolKind kind))
+        if (PlayerIsHoldingRequestedTool(player, toolType, anyTool))
             return false;
 
-        if (player.CurrentTool is Tool currentTool && TryGetWalletKind(currentTool, out WalletToolKind currentKind) && currentKind == kind)
+        if (!TryGetWalletKindForRequestedType(toolType, anyTool, out WalletToolKind kind))
             return false;
 
         return TrySetTemporaryWalletTool(player, kind);
     }
 
-    private bool TrySetTemporaryWalletTool(Farmer player, WalletToolKind kind)
+    private static bool PlayerIsHoldingRequestedTool(Farmer player, Type toolType, bool anyTool)
     {
-        if (PendingToolUse is not null || !Config.ModEnabled || IsToolUpgradeLocation(player.currentLocation) || !StoredTools.TryGetValue(kind, out WalletToolState? state))
+        Item? currentItem = player.CurrentItem;
+        if (currentItem is null)
             return false;
 
-        Tool? walletTool = state.CreateTool(Monitor);
-        if (walletTool is null)
-            return false;
+        if (currentItem.GetType() == toolType)
+            return true;
 
-        int previousToolIndex = player.CurrentToolIndex;
-        int hiddenSlot = player.Items.Count;
-
-        MarkRuntimeTool(walletTool);
-
-        SuppressInventoryConversion = true;
-        player.Items.Add(walletTool);
-        player.CurrentToolIndex = hiddenSlot;
-        PendingToolUse = new TemporaryToolUse(hiddenSlot, previousToolIndex, kind, walletTool);
-        SuppressInventoryConversion = false;
-
-        Game1.playSound("toolSwap");
-        return true;
+        return anyTool && currentItem is Axe or Pickaxe or Hoe;
     }
 
-    private bool TryGetDesiredTool(Farmer player, out WalletToolKind kind)
+    private bool TryGetWalletKindForRequestedType(Type toolType, bool anyTool, out WalletToolKind kind)
+    {
+        if (toolType == typeof(Axe))
+        {
+            kind = WalletToolKind.Axe;
+            return HasStoredEnabledTool(kind);
+        }
+
+        if (toolType == typeof(Pickaxe))
+        {
+            kind = WalletToolKind.Pickaxe;
+            return HasStoredEnabledTool(kind);
+        }
+
+        if (toolType == typeof(Hoe))
+        {
+            kind = WalletToolKind.Hoe;
+            return HasStoredEnabledTool(kind);
+        }
+
+        if (toolType == typeof(WateringCan))
+        {
+            kind = WalletToolKind.WateringCan;
+            return HasStoredEnabledTool(kind);
+        }
+
+        if (toolType == typeof(Pan))
+        {
+            kind = WalletToolKind.Pan;
+            return HasStoredEnabledTool(kind);
+        }
+
+        if (anyTool)
+        {
+            foreach (WalletToolKind candidate in new[] { WalletToolKind.Axe, WalletToolKind.Pickaxe, WalletToolKind.Hoe })
+            {
+                if (HasStoredEnabledTool(candidate))
+                {
+                    kind = candidate;
+                    return true;
+                }
+            }
+        }
+
+        kind = WalletToolKind.Axe;
+        return false;
+    }
+
+    private bool HasStoredEnabledTool(WalletToolKind kind)
+    {
+        return IsWalletEnabled(kind) && StoredTools.ContainsKey(kind);
+    }
+
+    private bool IsExternalSwitchModLoaded()
+    {
+        return Helper.ModRegistry.IsLoaded("aedenthorn.ToolSmartSwitch")
+            || Helper.ModRegistry.IsLoaded("Trapyy.AutomatetoolSwap");
+    }
+
+    private bool TryPrepareWalletToolUse(Farmer player)
+    {
+        if (IsExternalSwitchModLoaded())
+            return false;
+
+        if (PendingToolUse is not null || !Config.ModEnabled || !Config.FallbackSwitchEnabled || Game1.fadeToBlack || !Context.CanPlayerMove)
+            return false;
+
+        if (!TryGetFallbackToolRequest(player, out Type toolType, out bool anyTool))
+            return false;
+
+        return TrySupplyRequestedWalletTool(player, toolType, anyTool);
+    }
+
+    private bool TryGetFallbackToolRequest(Farmer player, out Type toolType, out bool anyTool)
     {
         Vector2 position = !Game1.wasMouseVisibleThisFrame
             ? player.GetToolLocation(false)
@@ -648,38 +774,43 @@ public sealed class ModEntry : Mod
         Vector2 tile = player.GetToolLocation(position, false) / 64f;
         tile = new Vector2((int)tile.X, (int)tile.Y);
 
-        if (Config.SwitchForObjects && player.currentLocation.objects.TryGetValue(tile, out Object obj) && TryGetToolForObject(obj, out kind))
-            return HasStoredEnabledTool(kind);
+        if (Config.FallbackSwitchForObjects && player.currentLocation.objects.TryGetValue(tile, out Object obj) && TryGetToolRequestForObject(obj, out toolType, out anyTool))
+            return true;
 
         if (player.currentLocation.terrainFeatures.TryGetValue(tile, out TerrainFeature feature))
         {
-            if (TryGetToolForTerrainFeature(feature, out kind))
-                return HasStoredEnabledTool(kind);
+            if (TryGetToolRequestForTerrainFeature(feature, out toolType, out anyTool))
+                return true;
 
-            if (Config.SwitchForWatering && player.currentLocation is Farm && feature is HoeDirt dirt && dirt.state.Value == 0)
+            if (Config.FallbackSwitchForWatering && player.currentLocation is Farm && feature is HoeDirt dirt && dirt.state.Value == 0)
             {
-                kind = WalletToolKind.WateringCan;
-                return HasStoredEnabledTool(kind);
+                toolType = typeof(WateringCan);
+                anyTool = false;
+                return true;
             }
 
-            if (Config.SwitchForCrops && feature is HoeDirt cropDirt && cropDirt.crop is not null && cropDirt.crop.forageCrop.Value && cropDirt.crop.whichForageCrop.Value == Crop.forageCrop_ginger.ToString())
+            if (Config.FallbackSwitchForCrops && feature is HoeDirt cropDirt && cropDirt.crop is not null && cropDirt.crop.forageCrop.Value && cropDirt.crop.whichForageCrop.Value == Crop.forageCrop_ginger.ToString())
             {
-                kind = WalletToolKind.Hoe;
-                return HasStoredEnabledTool(kind);
+                toolType = typeof(Hoe);
+                anyTool = false;
+                return true;
             }
         }
 
-        if (Config.SwitchForResourceClumps)
+        if (Config.FallbackSwitchForResourceClumps)
         {
             Rectangle tileRect = new((int)tile.X * 64, (int)tile.Y * 64, 64, 64);
             foreach (ResourceClump clump in player.currentLocation.resourceClumps)
             {
-                if (clump.getBoundingBox().Intersects(tileRect) && TryGetToolForClump(clump, out kind))
-                    return HasStoredEnabledTool(kind);
+                if (clump.getBoundingBox().Intersects(tileRect) && TryGetToolRequestForClump(clump, out toolType))
+                {
+                    anyTool = false;
+                    return true;
+                }
             }
         }
 
-        if (Config.SwitchForPan)
+        if (Config.FallbackSwitchForPan)
         {
             int panX = player.currentLocation.orePanPoint.X;
             int panY = player.currentLocation.orePanPoint.Y;
@@ -688,25 +819,101 @@ public sealed class ModEntry : Mod
                 Rectangle panRect = new(panX * 64 - 64, panY * 64 - 64, 256, 256);
                 if (panRect.Contains((int)tile.X * 64, (int)tile.Y * 64) && Utility.distance(player.getStandingPosition().X, panRect.Center.X, player.getStandingPosition().Y, panRect.Center.Y) <= 192f)
                 {
-                    kind = WalletToolKind.Pan;
-                    return HasStoredEnabledTool(kind);
+                    toolType = typeof(Pan);
+                    anyTool = false;
+                    return true;
                 }
             }
         }
 
-        if (Config.SwitchForWateringCan && TryNeedsWateringCan(player, tile))
+        if (Config.FallbackSwitchForWateringCan && TryNeedsWateringCan(player, tile))
         {
-            kind = WalletToolKind.WateringCan;
-            return HasStoredEnabledTool(kind);
+            toolType = typeof(WateringCan);
+            anyTool = false;
+            return true;
         }
 
-        if (Config.SwitchForTilling && IsDiggableHoeTile(player.currentLocation, tile))
+        if (Config.FallbackSwitchForTilling && IsDiggableHoeTile(player.currentLocation, tile))
         {
-            kind = WalletToolKind.Hoe;
-            return HasStoredEnabledTool(kind);
+            toolType = typeof(Hoe);
+            anyTool = false;
+            return true;
         }
 
-        kind = WalletToolKind.Axe;
+        toolType = typeof(Axe);
+        anyTool = false;
+        return false;
+    }
+
+    private static bool TryGetToolRequestForObject(Object obj, out Type toolType, out bool anyTool)
+    {
+        anyTool = false;
+
+        if (obj.Name.Equals("Stone", StringComparison.OrdinalIgnoreCase))
+        {
+            toolType = typeof(Pickaxe);
+            return true;
+        }
+
+        if (obj.Name.Contains("Twig", StringComparison.OrdinalIgnoreCase))
+        {
+            toolType = typeof(Axe);
+            return true;
+        }
+
+        if (obj.ParentSheetIndex == 590)
+        {
+            toolType = typeof(Hoe);
+            return true;
+        }
+
+        if (obj is BreakableContainer)
+        {
+            toolType = typeof(Axe);
+            anyTool = true;
+            return true;
+        }
+
+        toolType = typeof(Axe);
+        return false;
+    }
+
+    private bool TryGetToolRequestForTerrainFeature(TerrainFeature feature, out Type toolType, out bool anyTool)
+    {
+        anyTool = false;
+
+        if (Config.FallbackSwitchForTrees && feature is Tree tree)
+        {
+            if (tree.growthStage.Value >= 3)
+            {
+                toolType = typeof(Axe);
+                return true;
+            }
+
+            toolType = typeof(Axe);
+            anyTool = true;
+            return true;
+        }
+
+        toolType = typeof(Axe);
+        return false;
+    }
+
+    private static bool TryGetToolRequestForClump(ResourceClump clump, out Type toolType)
+    {
+        if (clump.parentSheetIndex.Value == 600 || clump.parentSheetIndex.Value == 602)
+        {
+            toolType = typeof(Axe);
+            return true;
+        }
+
+        if (new[] { 622, 672, 752, 754, 756, 758 }.Contains(clump.parentSheetIndex.Value))
+        {
+            toolType = typeof(Pickaxe);
+            return true;
+        }
+
+        toolType = typeof(Axe);
         return false;
     }
 
@@ -720,93 +927,6 @@ public sealed class ModEntry : Mod
 
         return location.doesTileHaveProperty(x, y, "Diggable", "Back") is not null
             || location.doesTileHaveProperty(x, y, "Diggable", "Buildings") is not null;
-    }
-
-    private bool HasStoredEnabledTool(WalletToolKind kind)
-    {
-        return IsWalletEnabled(kind) && StoredTools.ContainsKey(kind);
-    }
-
-    private static bool TryGetToolForObject(Object obj, out WalletToolKind kind)
-    {
-        if (obj.Name.Equals("Stone", StringComparison.OrdinalIgnoreCase))
-        {
-            kind = WalletToolKind.Pickaxe;
-            return true;
-        }
-        if (obj.Name.Contains("Twig", StringComparison.OrdinalIgnoreCase))
-        {
-            kind = WalletToolKind.Axe;
-            return true;
-        }
-        if (obj.ParentSheetIndex == 590)
-        {
-            kind = WalletToolKind.Hoe;
-            return true;
-        }
-        if (obj is BreakableContainer)
-        {
-            kind = WalletToolKind.Hoe;
-            return true;
-        }
-
-        kind = WalletToolKind.Axe;
-        return false;
-    }
-
-    private bool TryGetToolForTerrainFeature(TerrainFeature feature, out WalletToolKind kind)
-    {
-        if (Config.SwitchForTrees && feature is Tree tree)
-        {
-            if (tree.growthStage.Value >= 3)
-            {
-                kind = WalletToolKind.Axe;
-                return true;
-            }
-
-            if (tree.growthStage.Value == 1)
-            {
-                kind = WalletToolKind.Axe;
-                return false;
-            }
-
-            if (HasStoredEnabledTool(WalletToolKind.Axe))
-            {
-                kind = WalletToolKind.Axe;
-                return true;
-            }
-            if (HasStoredEnabledTool(WalletToolKind.Pickaxe))
-            {
-                kind = WalletToolKind.Pickaxe;
-                return true;
-            }
-            if (HasStoredEnabledTool(WalletToolKind.Hoe))
-            {
-                kind = WalletToolKind.Hoe;
-                return true;
-            }
-        }
-
-        kind = WalletToolKind.Axe;
-        return false;
-    }
-
-    private static bool TryGetToolForClump(ResourceClump clump, out WalletToolKind kind)
-    {
-        if (clump.parentSheetIndex.Value == 600 || clump.parentSheetIndex.Value == 602)
-        {
-            kind = WalletToolKind.Axe;
-            return true;
-        }
-
-        if (new[] { 622, 672, 752, 754, 756, 758 }.Contains(clump.parentSheetIndex.Value))
-        {
-            kind = WalletToolKind.Pickaxe;
-            return true;
-        }
-
-        kind = WalletToolKind.Axe;
-        return false;
     }
 
     private static bool TryNeedsWateringCan(Farmer player, Vector2 tile)
@@ -838,9 +958,34 @@ public sealed class ModEntry : Mod
         return location.objects.TryGetValue(tile, out Object bowl) && bowl.Name.EndsWith("Pet Bowl", StringComparison.OrdinalIgnoreCase);
     }
 
-    private static void MarkRuntimeTool(Tool tool)
+    private bool TrySetTemporaryWalletTool(Farmer player, WalletToolKind kind)
+    {
+        if (PendingToolUse is not null || !Config.ModEnabled || IsToolUpgradeLocation(player.currentLocation) || !StoredTools.TryGetValue(kind, out WalletToolState? state))
+            return false;
+
+        Tool? walletTool = state.CreateTool(Monitor);
+        if (walletTool is null)
+            return false;
+
+        int previousToolIndex = player.CurrentToolIndex;
+        int hiddenSlot = player.Items.Count;
+
+        MarkRuntimeTool(walletTool, kind);
+
+        SuppressInventoryConversion = true;
+        player.Items.Add(walletTool);
+        player.CurrentToolIndex = hiddenSlot;
+        PendingToolUse = new TemporaryToolUse(hiddenSlot, previousToolIndex, kind, walletTool);
+        SuppressInventoryConversion = false;
+
+        Game1.playSound("toolSwap");
+        return true;
+    }
+
+    private static void MarkRuntimeTool(Tool tool, WalletToolKind kind)
     {
         tool.modData[RuntimeToolMarker] = "true";
+        tool.modData[RuntimeToolKindMarker] = kind.ToString();
     }
 
     private static bool IsRuntimeTool(Item? item)

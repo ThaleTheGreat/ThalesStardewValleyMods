@@ -1,8 +1,8 @@
 {
   "Name": "Wallet Scepter",
   "Author": "ThaleTheGreat",
-  "Version": "1.0.0",
-  "Description": "Turns the Return Scepter into a permanent wallet-style unlock, adds a configurable hotkey, and optionally asks at 25:00 whether to return to the farm or go to bed.",
+  "Version": "1.1.0",
+  "Description": "Puts the Return Scepter into the Wallet",
   "UniqueID": "ThaleTheGreat.WalletScepter",
   "EntryDll": "WalletScepter.dll",
   "MinimumApiVersion": "4.0.0",
@@ -10,6 +10,10 @@
     "Nexus:47133"
   ],
   "Dependencies": [
+    {
+      "UniqueID": "aedenthorn.MobilePhone",
+      "IsRequired": false
+    },
     {
       "UniqueID": "spacechase0.GenericModConfigMenu",
       "IsRequired": false

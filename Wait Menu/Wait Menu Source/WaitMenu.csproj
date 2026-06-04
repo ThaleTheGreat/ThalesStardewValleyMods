@@ -1,7 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
-    <AssemblyName>WaitMenu</AssemblyName>
+        <Version>1.3.0</Version>
+<AssemblyName>WaitMenu</AssemblyName>
     <RootNamespace>WaitMenu</RootNamespace>
     <ModFolderName>Wait Menu</ModFolderName>
     <Nullable>disable</Nullable>
@@ -17,5 +18,6 @@
   <ItemGroup>
     <None Include="manifest.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="LICENSE" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="assets\**\*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

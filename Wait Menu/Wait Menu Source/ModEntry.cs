@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
@@ -18,6 +19,7 @@ public sealed class ModEntry : Mod
     private ModConfig config = new();
     private GamePadState previousPadState;
     private bool hasPreviousPadState;
+    private IMobilePhoneApi mobilePhoneApi;
 
     public override void Entry(IModHelper helper)
     {
@@ -28,6 +30,8 @@ public sealed class ModEntry : Mod
 
     private void OnGameLaunched(object sender, GameLaunchedEventArgs e)
     {
+        this.RegisterMobilePhoneApp();
+
         IGenericModConfigMenuApi api = this.Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
         if (api == null)
             return;
@@ -80,6 +84,31 @@ public sealed class ModEntry : Mod
             tooltip: () => "Clears stale NPC pathing/animation state after placing NPCs at schedule destinations.");
     }
 
+    private void RegisterMobilePhoneApp()
+    {
+        try
+        {
+            this.mobilePhoneApi = this.Helper.ModRegistry.GetApi<IMobilePhoneApi>("aedenthorn.MobilePhone");
+            if (this.mobilePhoneApi == null)
+                return;
+
+            Texture2D icon = this.Helper.ModContent.Load<Texture2D>("assets/MobilePhone.png");
+            this.mobilePhoneApi.AddApp(this.ModManifest.UniqueID, "Wait Menu", this.OpenFromMobilePhone, icon);
+        }
+        catch (Exception ex)
+        {
+            this.Monitor.Log($"Wait Menu could not register with Mobile Phone: {ex}", LogLevel.Warn);
+        }
+    }
+
+    private void OpenFromMobilePhone()
+    {
+        this.mobilePhoneApi?.SetAppRunning(false);
+        this.mobilePhoneApi?.SetRunningApp(null);
+        this.mobilePhoneApi?.SetPhoneOpened(false);
+        this.OpenWaitMenu(ignoreActiveMenu: true);
+    }
+
     private void OnUpdateTicked(object sender, UpdateTickedEventArgs e)
     {
         if (!Context.IsWorldReady)
@@ -89,7 +118,18 @@ public sealed class ModEntry : Mod
         if (!this.config.OpenMenuKey.JustPressed() && !controllerPressed)
             return;
 
-        if (Game1.activeClickableMenu != null || !Game1.player.CanMove)
+        this.OpenWaitMenu(ignoreActiveMenu: false);
+    }
+
+    private void OpenWaitMenu(bool ignoreActiveMenu)
+    {
+        if (!Context.IsWorldReady)
+            return;
+
+        if (!ignoreActiveMenu && Game1.activeClickableMenu != null)
+            return;
+
+        if (!Game1.player.CanMove)
             return;
 
         if (Game1.eventUp && !this.config.AllowDuringEvents)

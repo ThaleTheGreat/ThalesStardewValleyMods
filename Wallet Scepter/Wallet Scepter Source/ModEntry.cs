@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using TileLocation = xTile.Dimensions.Location;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
@@ -33,6 +34,8 @@ public sealed class ModEntry : Mod
     private string PendingSleepHomeLocationName = DefaultHomeLocationName;
     private int PendingSleepAttempts;
     private bool GmcmRegistered;
+    private IGenericModConfigMenuApi? GmcmApi;
+    private IMobilePhoneApi? MobilePhoneApi;
     private bool GmcmMissingLogged;
 
     public override void Entry(IModHelper helper)
@@ -76,9 +79,60 @@ public sealed class ModEntry : Mod
         return (DefaultToolTexturePath, new Point(32, 0));
     }
 
+    private Texture2D CreateMobilePhoneScepterIcon()
+    {
+        (string texturePath, Point texturePosition) = GetReturnScepterPowerTexture();
+        Texture2D sourceTexture = Helper.GameContent.Load<Texture2D>(texturePath);
+
+        const int iconSize = 16;
+        Color[] pixels = new Color[iconSize * iconSize];
+        sourceTexture.GetData(0, new Rectangle(texturePosition.X, texturePosition.Y, iconSize, iconSize), pixels, 0, pixels.Length);
+
+        Texture2D icon = new(Game1.graphics.GraphicsDevice, iconSize, iconSize);
+        icon.SetData(pixels);
+        return icon;
+    }
+
     private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
     {
         RegisterGmcm();
+        RegisterMobilePhoneApp();
+    }
+
+    private void RegisterMobilePhoneApp()
+    {
+        MobilePhoneApi = Helper.ModRegistry.GetApi<IMobilePhoneApi>("aedenthorn.MobilePhone");
+        if (MobilePhoneApi is null)
+            return;
+
+        try
+        {
+            Texture2D icon = CreateMobilePhoneScepterIcon();
+            MobilePhoneApi.AddApp(ModManifest.UniqueID, "Wallet Scepter", ActivateScepterFromMobilePhone, icon);
+        }
+        catch (Exception ex)
+        {
+            Monitor.Log($"Failed to register Wallet Scepter Mobile Phone app: {ex.Message}", LogLevel.Warn);
+        }
+    }
+
+    private void ActivateScepterFromMobilePhone()
+    {
+        MobilePhoneApi?.SetPhoneOpened(false);
+        MobilePhoneApi?.SetAppRunning(false);
+
+        if (!Context.IsWorldReady || Game1.activeClickableMenu is not null)
+            return;
+
+        if (Config.RequireWalletUnlock && !HasWalletScepter(Game1.player))
+        {
+            if (Config.ShowHudMessageWhenMissing)
+                Game1.addHUDMessage(new HUDMessage("You do not have the Return Scepter in your wallet.", HUDMessage.error_type));
+
+            return;
+        }
+
+        UseRealReturnScepterPath();
     }
 
     private void RegisterGmcm()
@@ -86,8 +140,8 @@ public sealed class ModEntry : Mod
         if (GmcmRegistered)
             return;
 
-        IGenericModConfigMenuApi? gmcm = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
-        if (gmcm is null)
+        GmcmApi = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
+        if (GmcmApi is null)
         {
             if (!GmcmMissingLogged)
             {
@@ -100,15 +154,15 @@ public sealed class ModEntry : Mod
 
         try
         {
-            gmcm.Unregister(ModManifest);
+            GmcmApi.Unregister(ModManifest);
 
-            gmcm.Register(
+            GmcmApi.Register(
                 ModManifest,
                 reset: () => Config = new ModConfig(),
                 save: () => Helper.WriteConfig(Config)
             );
 
-            gmcm.AddKeybindList(
+            GmcmApi.AddKeybindList(
                 ModManifest,
                 getValue: () => Config.UseReturnScepterKey,
                 setValue: value => Config.UseReturnScepterKey = value,
@@ -117,7 +171,7 @@ public sealed class ModEntry : Mod
                 fieldId: nameof(Config.UseReturnScepterKey)
             );
 
-            gmcm.AddBoolOption(
+            GmcmApi.AddBoolOption(
                 ModManifest,
                 getValue: () => Config.EnableAutomaticReturnHomeAt2500,
                 setValue: value => Config.EnableAutomaticReturnHomeAt2500 = value,
@@ -126,7 +180,7 @@ public sealed class ModEntry : Mod
                 fieldId: nameof(Config.EnableAutomaticReturnHomeAt2500)
             );
 
-            gmcm.AddBoolOption(
+            GmcmApi.AddBoolOption(
                 ModManifest,
                 getValue: () => Config.AskBeforeAutomaticReturnHomeAt2500,
                 setValue: value => Config.AskBeforeAutomaticReturnHomeAt2500 = value,
@@ -135,7 +189,7 @@ public sealed class ModEntry : Mod
                 fieldId: nameof(Config.AskBeforeAutomaticReturnHomeAt2500)
             );
 
-            gmcm.AddBoolOption(
+            GmcmApi.AddBoolOption(
                 ModManifest,
                 getValue: () => Config.RequireWalletUnlock,
                 setValue: value => Config.RequireWalletUnlock = value,
@@ -144,7 +198,7 @@ public sealed class ModEntry : Mod
                 fieldId: nameof(Config.RequireWalletUnlock)
             );
 
-            gmcm.AddBoolOption(
+            GmcmApi.AddBoolOption(
                 ModManifest,
                 getValue: () => Config.ShowHudMessageWhenMissing,
                 setValue: value => Config.ShowHudMessageWhenMissing = value,

@@ -10,6 +10,8 @@ public interface IGenericModConfigMenuApi
 
     void Unregister(IManifest mod);
 
+    void OpenModMenu(IManifest mod);
+
     void AddKeybindList(
         IManifest mod,
         Func<KeybindList> getValue,

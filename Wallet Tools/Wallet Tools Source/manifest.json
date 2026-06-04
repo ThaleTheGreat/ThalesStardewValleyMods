@@ -1,8 +1,8 @@
 {
   "Name": "Wallet Tools",
   "Author": "ThaleTheGreat",
-  "Version": "1.0.1",
-  "Description": "Moves core progression tools into the wallet and smart-switches them when needed.",
+  "Version": "1.1.0",
+  "Description": "Puts your main tools into the Wallet",
   "UniqueID": "ThaleTheGreat.WalletTools",
   "EntryDll": "WalletTools.dll",
   "MinimumApiVersion": "4.0.0",
@@ -10,6 +10,18 @@
     "Nexus:47136"
   ],
   "Dependencies": [
+    {
+      "UniqueID": "aedenthorn.ToolSmartSwitch",
+      "IsRequired": false
+    },
+    {
+      "UniqueID": "Trapyy.AutomatetoolSwap",
+      "IsRequired": false
+    },
+    {
+      "UniqueID": "aedenthorn.MobilePhone",
+      "IsRequired": false
+    },
     {
       "UniqueID": "spacechase0.GenericModConfigMenu",
       "IsRequired": false
