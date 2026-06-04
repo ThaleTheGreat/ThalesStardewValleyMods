@@ -128,135 +128,7 @@ namespace ThaleTheGreat.Mapster
 
         private Texture2D CreateMobilePhoneAppIcon()
         {
-            const int size = 64;
-            Texture2D texture = new(Game1.graphics.GraphicsDevice, size, size);
-            Color[] pixels = new Color[size * size];
-
-            Color transparent = Color.Transparent;
-            Color shadow = new(54, 36, 22, 180);
-            Color border = new(100, 63, 35);
-            Color paperDark = new(196, 166, 104);
-            Color paper = new(238, 216, 151);
-            Color paperLight = new(255, 236, 175);
-            Color grass = new(92, 154, 76);
-            Color grassDark = new(54, 110, 57);
-            Color water = new(67, 139, 203);
-            Color waterLight = new(116, 181, 224);
-            Color road = new(189, 138, 80);
-            Color roadLight = new(219, 177, 111);
-            Color pin = new(207, 57, 52);
-            Color pinDark = new(128, 35, 37);
-            Color pinLight = new(255, 105, 85);
-
-            Array.Fill(pixels, transparent);
-
-            FillRoundedRect(pixels, size, 6, 7, 52, 52, 8, shadow);
-            FillRoundedRect(pixels, size, 4, 4, 52, 52, 8, border);
-            FillRoundedRect(pixels, size, 8, 8, 44, 44, 5, paperDark);
-            FillRoundedRect(pixels, size, 10, 10, 40, 40, 4, paper);
-            FillRect(pixels, size, 12, 12, 36, 8, paperLight);
-
-            FillRect(pixels, size, 11, 31, 17, 17, grassDark);
-            FillRect(pixels, size, 13, 29, 18, 17, grass);
-            FillRect(pixels, size, 34, 11, 14, 18, water);
-            FillRect(pixels, size, 36, 12, 10, 15, waterLight);
-
-            for (int x = 10; x < 49; x++)
-            {
-                int y = 35 - x / 3;
-                DrawLine(pixels, size, x, y, x, y + 3, road);
-                DrawLine(pixels, size, x, y + 1, x, y + 1, roadLight);
-            }
-
-            DrawLine(pixels, size, 18, 11, 18, 47, new Color(140, 104, 66, 150));
-            DrawLine(pixels, size, 33, 11, 33, 47, new Color(140, 104, 66, 150));
-            DrawLine(pixels, size, 11, 24, 48, 24, new Color(140, 104, 66, 150));
-            DrawLine(pixels, size, 11, 38, 48, 38, new Color(140, 104, 66, 150));
-
-            FillCircle(pixels, size, 36, 31, 9, pinDark);
-            FillCircle(pixels, size, 36, 30, 8, pin);
-            FillCircle(pixels, size, 34, 28, 3, pinLight);
-            FillCircle(pixels, size, 36, 30, 3, paperLight);
-            DrawLine(pixels, size, 36, 38, 32, 49, pinDark);
-            DrawLine(pixels, size, 36, 38, 40, 49, pinDark);
-            DrawLine(pixels, size, 33, 49, 39, 49, pinDark);
-
-            DrawLine(pixels, size, 10, 51, 48, 51, new Color(255, 248, 204, 120));
-            texture.SetData(pixels);
-            return texture;
-        }
-
-        private static void FillRect(Color[] pixels, int size, int x, int y, int width, int height, Color color)
-        {
-            for (int py = Math.Max(0, y); py < Math.Min(size, y + height); py++)
-            {
-                for (int px = Math.Max(0, x); px < Math.Min(size, x + width); px++)
-                    pixels[py * size + px] = color;
-            }
-        }
-
-        private static void FillRoundedRect(Color[] pixels, int size, int x, int y, int width, int height, int radius, Color color)
-        {
-            for (int py = y; py < y + height; py++)
-            {
-                for (int px = x; px < x + width; px++)
-                {
-                    int dx = px < x + radius ? x + radius - px : px >= x + width - radius ? px - (x + width - radius - 1) : 0;
-                    int dy = py < y + radius ? y + radius - py : py >= y + height - radius ? py - (y + height - radius - 1) : 0;
-                    if (dx * dx + dy * dy <= radius * radius)
-                        SetPixel(pixels, size, px, py, color);
-                }
-            }
-        }
-
-        private static void FillCircle(Color[] pixels, int size, int centerX, int centerY, int radius, Color color)
-        {
-            int radiusSquared = radius * radius;
-            for (int y = centerY - radius; y <= centerY + radius; y++)
-            {
-                for (int x = centerX - radius; x <= centerX + radius; x++)
-                {
-                    int dx = x - centerX;
-                    int dy = y - centerY;
-                    if (dx * dx + dy * dy <= radiusSquared)
-                        SetPixel(pixels, size, x, y, color);
-                }
-            }
-        }
-
-        private static void DrawLine(Color[] pixels, int size, int x1, int y1, int x2, int y2, Color color)
-        {
-            int dx = Math.Abs(x2 - x1);
-            int dy = -Math.Abs(y2 - y1);
-            int sx = x1 < x2 ? 1 : -1;
-            int sy = y1 < y2 ? 1 : -1;
-            int error = dx + dy;
-
-            while (true)
-            {
-                SetPixel(pixels, size, x1, y1, color);
-                if (x1 == x2 && y1 == y2)
-                    break;
-
-                int e2 = 2 * error;
-                if (e2 >= dy)
-                {
-                    error += dy;
-                    x1 += sx;
-                }
-
-                if (e2 <= dx)
-                {
-                    error += dx;
-                    y1 += sy;
-                }
-            }
-        }
-
-        private static void SetPixel(Color[] pixels, int size, int x, int y, Color color)
-        {
-            if (x >= 0 && y >= 0 && x < size && y < size)
-                pixels[y * size + x] = color;
+            return Helper.ModContent.Load<Texture2D>("assets/MobilePhone.png");
         }
 
         private void OpenMapFromMobilePhone()
@@ -300,7 +172,6 @@ namespace ThaleTheGreat.Mapster
             ResetMapZoom();
             mapRightDragging = false;
             mobilePhoneAppRegistered = false;
-            mobilePhoneAppIcon?.Dispose();
             mobilePhoneAppIcon = null;
         }
 

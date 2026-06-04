@@ -3,7 +3,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <AssemblyName>GMCMAdvancedSearch</AssemblyName>
     <RootNamespace>GMCMAdvancedSearch</RootNamespace>
-    <Version>1.2.0</Version>
+    <Version>1.3.0</Version>
     <Nullable>enable</Nullable>
     <LangVersion>10.0</LangVersion>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
@@ -14,6 +14,7 @@
   <ItemGroup>
     <None Include="manifest.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="LICENSE" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="assets\**" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Netcode;
@@ -6,10 +10,6 @@ using StardewModdingAPI.Events;
 using StardewValley;
 using StardewValley.Locations;
 using StardewValley.Menus;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using StardewObject = StardewValley.Object;
 
 namespace MineLevelIndicators;
@@ -18,15 +18,16 @@ public sealed class ModEntry : Mod
 {
     private readonly List<(int Level, string Type)> infestedLevels = new();
     private readonly List<int> mushroomLevels = new();
-    private ClickableTextureComponent icon;
-    private ModConfig config;
+    private ClickableTextureComponent? icon;
+    private Texture2D? indicatorIconTexture;
+    private ModConfig config = new();
     private string hoverText = string.Empty;
     private bool reflectionWarned;
+    private bool mobilePhoneLoaded;
 
     public override void Entry(IModHelper helper)
     {
         config = helper.ReadConfig<ModConfig>();
-
         helper.Events.GameLoop.GameLaunched += OnGameLaunched;
         helper.Events.GameLoop.DayStarted += OnDayStarted;
         helper.Events.GameLoop.SaveLoaded += (_, _) => RefreshIndicators();
@@ -35,9 +36,15 @@ public sealed class ModEntry : Mod
         helper.Events.Display.RenderedHud += OnRenderedHud;
     }
 
-    private void OnGameLaunched(object sender, GameLaunchedEventArgs e)
+    private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
     {
-        IGenericModConfigMenuApi gmcm = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
+        RegisterGmcm();
+        RegisterMobilePhoneApp();
+    }
+
+    private void RegisterGmcm()
+    {
+        IGenericModConfigMenuApi? gmcm = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
         if (gmcm == null)
             return;
 
@@ -80,24 +87,55 @@ public sealed class ModEntry : Mod
         );
     }
 
-    private void EnsureIcon()
+    private void RegisterMobilePhoneApp()
     {
-        if (icon != null || Game1.objectSpriteSheet == null)
+        IMobilePhoneApi? phoneApi = Helper.ModRegistry.GetApi<IMobilePhoneApi>("aedenthorn.MobilePhone");
+        if (phoneApi == null)
             return;
 
+        mobilePhoneLoaded = true;
+
+        bool success = phoneApi.AddApp(ModManifest.UniqueID, "Mine Levels", ShowMineLevelReport, GetIndicatorIconTexture());
+        Monitor.Log($"Mobile Phone app registration result: {success}", LogLevel.Trace);
+    }
+
+    private void ShowMineLevelReport()
+    {
+        if (!Context.IsWorldReady)
+        {
+            Game1.addHUDMessage(new HUDMessage("Mine level indicators are available after loading a save.", HUDMessage.error_type));
+            return;
+        }
+
+        RefreshIndicators();
+        string text = string.IsNullOrWhiteSpace(hoverText) ? "No mine level indicators are currently enabled." : hoverText;
+        Game1.drawObjectDialogue(text);
+    }
+
+    private Texture2D GetIndicatorIconTexture()
+    {
+        return indicatorIconTexture ??= Helper.ModContent.Load<Texture2D>("assets/MobilePhone.png");
+    }
+
+    private void EnsureIcon()
+    {
+        if (icon != null)
+            return;
+
+        Texture2D iconTexture = GetIndicatorIconTexture();
         icon = new ClickableTextureComponent(
             name: string.Empty,
-            bounds: new Rectangle(GetHudRightEdge() - 134, 290, 40, 40),
+            bounds: new Rectangle(GetHudRightEdge() - 54, 290, 48, 48),
             label: string.Empty,
             hoverText: string.Empty,
-            texture: Game1.objectSpriteSheet,
-            sourceRect: new Rectangle(351, 496, 18, 14),
-            scale: 3f,
+            texture: iconTexture,
+            sourceRect: new Rectangle(0, 0, iconTexture.Width, iconTexture.Height),
+            scale: 1f,
             drawShadow: false
         );
     }
 
-    private void OnDayStarted(object sender, DayStartedEventArgs e)
+    private void OnDayStarted(object? sender, DayStartedEventArgs e)
     {
         RefreshIndicators();
     }
@@ -105,7 +143,6 @@ public sealed class ModEntry : Mod
     private void RefreshIndicators()
     {
         ClearLists();
-
         if (!Context.IsWorldReady || (!config.ShowInfestedLevelIndicators && !config.ShowMushroomLevelIndicators))
             return;
 
@@ -121,7 +158,7 @@ public sealed class ModEntry : Mod
         hoverText = BuildHoverText(deepestMineLevel);
     }
 
-    private void OnRenderedHud(object sender, RenderedHudEventArgs e)
+    private void OnRenderedHud(object? sender, RenderedHudEventArgs e)
     {
         if (!ShouldDrawHudIndicator())
             return;
@@ -130,13 +167,13 @@ public sealed class ModEntry : Mod
         if (icon == null)
             return;
 
-        Point position = new(GetHudRightEdge() - 50, Game1.options.zoomButtons ? 290 : 260);
+        Point position = new(GetHudRightEdge() - 54, GetHudIconY());
         icon.bounds.X = position.X;
         icon.bounds.Y = position.Y;
         icon.draw(e.SpriteBatch, Color.White, 1f, 0, 0, 0);
     }
 
-    private void OnRenderingHud(object sender, RenderingHudEventArgs e)
+    private void OnRenderingHud(object? sender, RenderingHudEventArgs e)
     {
         if (!ShouldDrawHudIndicator() || icon == null || !icon.containsPoint(Game1.getMouseX(), Game1.getMouseY()))
             return;
@@ -171,7 +208,6 @@ public sealed class ModEntry : Mod
             string infestedText = infestedLevels.Any()
                 ? string.Join(Environment.NewLine, infestedLevels.Select(level => $"{level.Level}{(string.IsNullOrEmpty(level.Type) ? string.Empty : " - " + level.Type)}"))
                 : "None";
-
             sections.Add($"Infested Levels:\n{infestedText}");
         }
 
@@ -180,7 +216,6 @@ public sealed class ModEntry : Mod
             string mushroomText = deepest > 80
                 ? mushroomLevels.Any() ? string.Join(Environment.NewLine, mushroomLevels.Select(level => level.ToString())) : "None"
                 : "Mine Not Sufficiently Explored";
-
             sections.Add($"Mushroom Levels:\n{mushroomText}");
         }
 
@@ -204,12 +239,11 @@ public sealed class ModEntry : Mod
                 2 => "Monster",
                 _ => string.Empty
             };
-
             infestedLevels.Add((level, type));
         }
     }
 
-    private int GetInfestedType(MineShaft mine)
+    private int GetInfestedType(MineShaft? mine)
     {
         if (mine == null || mine.Objects == null)
             return 0;
@@ -236,7 +270,7 @@ public sealed class ModEntry : Mod
             if (level % 5 == 0)
                 continue;
 
-            MineShaft mine = TryGetMine(level);
+            MineShaft? mine = TryGetMine(level);
             if (mine != null && IsMushroomLevel(mine))
                 mushroomLevels.Add(level);
         }
@@ -271,7 +305,7 @@ public sealed class ModEntry : Mod
         return false;
     }
 
-    private MineShaft TryGetMine(int level)
+    private MineShaft? TryGetMine(int level)
     {
         try
         {
@@ -286,17 +320,15 @@ public sealed class ModEntry : Mod
     private bool TryReadMineBool(MineShaft mine, string fieldName, out bool value)
     {
         const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
-        FieldInfo field = mine.GetType().GetField(fieldName, flags);
-
+        FieldInfo? field = mine.GetType().GetField(fieldName, flags);
         if (field != null)
         {
-            object fieldValue = field.GetValue(mine);
+            object? fieldValue = field.GetValue(mine);
             switch (fieldValue)
             {
                 case bool boolValue:
                     value = boolValue;
                     return true;
-
                 case NetBool netBool:
                     value = netBool.Value;
                     return true;
@@ -307,17 +339,25 @@ public sealed class ModEntry : Mod
         if (!reflectionWarned && (fieldName == "netIsSlimeArea" || fieldName == "netIsMonsterArea"))
         {
             reflectionWarned = true;
-            Monitor.Log("Could not access MineShaft fields used to detect infested floors (netIsSlimeArea/netIsMonsterArea). If this persists, the mod needs updated 1.6 detection logic.", LogLevel.Warn);
+            Monitor.Log(
+                "Could not access MineShaft fields used to detect infested floors (netIsSlimeArea/netIsMonsterArea). If this persists, the mod needs updated 1.6 detection logic.",
+                LogLevel.Warn
+            );
         }
 
         return false;
+    }
+
+    private int GetHudIconY()
+    {
+        int y = Game1.options.zoomButtons ? 290 : 260;
+        return mobilePhoneLoaded ? y + 52 : y;
     }
 
     private static int GetHudRightEdge()
     {
         Viewport viewport = Game1.graphics.GraphicsDevice.Viewport;
         Rectangle titleSafeArea = viewport.TitleSafeArea;
-
         if (Game1.isOutdoorMapSmallerThanViewport())
         {
             int mapWidth = Game1.currentLocation.map.Layers[0].LayerWidth * Game1.tileSize;

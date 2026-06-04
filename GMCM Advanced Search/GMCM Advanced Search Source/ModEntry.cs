@@ -3,6 +3,7 @@ using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.Menus;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 
@@ -24,6 +25,7 @@ public sealed class ModEntry : Mod
 {
     private ModConfig Config = new();
     private IGenericModConfigMenuApi? Gmcm;
+    private IMobilePhoneApi? MobilePhone;
     private List<GmcmOptionRecord> IndexedOptions = new();
     private bool IndexBuilt;
 
@@ -78,6 +80,22 @@ public sealed class ModEntry : Mod
         Gmcm.AddBoolOption(ModManifest, () => Config.IncludeConfigValues, SetIncludeConfigValues, () => "Search config values", () => "Also index simple config.json values. This can produce more noisy results.");
         Gmcm.AddBoolOption(ModManifest, () => Config.DebugLogging, v => Config.DebugLogging = v, () => "Debug logging", () => "Log index counts and reflection details for troubleshooting.");
         Gmcm.AddParagraph(ModManifest, () => "Tip: search terms match actual option labels, tooltips, field IDs, and config keys only. Mod names and UniqueIDs are not used as search matches.");
+
+        TryRegisterMobilePhoneApp();
+    }
+
+    private void TryRegisterMobilePhoneApp()
+    {
+        MobilePhone = Helper.ModRegistry.GetApi<IMobilePhoneApi>("JoXW.MobilePhone")
+            ?? Helper.ModRegistry.GetApi<IMobilePhoneApi>("aedenthorn.MobilePhone");
+        if (MobilePhone == null)
+            return;
+
+        Texture2D icon = Helper.ModContent.Load<Texture2D>("assets/MobilePhone.png");
+        bool registered = MobilePhone.AddApp(ModManifest.UniqueID, "GMCM Search", OpenSearchMenuFromPhone, icon);
+
+        if (Config.DebugLogging)
+            Monitor.Log($"Mobile Phone app registration: {registered}.", LogLevel.Debug);
     }
 
     private void ResetConfig()
@@ -126,11 +144,30 @@ public sealed class ModEntry : Mod
 
     private void OnUpdateTicked(object? sender, UpdateTickedEventArgs e)
     {
-        if (!Config.OpenSearchMenuKey.JustPressed())
-            return;
+        if (Config.OpenSearchMenuKey.JustPressed())
+            TryOpenSearchMenu(true);
+    }
 
+    private void OpenSearchMenuFromPhone()
+    {
+        if (Game1.activeClickableMenu is SearchMenu)
+        {
+            TryOpenSearchMenu(true);
+            return;
+        }
+
+        Game1.activeClickableMenu = null;
+        Helper.Events.GameLoop.UpdateTicked -= OpenMenuNextTick;
+        Helper.Events.GameLoop.UpdateTicked += OpenMenuNextTick;
+    }
+
+    private void TryOpenSearchMenu(bool allowToggle)
+    {
         if (Game1.activeClickableMenu is SearchMenu menu)
         {
+            if (!allowToggle)
+                return;
+
             Game1.playSound("bigDeSelect");
             menu.CloseFromInput();
             return;
@@ -167,6 +204,7 @@ public sealed class ModEntry : Mod
         if (isGmcmMenu)
         {
             Game1.activeClickableMenu = null;
+            Helper.Events.GameLoop.UpdateTicked -= OpenMenuNextTick;
             Helper.Events.GameLoop.UpdateTicked += OpenMenuNextTick;
         }
         else
@@ -178,7 +216,7 @@ public sealed class ModEntry : Mod
     private void OpenMenuNextTick(object? sender, UpdateTickedEventArgs e)
     {
         Helper.Events.GameLoop.UpdateTicked -= OpenMenuNextTick;
-        OpenMenu();
+        TryOpenSearchMenu(false);
     }
 
     private void OpenMenu()

@@ -1,12 +1,18 @@
 {
   "Name": "GMCM Advanced Search",
   "Author": "ThaleTheGreat",
-  "Version": "1.2.1",
+  "Version": "1.3.0",
   "Description": "Search GMCM config options by option label, tooltip, field ID, and config key.",
   "UniqueID": "ThaleTheGreat.GMCMAdvancedSearch",
   "EntryDll": "GMCMAdvancedSearch.dll",
   "MinimumApiVersion": "4.0.0",
   "UpdateKeys": [
     "Nexus:46173"
+  ],
+  "Dependencies": [
+    {
+      "UniqueID": "aedenthorn.MobilePhone",
+      "IsRequired": false
+    }
   ]
 }
