@@ -3,7 +3,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <AssemblyName>UniversalUIMoreStats</AssemblyName>
     <RootNamespace>ThaleTheGreat.UniversalUIMoreStats</RootNamespace>
-    <Version>1.0.1</Version>
+    <Version>2.2.0</Version>
     <LangVersion>10.0</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
