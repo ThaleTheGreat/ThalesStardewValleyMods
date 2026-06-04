@@ -1,9 +1,11 @@
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
+using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.Menus;
 using System;
+using System.IO;
 
 #nullable enable
 namespace ThaleTheGreat.DateChange;
@@ -14,6 +16,8 @@ public class ModEntry : Mod
   private const string LegacySaveDataKey = "pending-world-changes";
   internal ModConfig Config = null!;
   internal bool FreezeTime;
+  private IMobilePhoneApi? MobilePhoneApi;
+  private bool MobilePhoneOpenQueued;
 
   public override void Entry(IModHelper helper)
   {
@@ -71,6 +75,8 @@ public class ModEntry : Mod
 
   private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
   {
+    this.RegisterMobilePhoneApp();
+
     IGenericModConfigMenuApi? api = this.Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
     if (api == null)
       return;
@@ -78,6 +84,51 @@ public class ModEntry : Mod
     api.AddKeybindList(this.ModManifest, (Func<KeybindList>) (() => this.Config.OpenMenuKey), (Action<KeybindList>) (value => this.Config.OpenMenuKey = value), (Func<string>) (() => "Open Menu Key"), (Func<string>) (() => "Keybind to open the Date Change menu."));
     api.AddBoolOption(this.ModManifest, (Func<bool>) (() => this.Config.ApplyImmediately), (Action<bool>) (value => this.Config.ApplyImmediately = value), (Func<string>) (() => "Apply Immediately"), (Func<string>) (() => "If enabled, Apply happens right now. If disabled (default), Apply queues changes for the next morning."));
     api.AddBoolOption(this.ModManifest, (Func<bool>) (() => this.Config.DebugLogging), (Action<bool>) (value => this.Config.DebugLogging = value), (Func<string>) (() => "Debug Logging"), (Func<string>) (() => "Show routine Date Change diagnostic messages in the SMAPI console."));
+  }
+
+  private void RegisterMobilePhoneApp()
+  {
+    this.MobilePhoneApi = this.Helper.ModRegistry.GetApi<IMobilePhoneApi>("aedenthorn.MobilePhone");
+    if (this.MobilePhoneApi == null)
+      return;
+
+    try
+    {
+      Texture2D appIcon = this.Helper.ModContent.Load<Texture2D>(Path.Combine("assets", "MobilePhone.png"));
+      bool success = this.MobilePhoneApi.AddApp(this.ModManifest.UniqueID, "Date Change", this.OpenFromMobilePhone, appIcon);
+      this.DebugLog($"Mobile Phone app registration success: {success}.");
+    }
+    catch (Exception ex)
+    {
+      this.Monitor.Log($"Failed to register the Date Change Mobile Phone app: {ex.Message}", LogLevel.Warn);
+    }
+  }
+
+  private void OpenFromMobilePhone()
+  {
+    if (this.MobilePhoneOpenQueued)
+      return;
+
+    this.MobilePhoneOpenQueued = true;
+    this.Helper.Events.GameLoop.UpdateTicked += this.OnOpenFromMobilePhoneTicked;
+  }
+
+  private void OnOpenFromMobilePhoneTicked(object? sender, UpdateTickedEventArgs e)
+  {
+    this.Helper.Events.GameLoop.UpdateTicked -= this.OnOpenFromMobilePhoneTicked;
+    this.MobilePhoneOpenQueued = false;
+
+    if (!Context.IsWorldReady || Game1.activeClickableMenu is DateChangeMenu)
+      return;
+
+    if (this.MobilePhoneApi != null)
+    {
+      this.MobilePhoneApi.SetAppRunning(false);
+      this.MobilePhoneApi.SetRunningApp(string.Empty);
+      this.MobilePhoneApi.SetPhoneOpened(false);
+    }
+
+    Game1.activeClickableMenu = new DateChangeMenu(this);
   }
 
   internal void ToggleFreezeTime()

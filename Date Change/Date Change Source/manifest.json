@@ -1,7 +1,7 @@
 {
   "Name": "Date Change",
   "Author": "ThaleTheGreat",
-  "Version": "1.1.1",
+  "Version": "1.2.0",
   "Description": "In-game menu to change day, season, and year, plus freeze time. Defaults to queuing date changes for the next morning; optional GMCM setting enables immediate apply.",
   "UniqueID": "ThaleTheGreat.DateChange",
   "EntryDll": "DateChange.dll",
@@ -12,6 +12,10 @@
   "Dependencies": [
     {
       "UniqueID": "spacechase0.GenericModConfigMenu",
+      "IsRequired": false
+    },
+    {
+      "UniqueID": "aedenthorn.MobilePhone",
       "IsRequired": false
     }
   ]

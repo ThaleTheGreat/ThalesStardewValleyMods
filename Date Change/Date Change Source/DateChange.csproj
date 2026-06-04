@@ -2,7 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
-    <AssemblyName>DateChange</AssemblyName>
+        <Version>1.2.0</Version>
+<AssemblyName>DateChange</AssemblyName>
     <RootNamespace>ThaleTheGreat.DateChange</RootNamespace>
     <ModFolderName>Date Change</ModFolderName>
     <LangVersion>10.0</LangVersion>
@@ -19,6 +20,7 @@
   <ItemGroup>
     <None Include="manifest.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="LICENSE" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="assets\**\*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>
