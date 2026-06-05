@@ -1,10 +1,10 @@
 {
    "Name": "[CP] Thales Farmer Portrait",
-   "Author": "aedenthorn",
-   "Version": "1.0.0",
+   "Author": "ThaleTheGreat",
+   "Version": "1.0.1",
    "Description": "FarmerPortrait",
    "UniqueID": "ThaleTheGreat.ThalesFarmerPortrait",
-   "MinimumApiVersion": "3.13.0",
+   "MinimumApiVersion": "4.0.0",
    "UpdateKeys": [ "Nexus:47178" ],
    "ContentPackFor": {
       "UniqueID": "Pathoschild.ContentPatcher", 
