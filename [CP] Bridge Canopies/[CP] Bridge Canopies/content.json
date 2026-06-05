@@ -1,7 +1,11 @@
 {
   "Format": "2.8.0",
   "ConfigSchema": {
-    "BridgeSet": {
+    "NorthBridgeSet": {
+      "AllowValues": "Original, Torii, Dango, Ramen, Taiyaki, Takoyaki, Yakitori",
+      "Default": "Original"
+    },
+    "SouthBridgeSet": {
       "AllowValues": "Original, Torii, Dango, Ramen, Taiyaki, Takoyaki, Yakitori",
       "Default": "Original"
     }
@@ -24,28 +28,7 @@
         "Height": 5
       },
       "When": {
-        "BridgeSet": "Original",
-        "Season": "spring"
-      }
-    },
-    {
-      "Action": "EditMap",
-      "Target": "Maps/Town",
-      "FromFile": "assets/bridge_south_original_spring.tmx",
-      "FromArea": {
-        "X": 0,
-        "Y": 0,
-        "Width": 6,
-        "Height": 5
-      },
-      "ToArea": {
-        "X": 76,
-        "Y": 91,
-        "Width": 6,
-        "Height": 5
-      },
-      "When": {
-        "BridgeSet": "Original",
+        "NorthBridgeSet": "Original",
         "Season": "spring"
       }
     },
@@ -66,28 +49,7 @@
         "Height": 5
       },
       "When": {
-        "BridgeSet": "Original",
-        "Season": "summer"
-      }
-    },
-    {
-      "Action": "EditMap",
-      "Target": "Maps/Town",
-      "FromFile": "assets/bridge_south_original_summer.tmx",
-      "FromArea": {
-        "X": 0,
-        "Y": 0,
-        "Width": 6,
-        "Height": 5
-      },
-      "ToArea": {
-        "X": 76,
-        "Y": 91,
-        "Width": 6,
-        "Height": 5
-      },
-      "When": {
-        "BridgeSet": "Original",
+        "NorthBridgeSet": "Original",
         "Season": "summer"
       }
     },
@@ -108,28 +70,7 @@
         "Height": 5
       },
       "When": {
-        "BridgeSet": "Original",
-        "Season": "fall"
-      }
-    },
-    {
-      "Action": "EditMap",
-      "Target": "Maps/Town",
-      "FromFile": "assets/bridge_south_original_fall.tmx",
-      "FromArea": {
-        "X": 0,
-        "Y": 0,
-        "Width": 6,
-        "Height": 5
-      },
-      "ToArea": {
-        "X": 76,
-        "Y": 91,
-        "Width": 6,
-        "Height": 5
-      },
-      "When": {
-        "BridgeSet": "Original",
+        "NorthBridgeSet": "Original",
         "Season": "fall"
       }
     },
@@ -150,28 +91,7 @@
         "Height": 5
       },
       "When": {
-        "BridgeSet": "Original",
-        "Season": "winter"
-      }
-    },
-    {
-      "Action": "EditMap",
-      "Target": "Maps/Town",
-      "FromFile": "assets/bridge_south_original_winter.tmx",
-      "FromArea": {
-        "X": 0,
-        "Y": 0,
-        "Width": 6,
-        "Height": 5
-      },
-      "ToArea": {
-        "X": 76,
-        "Y": 91,
-        "Width": 6,
-        "Height": 5
-      },
-      "When": {
-        "BridgeSet": "Original",
+        "NorthBridgeSet": "Original",
         "Season": "winter"
       }
     },
@@ -192,28 +112,7 @@
         "Height": 5
       },
       "When": {
-        "BridgeSet": "Dango",
-        "Season": "spring"
-      }
-    },
-    {
-      "Action": "EditMap",
-      "Target": "Maps/Town",
-      "FromFile": "assets/bridge_south_dango_spring.tmx",
-      "FromArea": {
-        "X": 0,
-        "Y": 0,
-        "Width": 6,
-        "Height": 5
-      },
-      "ToArea": {
-        "X": 76,
-        "Y": 91,
-        "Width": 6,
-        "Height": 5
-      },
-      "When": {
-        "BridgeSet": "Dango",
+        "NorthBridgeSet": "Dango",
         "Season": "spring"
       }
     },
@@ -234,28 +133,7 @@
         "Height": 5
       },
       "When": {
-        "BridgeSet": "Dango",
-        "Season": "summer"
-      }
-    },
-    {
-      "Action": "EditMap",
-      "Target": "Maps/Town",
-      "FromFile": "assets/bridge_south_dango_summer.tmx",
-      "FromArea": {
-        "X": 0,
-        "Y": 0,
-        "Width": 6,
-        "Height": 5
-      },
-      "ToArea": {
-        "X": 76,
-        "Y": 91,
-        "Width": 6,
-        "Height": 5
-      },
-      "When": {
-        "BridgeSet": "Dango",
+        "NorthBridgeSet": "Dango",
         "Season": "summer"
       }
     },
@@ -276,28 +154,7 @@
         "Height": 5
       },
       "When": {
-        "BridgeSet": "Dango",
-        "Season": "fall"
-      }
-    },
-    {
-      "Action": "EditMap",
-      "Target": "Maps/Town",
-      "FromFile": "assets/bridge_south_dango_fall.tmx",
-      "FromArea": {
-        "X": 0,
-        "Y": 0,
-        "Width": 6,
-        "Height": 5
-      },
-      "ToArea": {
-        "X": 76,
-        "Y": 91,
-        "Width": 6,
-        "Height": 5
-      },
-      "When": {
-        "BridgeSet": "Dango",
+        "NorthBridgeSet": "Dango",
         "Season": "fall"
       }
     },
@@ -318,28 +175,7 @@
         "Height": 5
       },
       "When": {
-        "BridgeSet": "Dango",
-        "Season": "winter"
-      }
-    },
-    {
-      "Action": "EditMap",
-      "Target": "Maps/Town",
-      "FromFile": "assets/bridge_south_dango_winter.tmx",
-      "FromArea": {
-        "X": 0,
-        "Y": 0,
-        "Width": 6,
-        "Height": 5
-      },
-      "ToArea": {
-        "X": 76,
-        "Y": 91,
-        "Width": 6,
-        "Height": 5
-      },
-      "When": {
-        "BridgeSet": "Dango",
+        "NorthBridgeSet": "Dango",
         "Season": "winter"
       }
     },
@@ -360,28 +196,7 @@
         "Height": 5
       },
       "When": {
-        "BridgeSet": "Ramen",
-        "Season": "spring"
-      }
-    },
-    {
-      "Action": "EditMap",
-      "Target": "Maps/Town",
-      "FromFile": "assets/bridge_south_ramen_spring.tmx",
-      "FromArea": {
-        "X": 0,
-        "Y": 0,
-        "Width": 6,
-        "Height": 5
-      },
-      "ToArea": {
-        "X": 76,
-        "Y": 91,
-        "Width": 6,
-        "Height": 5
-      },
-      "When": {
-        "BridgeSet": "Ramen",
+        "NorthBridgeSet": "Ramen",
         "Season": "spring"
       }
     },
@@ -402,28 +217,7 @@
         "Height": 5
       },
       "When": {
-        "BridgeSet": "Ramen",
-        "Season": "summer"
-      }
-    },
-    {
-      "Action": "EditMap",
-      "Target": "Maps/Town",
-      "FromFile": "assets/bridge_south_ramen_summer.tmx",
-      "FromArea": {
-        "X": 0,
-        "Y": 0,
-        "Width": 6,
-        "Height": 5
-      },
-      "ToArea": {
-        "X": 76,
-        "Y": 91,
-        "Width": 6,
-        "Height": 5
-      },
-      "When": {
-        "BridgeSet": "Ramen",
+        "NorthBridgeSet": "Ramen",
         "Season": "summer"
       }
     },
@@ -444,28 +238,7 @@
         "Height": 5
       },
       "When": {
-        "BridgeSet": "Ramen",
-        "Season": "fall"
-      }
-    },
-    {
-      "Action": "EditMap",
-      "Target": "Maps/Town",
-      "FromFile": "assets/bridge_south_ramen_fall.tmx",
-      "FromArea": {
-        "X": 0,
-        "Y": 0,
-        "Width": 6,
-        "Height": 5
-      },
-      "ToArea": {
-        "X": 76,
-        "Y": 91,
-        "Width": 6,
-        "Height": 5
-      },
-      "When": {
-        "BridgeSet": "Ramen",
+        "NorthBridgeSet": "Ramen",
         "Season": "fall"
       }
     },
@@ -486,28 +259,7 @@
         "Height": 5
       },
       "When": {
-        "BridgeSet": "Ramen",
-        "Season": "winter"
-      }
-    },
-    {
-      "Action": "EditMap",
-      "Target": "Maps/Town",
-      "FromFile": "assets/bridge_south_ramen_winter.tmx",
-      "FromArea": {
-        "X": 0,
-        "Y": 0,
-        "Width": 6,
-        "Height": 5
-      },
-      "ToArea": {
-        "X": 76,
-        "Y": 91,
-        "Width": 6,
-        "Height": 5
-      },
-      "When": {
-        "BridgeSet": "Ramen",
+        "NorthBridgeSet": "Ramen",
         "Season": "winter"
       }
     },
@@ -528,28 +280,7 @@
         "Height": 5
       },
       "When": {
-        "BridgeSet": "Taiyaki",
-        "Season": "spring"
-      }
-    },
-    {
-      "Action": "EditMap",
-      "Target": "Maps/Town",
-      "FromFile": "assets/bridge_south_taiyaki_spring.tmx",
-      "FromArea": {
-        "X": 0,
-        "Y": 0,
-        "Width": 6,
-        "Height": 5
-      },
-      "ToArea": {
-        "X": 76,
-        "Y": 91,
-        "Width": 6,
-        "Height": 5
-      },
-      "When": {
-        "BridgeSet": "Taiyaki",
+        "NorthBridgeSet": "Taiyaki",
         "Season": "spring"
       }
     },
@@ -570,28 +301,7 @@
         "Height": 5
       },
       "When": {
-        "BridgeSet": "Taiyaki",
-        "Season": "summer"
-      }
-    },
-    {
-      "Action": "EditMap",
-      "Target": "Maps/Town",
-      "FromFile": "assets/bridge_south_taiyaki_summer.tmx",
-      "FromArea": {
-        "X": 0,
-        "Y": 0,
-        "Width": 6,
-        "Height": 5
-      },
-      "ToArea": {
-        "X": 76,
-        "Y": 91,
-        "Width": 6,
-        "Height": 5
-      },
-      "When": {
-        "BridgeSet": "Taiyaki",
+        "NorthBridgeSet": "Taiyaki",
         "Season": "summer"
       }
     },
@@ -612,28 +322,7 @@
         "Height": 5
       },
       "When": {
-        "BridgeSet": "Taiyaki",
-        "Season": "fall"
-      }
-    },
-    {
-      "Action": "EditMap",
-      "Target": "Maps/Town",
-      "FromFile": "assets/bridge_south_taiyaki_fall.tmx",
-      "FromArea": {
-        "X": 0,
-        "Y": 0,
-        "Width": 6,
-        "Height": 5
-      },
-      "ToArea": {
-        "X": 76,
-        "Y": 91,
-        "Width": 6,
-        "Height": 5
-      },
-      "When": {
-        "BridgeSet": "Taiyaki",
+        "NorthBridgeSet": "Taiyaki",
         "Season": "fall"
       }
     },
@@ -654,28 +343,7 @@
         "Height": 5
       },
       "When": {
-        "BridgeSet": "Taiyaki",
-        "Season": "winter"
-      }
-    },
-    {
-      "Action": "EditMap",
-      "Target": "Maps/Town",
-      "FromFile": "assets/bridge_south_taiyaki_winter.tmx",
-      "FromArea": {
-        "X": 0,
-        "Y": 0,
-        "Width": 6,
-        "Height": 5
-      },
-      "ToArea": {
-        "X": 76,
-        "Y": 91,
-        "Width": 6,
-        "Height": 5
-      },
-      "When": {
-        "BridgeSet": "Taiyaki",
+        "NorthBridgeSet": "Taiyaki",
         "Season": "winter"
       }
     },
@@ -696,28 +364,7 @@
         "Height": 5
       },
       "When": {
-        "BridgeSet": "Takoyaki",
-        "Season": "spring"
-      }
-    },
-    {
-      "Action": "EditMap",
-      "Target": "Maps/Town",
-      "FromFile": "assets/bridge_south_takoyaki_spring.tmx",
-      "FromArea": {
-        "X": 0,
-        "Y": 0,
-        "Width": 6,
-        "Height": 5
-      },
-      "ToArea": {
-        "X": 76,
-        "Y": 91,
-        "Width": 6,
-        "Height": 5
-      },
-      "When": {
-        "BridgeSet": "Takoyaki",
+        "NorthBridgeSet": "Takoyaki",
         "Season": "spring"
       }
     },
@@ -738,28 +385,7 @@
         "Height": 5
       },
       "When": {
-        "BridgeSet": "Takoyaki",
-        "Season": "summer"
-      }
-    },
-    {
-      "Action": "EditMap",
-      "Target": "Maps/Town",
-      "FromFile": "assets/bridge_south_takoyaki_summer.tmx",
-      "FromArea": {
-        "X": 0,
-        "Y": 0,
-        "Width": 6,
-        "Height": 5
-      },
-      "ToArea": {
-        "X": 76,
-        "Y": 91,
-        "Width": 6,
-        "Height": 5
-      },
-      "When": {
-        "BridgeSet": "Takoyaki",
+        "NorthBridgeSet": "Takoyaki",
         "Season": "summer"
       }
     },
@@ -780,28 +406,7 @@
         "Height": 5
       },
       "When": {
-        "BridgeSet": "Takoyaki",
-        "Season": "fall"
-      }
-    },
-    {
-      "Action": "EditMap",
-      "Target": "Maps/Town",
-      "FromFile": "assets/bridge_south_takoyaki_fall.tmx",
-      "FromArea": {
-        "X": 0,
-        "Y": 0,
-        "Width": 6,
-        "Height": 5
-      },
-      "ToArea": {
-        "X": 76,
-        "Y": 91,
-        "Width": 6,
-        "Height": 5
-      },
-      "When": {
-        "BridgeSet": "Takoyaki",
+        "NorthBridgeSet": "Takoyaki",
         "Season": "fall"
       }
     },
@@ -822,28 +427,7 @@
         "Height": 5
       },
       "When": {
-        "BridgeSet": "Takoyaki",
-        "Season": "winter"
-      }
-    },
-    {
-      "Action": "EditMap",
-      "Target": "Maps/Town",
-      "FromFile": "assets/bridge_south_takoyaki_winter.tmx",
-      "FromArea": {
-        "X": 0,
-        "Y": 0,
-        "Width": 6,
-        "Height": 5
-      },
-      "ToArea": {
-        "X": 76,
-        "Y": 91,
-        "Width": 6,
-        "Height": 5
-      },
-      "When": {
-        "BridgeSet": "Takoyaki",
+        "NorthBridgeSet": "Takoyaki",
         "Season": "winter"
       }
     },
@@ -864,28 +448,7 @@
         "Height": 5
       },
       "When": {
-        "BridgeSet": "Yakitori",
-        "Season": "spring"
-      }
-    },
-    {
-      "Action": "EditMap",
-      "Target": "Maps/Town",
-      "FromFile": "assets/bridge_south_yakitori_spring.tmx",
-      "FromArea": {
-        "X": 0,
-        "Y": 0,
-        "Width": 6,
-        "Height": 5
-      },
-      "ToArea": {
-        "X": 76,
-        "Y": 91,
-        "Width": 6,
-        "Height": 5
-      },
-      "When": {
-        "BridgeSet": "Yakitori",
+        "NorthBridgeSet": "Yakitori",
         "Season": "spring"
       }
     },
@@ -906,28 +469,7 @@
         "Height": 5
       },
       "When": {
-        "BridgeSet": "Yakitori",
-        "Season": "summer"
-      }
-    },
-    {
-      "Action": "EditMap",
-      "Target": "Maps/Town",
-      "FromFile": "assets/bridge_south_yakitori_summer.tmx",
-      "FromArea": {
-        "X": 0,
-        "Y": 0,
-        "Width": 6,
-        "Height": 5
-      },
-      "ToArea": {
-        "X": 76,
-        "Y": 91,
-        "Width": 6,
-        "Height": 5
-      },
-      "When": {
-        "BridgeSet": "Yakitori",
+        "NorthBridgeSet": "Yakitori",
         "Season": "summer"
       }
     },
@@ -948,28 +490,7 @@
         "Height": 5
       },
       "When": {
-        "BridgeSet": "Yakitori",
-        "Season": "fall"
-      }
-    },
-    {
-      "Action": "EditMap",
-      "Target": "Maps/Town",
-      "FromFile": "assets/bridge_south_yakitori_fall.tmx",
-      "FromArea": {
-        "X": 0,
-        "Y": 0,
-        "Width": 6,
-        "Height": 5
-      },
-      "ToArea": {
-        "X": 76,
-        "Y": 91,
-        "Width": 6,
-        "Height": 5
-      },
-      "When": {
-        "BridgeSet": "Yakitori",
+        "NorthBridgeSet": "Yakitori",
         "Season": "fall"
       }
     },
@@ -990,28 +511,7 @@
         "Height": 5
       },
       "When": {
-        "BridgeSet": "Yakitori",
-        "Season": "winter"
-      }
-    },
-    {
-      "Action": "EditMap",
-      "Target": "Maps/Town",
-      "FromFile": "assets/bridge_south_yakitori_winter.tmx",
-      "FromArea": {
-        "X": 0,
-        "Y": 0,
-        "Width": 6,
-        "Height": 5
-      },
-      "ToArea": {
-        "X": 76,
-        "Y": 91,
-        "Width": 6,
-        "Height": 5
-      },
-      "When": {
-        "BridgeSet": "Yakitori",
+        "NorthBridgeSet": "Yakitori",
         "Season": "winter"
       }
     },
@@ -1032,7 +532,511 @@
         "Height": 5
       },
       "When": {
-        "BridgeSet": "Torii"
+        "NorthBridgeSet": "Torii"
+      }
+    },
+    {
+      "Action": "EditMap",
+      "Target": "Maps/Town",
+      "FromFile": "assets/bridge_south_original_spring.tmx",
+      "FromArea": {
+        "X": 0,
+        "Y": 0,
+        "Width": 6,
+        "Height": 5
+      },
+      "ToArea": {
+        "X": 76,
+        "Y": 91,
+        "Width": 6,
+        "Height": 5
+      },
+      "When": {
+        "SouthBridgeSet": "Original",
+        "Season": "spring"
+      }
+    },
+    {
+      "Action": "EditMap",
+      "Target": "Maps/Town",
+      "FromFile": "assets/bridge_south_original_summer.tmx",
+      "FromArea": {
+        "X": 0,
+        "Y": 0,
+        "Width": 6,
+        "Height": 5
+      },
+      "ToArea": {
+        "X": 76,
+        "Y": 91,
+        "Width": 6,
+        "Height": 5
+      },
+      "When": {
+        "SouthBridgeSet": "Original",
+        "Season": "summer"
+      }
+    },
+    {
+      "Action": "EditMap",
+      "Target": "Maps/Town",
+      "FromFile": "assets/bridge_south_original_fall.tmx",
+      "FromArea": {
+        "X": 0,
+        "Y": 0,
+        "Width": 6,
+        "Height": 5
+      },
+      "ToArea": {
+        "X": 76,
+        "Y": 91,
+        "Width": 6,
+        "Height": 5
+      },
+      "When": {
+        "SouthBridgeSet": "Original",
+        "Season": "fall"
+      }
+    },
+    {
+      "Action": "EditMap",
+      "Target": "Maps/Town",
+      "FromFile": "assets/bridge_south_original_winter.tmx",
+      "FromArea": {
+        "X": 0,
+        "Y": 0,
+        "Width": 6,
+        "Height": 5
+      },
+      "ToArea": {
+        "X": 76,
+        "Y": 91,
+        "Width": 6,
+        "Height": 5
+      },
+      "When": {
+        "SouthBridgeSet": "Original",
+        "Season": "winter"
+      }
+    },
+    {
+      "Action": "EditMap",
+      "Target": "Maps/Town",
+      "FromFile": "assets/bridge_south_dango_spring.tmx",
+      "FromArea": {
+        "X": 0,
+        "Y": 0,
+        "Width": 6,
+        "Height": 5
+      },
+      "ToArea": {
+        "X": 76,
+        "Y": 91,
+        "Width": 6,
+        "Height": 5
+      },
+      "When": {
+        "SouthBridgeSet": "Dango",
+        "Season": "spring"
+      }
+    },
+    {
+      "Action": "EditMap",
+      "Target": "Maps/Town",
+      "FromFile": "assets/bridge_south_dango_summer.tmx",
+      "FromArea": {
+        "X": 0,
+        "Y": 0,
+        "Width": 6,
+        "Height": 5
+      },
+      "ToArea": {
+        "X": 76,
+        "Y": 91,
+        "Width": 6,
+        "Height": 5
+      },
+      "When": {
+        "SouthBridgeSet": "Dango",
+        "Season": "summer"
+      }
+    },
+    {
+      "Action": "EditMap",
+      "Target": "Maps/Town",
+      "FromFile": "assets/bridge_south_dango_fall.tmx",
+      "FromArea": {
+        "X": 0,
+        "Y": 0,
+        "Width": 6,
+        "Height": 5
+      },
+      "ToArea": {
+        "X": 76,
+        "Y": 91,
+        "Width": 6,
+        "Height": 5
+      },
+      "When": {
+        "SouthBridgeSet": "Dango",
+        "Season": "fall"
+      }
+    },
+    {
+      "Action": "EditMap",
+      "Target": "Maps/Town",
+      "FromFile": "assets/bridge_south_dango_winter.tmx",
+      "FromArea": {
+        "X": 0,
+        "Y": 0,
+        "Width": 6,
+        "Height": 5
+      },
+      "ToArea": {
+        "X": 76,
+        "Y": 91,
+        "Width": 6,
+        "Height": 5
+      },
+      "When": {
+        "SouthBridgeSet": "Dango",
+        "Season": "winter"
+      }
+    },
+    {
+      "Action": "EditMap",
+      "Target": "Maps/Town",
+      "FromFile": "assets/bridge_south_ramen_spring.tmx",
+      "FromArea": {
+        "X": 0,
+        "Y": 0,
+        "Width": 6,
+        "Height": 5
+      },
+      "ToArea": {
+        "X": 76,
+        "Y": 91,
+        "Width": 6,
+        "Height": 5
+      },
+      "When": {
+        "SouthBridgeSet": "Ramen",
+        "Season": "spring"
+      }
+    },
+    {
+      "Action": "EditMap",
+      "Target": "Maps/Town",
+      "FromFile": "assets/bridge_south_ramen_summer.tmx",
+      "FromArea": {
+        "X": 0,
+        "Y": 0,
+        "Width": 6,
+        "Height": 5
+      },
+      "ToArea": {
+        "X": 76,
+        "Y": 91,
+        "Width": 6,
+        "Height": 5
+      },
+      "When": {
+        "SouthBridgeSet": "Ramen",
+        "Season": "summer"
+      }
+    },
+    {
+      "Action": "EditMap",
+      "Target": "Maps/Town",
+      "FromFile": "assets/bridge_south_ramen_fall.tmx",
+      "FromArea": {
+        "X": 0,
+        "Y": 0,
+        "Width": 6,
+        "Height": 5
+      },
+      "ToArea": {
+        "X": 76,
+        "Y": 91,
+        "Width": 6,
+        "Height": 5
+      },
+      "When": {
+        "SouthBridgeSet": "Ramen",
+        "Season": "fall"
+      }
+    },
+    {
+      "Action": "EditMap",
+      "Target": "Maps/Town",
+      "FromFile": "assets/bridge_south_ramen_winter.tmx",
+      "FromArea": {
+        "X": 0,
+        "Y": 0,
+        "Width": 6,
+        "Height": 5
+      },
+      "ToArea": {
+        "X": 76,
+        "Y": 91,
+        "Width": 6,
+        "Height": 5
+      },
+      "When": {
+        "SouthBridgeSet": "Ramen",
+        "Season": "winter"
+      }
+    },
+    {
+      "Action": "EditMap",
+      "Target": "Maps/Town",
+      "FromFile": "assets/bridge_south_taiyaki_spring.tmx",
+      "FromArea": {
+        "X": 0,
+        "Y": 0,
+        "Width": 6,
+        "Height": 5
+      },
+      "ToArea": {
+        "X": 76,
+        "Y": 91,
+        "Width": 6,
+        "Height": 5
+      },
+      "When": {
+        "SouthBridgeSet": "Taiyaki",
+        "Season": "spring"
+      }
+    },
+    {
+      "Action": "EditMap",
+      "Target": "Maps/Town",
+      "FromFile": "assets/bridge_south_taiyaki_summer.tmx",
+      "FromArea": {
+        "X": 0,
+        "Y": 0,
+        "Width": 6,
+        "Height": 5
+      },
+      "ToArea": {
+        "X": 76,
+        "Y": 91,
+        "Width": 6,
+        "Height": 5
+      },
+      "When": {
+        "SouthBridgeSet": "Taiyaki",
+        "Season": "summer"
+      }
+    },
+    {
+      "Action": "EditMap",
+      "Target": "Maps/Town",
+      "FromFile": "assets/bridge_south_taiyaki_fall.tmx",
+      "FromArea": {
+        "X": 0,
+        "Y": 0,
+        "Width": 6,
+        "Height": 5
+      },
+      "ToArea": {
+        "X": 76,
+        "Y": 91,
+        "Width": 6,
+        "Height": 5
+      },
+      "When": {
+        "SouthBridgeSet": "Taiyaki",
+        "Season": "fall"
+      }
+    },
+    {
+      "Action": "EditMap",
+      "Target": "Maps/Town",
+      "FromFile": "assets/bridge_south_taiyaki_winter.tmx",
+      "FromArea": {
+        "X": 0,
+        "Y": 0,
+        "Width": 6,
+        "Height": 5
+      },
+      "ToArea": {
+        "X": 76,
+        "Y": 91,
+        "Width": 6,
+        "Height": 5
+      },
+      "When": {
+        "SouthBridgeSet": "Taiyaki",
+        "Season": "winter"
+      }
+    },
+    {
+      "Action": "EditMap",
+      "Target": "Maps/Town",
+      "FromFile": "assets/bridge_south_takoyaki_spring.tmx",
+      "FromArea": {
+        "X": 0,
+        "Y": 0,
+        "Width": 6,
+        "Height": 5
+      },
+      "ToArea": {
+        "X": 76,
+        "Y": 91,
+        "Width": 6,
+        "Height": 5
+      },
+      "When": {
+        "SouthBridgeSet": "Takoyaki",
+        "Season": "spring"
+      }
+    },
+    {
+      "Action": "EditMap",
+      "Target": "Maps/Town",
+      "FromFile": "assets/bridge_south_takoyaki_summer.tmx",
+      "FromArea": {
+        "X": 0,
+        "Y": 0,
+        "Width": 6,
+        "Height": 5
+      },
+      "ToArea": {
+        "X": 76,
+        "Y": 91,
+        "Width": 6,
+        "Height": 5
+      },
+      "When": {
+        "SouthBridgeSet": "Takoyaki",
+        "Season": "summer"
+      }
+    },
+    {
+      "Action": "EditMap",
+      "Target": "Maps/Town",
+      "FromFile": "assets/bridge_south_takoyaki_fall.tmx",
+      "FromArea": {
+        "X": 0,
+        "Y": 0,
+        "Width": 6,
+        "Height": 5
+      },
+      "ToArea": {
+        "X": 76,
+        "Y": 91,
+        "Width": 6,
+        "Height": 5
+      },
+      "When": {
+        "SouthBridgeSet": "Takoyaki",
+        "Season": "fall"
+      }
+    },
+    {
+      "Action": "EditMap",
+      "Target": "Maps/Town",
+      "FromFile": "assets/bridge_south_takoyaki_winter.tmx",
+      "FromArea": {
+        "X": 0,
+        "Y": 0,
+        "Width": 6,
+        "Height": 5
+      },
+      "ToArea": {
+        "X": 76,
+        "Y": 91,
+        "Width": 6,
+        "Height": 5
+      },
+      "When": {
+        "SouthBridgeSet": "Takoyaki",
+        "Season": "winter"
+      }
+    },
+    {
+      "Action": "EditMap",
+      "Target": "Maps/Town",
+      "FromFile": "assets/bridge_south_yakitori_spring.tmx",
+      "FromArea": {
+        "X": 0,
+        "Y": 0,
+        "Width": 6,
+        "Height": 5
+      },
+      "ToArea": {
+        "X": 76,
+        "Y": 91,
+        "Width": 6,
+        "Height": 5
+      },
+      "When": {
+        "SouthBridgeSet": "Yakitori",
+        "Season": "spring"
+      }
+    },
+    {
+      "Action": "EditMap",
+      "Target": "Maps/Town",
+      "FromFile": "assets/bridge_south_yakitori_summer.tmx",
+      "FromArea": {
+        "X": 0,
+        "Y": 0,
+        "Width": 6,
+        "Height": 5
+      },
+      "ToArea": {
+        "X": 76,
+        "Y": 91,
+        "Width": 6,
+        "Height": 5
+      },
+      "When": {
+        "SouthBridgeSet": "Yakitori",
+        "Season": "summer"
+      }
+    },
+    {
+      "Action": "EditMap",
+      "Target": "Maps/Town",
+      "FromFile": "assets/bridge_south_yakitori_fall.tmx",
+      "FromArea": {
+        "X": 0,
+        "Y": 0,
+        "Width": 6,
+        "Height": 5
+      },
+      "ToArea": {
+        "X": 76,
+        "Y": 91,
+        "Width": 6,
+        "Height": 5
+      },
+      "When": {
+        "SouthBridgeSet": "Yakitori",
+        "Season": "fall"
+      }
+    },
+    {
+      "Action": "EditMap",
+      "Target": "Maps/Town",
+      "FromFile": "assets/bridge_south_yakitori_winter.tmx",
+      "FromArea": {
+        "X": 0,
+        "Y": 0,
+        "Width": 6,
+        "Height": 5
+      },
+      "ToArea": {
+        "X": 76,
+        "Y": 91,
+        "Width": 6,
+        "Height": 5
+      },
+      "When": {
+        "SouthBridgeSet": "Yakitori",
+        "Season": "winter"
       }
     },
     {
@@ -1052,7 +1056,7 @@
         "Height": 5
       },
       "When": {
-        "BridgeSet": "Torii"
+        "SouthBridgeSet": "Torii"
       }
     }
   ]
