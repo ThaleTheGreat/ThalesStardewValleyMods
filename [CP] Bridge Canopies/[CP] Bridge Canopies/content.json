@@ -4,7 +4,7 @@
     {
       "Action": "EditMap",
       "Target": "Maps/Town",
-      "FromFile": "assets/bridge_north.tmx",
+      "FromFile": "assets/bridge_north_spring.tmx",
       "FromArea": {
         "X": 0,
         "Y": 0,
@@ -16,12 +16,15 @@
         "Y": 50,
         "Width": 6,
         "Height": 5
+      },
+      "When": {
+        "Season": "spring"
       }
     },
     {
       "Action": "EditMap",
       "Target": "Maps/Town",
-      "FromFile": "assets/bridge_south.tmx",
+      "FromFile": "assets/bridge_south_spring.tmx",
       "FromArea": {
         "X": 0,
         "Y": 0,
@@ -33,6 +36,129 @@
         "Y": 91,
         "Width": 6,
         "Height": 5
+      },
+      "When": {
+        "Season": "spring"
+      }
+    },
+    {
+      "Action": "EditMap",
+      "Target": "Maps/Town",
+      "FromFile": "assets/bridge_north_summer.tmx",
+      "FromArea": {
+        "X": 0,
+        "Y": 0,
+        "Width": 6,
+        "Height": 5
+      },
+      "ToArea": {
+        "X": 71,
+        "Y": 50,
+        "Width": 6,
+        "Height": 5
+      },
+      "When": {
+        "Season": "summer"
+      }
+    },
+    {
+      "Action": "EditMap",
+      "Target": "Maps/Town",
+      "FromFile": "assets/bridge_south_summer.tmx",
+      "FromArea": {
+        "X": 0,
+        "Y": 0,
+        "Width": 6,
+        "Height": 5
+      },
+      "ToArea": {
+        "X": 76,
+        "Y": 91,
+        "Width": 6,
+        "Height": 5
+      },
+      "When": {
+        "Season": "summer"
+      }
+    },
+    {
+      "Action": "EditMap",
+      "Target": "Maps/Town",
+      "FromFile": "assets/bridge_north_fall.tmx",
+      "FromArea": {
+        "X": 0,
+        "Y": 0,
+        "Width": 6,
+        "Height": 5
+      },
+      "ToArea": {
+        "X": 71,
+        "Y": 50,
+        "Width": 6,
+        "Height": 5
+      },
+      "When": {
+        "Season": "fall"
+      }
+    },
+    {
+      "Action": "EditMap",
+      "Target": "Maps/Town",
+      "FromFile": "assets/bridge_south_fall.tmx",
+      "FromArea": {
+        "X": 0,
+        "Y": 0,
+        "Width": 6,
+        "Height": 5
+      },
+      "ToArea": {
+        "X": 76,
+        "Y": 91,
+        "Width": 6,
+        "Height": 5
+      },
+      "When": {
+        "Season": "fall"
+      }
+    },
+    {
+      "Action": "EditMap",
+      "Target": "Maps/Town",
+      "FromFile": "assets/bridge_north_winter.tmx",
+      "FromArea": {
+        "X": 0,
+        "Y": 0,
+        "Width": 6,
+        "Height": 5
+      },
+      "ToArea": {
+        "X": 71,
+        "Y": 50,
+        "Width": 6,
+        "Height": 5
+      },
+      "When": {
+        "Season": "winter"
+      }
+    },
+    {
+      "Action": "EditMap",
+      "Target": "Maps/Town",
+      "FromFile": "assets/bridge_south_winter.tmx",
+      "FromArea": {
+        "X": 0,
+        "Y": 0,
+        "Width": 6,
+        "Height": 5
+      },
+      "ToArea": {
+        "X": 76,
+        "Y": 91,
+        "Width": 6,
+        "Height": 5
+      },
+      "When": {
+        "Season": "winter"
       }
     }
   ]
