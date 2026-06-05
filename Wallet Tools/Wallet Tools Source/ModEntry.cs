@@ -60,6 +60,7 @@ public sealed class ModEntry : Mod
         helper.Events.GameLoop.Saving += OnSaving;
         helper.Events.GameLoop.UpdateTicked += OnUpdateTicked;
         helper.Events.Player.InventoryChanged += OnInventoryChanged;
+        helper.Events.Input.ButtonPressed += OnButtonPressed;
 
         Harmony = new Harmony(ModManifest.UniqueID);
         Harmony.PatchAll(Assembly.GetExecutingAssembly());
@@ -292,6 +293,12 @@ public sealed class ModEntry : Mod
             AddBool(GmcmApi, nameof(Config.WalletWateringCan), () => Config.WalletWateringCan, value => Config.WalletWateringCan = value, "Wallet Watering Can", "Move the watering can into the wallet when found in inventory.");
             AddBool(GmcmApi, nameof(Config.WalletPan), () => Config.WalletPan, value => Config.WalletPan = value, "Wallet Pan", "Move the copper pan into the wallet when found in inventory.");
 
+            AddKeybind(GmcmApi, nameof(Config.UseAxeHotkey), () => Config.UseAxeHotkey, value => Config.UseAxeHotkey = value, "Use Axe", "Immediately use the wallet axe.");
+            AddKeybind(GmcmApi, nameof(Config.UsePickaxeHotkey), () => Config.UsePickaxeHotkey, value => Config.UsePickaxeHotkey = value, "Use Pickaxe", "Immediately use the wallet pickaxe.");
+            AddKeybind(GmcmApi, nameof(Config.UseHoeHotkey), () => Config.UseHoeHotkey, value => Config.UseHoeHotkey = value, "Use Hoe", "Immediately use the wallet hoe.");
+            AddKeybind(GmcmApi, nameof(Config.UseWateringCanHotkey), () => Config.UseWateringCanHotkey, value => Config.UseWateringCanHotkey = value, "Use Watering Can", "Immediately use the wallet watering can.");
+            AddKeybind(GmcmApi, nameof(Config.UsePanHotkey), () => Config.UsePanHotkey, value => Config.UsePanHotkey = value, "Use Pan", "Immediately use the wallet pan.");
+
             AddBool(GmcmApi, nameof(Config.FallbackSwitchEnabled), () => Config.FallbackSwitchEnabled, value => Config.FallbackSwitchEnabled = value, "Fallback Switching", "Use Wallet Tools' built-in switching only when Tool Smart Switch and AutomateToolSwap are not installed.");
             AddBool(GmcmApi, nameof(Config.FallbackSwitchForObjects), () => Config.FallbackSwitchForObjects, value => Config.FallbackSwitchForObjects = value, "Fallback: Objects", "Fallback switches to axe, pickaxe, or hoe for matching objects.");
             AddBool(GmcmApi, nameof(Config.FallbackSwitchForTrees), () => Config.FallbackSwitchForTrees, value => Config.FallbackSwitchForTrees = value, "Fallback: Trees", "Fallback switches to axe, pickaxe, or hoe for trees and saplings.");
@@ -316,6 +323,11 @@ public sealed class ModEntry : Mod
     private void AddBool(IGenericModConfigMenuApi gmcm, string fieldId, Func<bool> getValue, Action<bool> setValue, string name, string tooltip)
     {
         gmcm.AddBoolOption(ModManifest, getValue, setValue, () => name, () => tooltip, fieldId);
+    }
+
+    private void AddKeybind(IGenericModConfigMenuApi gmcm, string fieldId, Func<StardewModdingAPI.Utilities.KeybindList> getValue, Action<StardewModdingAPI.Utilities.KeybindList> setValue, string name, string tooltip)
+    {
+        gmcm.AddKeybindList(ModManifest, getValue, setValue, () => name, () => tooltip, fieldId);
     }
 
     private void OnSaveLoaded(object? sender, SaveLoadedEventArgs e)
@@ -354,6 +366,46 @@ public sealed class ModEntry : Mod
             return;
 
         ConvertInventoryTools(e.Player);
+    }
+
+    private void OnButtonPressed(object? sender, ButtonPressedEventArgs e)
+    {
+        if (!Context.IsWorldReady || !Config.ModEnabled || Game1.activeClickableMenu is not null || Game1.fadeToBlack || !Context.CanPlayerMove)
+            return;
+
+        WalletToolKind? requested = GetRequestedHotkeyTool();
+        if (requested is null)
+            return;
+
+        Helper.Input.Suppress(e.Button);
+        TryUseWalletToolHotkey(Game1.player, requested.Value);
+    }
+
+    private WalletToolKind? GetRequestedHotkeyTool()
+    {
+        if (Config.UseAxeHotkey.JustPressed())
+            return WalletToolKind.Axe;
+        if (Config.UsePickaxeHotkey.JustPressed())
+            return WalletToolKind.Pickaxe;
+        if (Config.UseHoeHotkey.JustPressed())
+            return WalletToolKind.Hoe;
+        if (Config.UseWateringCanHotkey.JustPressed())
+            return WalletToolKind.WateringCan;
+        if (Config.UsePanHotkey.JustPressed())
+            return WalletToolKind.Pan;
+
+        return null;
+    }
+
+    private void TryUseWalletToolHotkey(Farmer player, WalletToolKind kind)
+    {
+        if (!HasStoredEnabledTool(kind))
+            return;
+
+        if (!TrySetTemporaryWalletTool(player, kind))
+            return;
+
+        Game1.pressUseToolButton();
     }
 
     private static bool IsToolUpgradeLocation(GameLocation? location)
