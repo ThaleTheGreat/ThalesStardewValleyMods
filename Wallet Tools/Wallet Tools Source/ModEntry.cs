@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -333,30 +334,36 @@ public sealed class ModEntry : Mod
     private void OnSaveLoaded(object? sender, SaveLoadedEventArgs e)
     {
         LoadStoredTools();
+        SyncBlacksmithUpgradeState(Game1.player);
         ConvertInventoryTools(Game1.player);
     }
 
     private void OnDayStarted(object? sender, DayStartedEventArgs e)
     {
+        SyncBlacksmithUpgradeState(Game1.player);
         ConvertInventoryTools(Game1.player);
     }
 
     private void OnDayEnding(object? sender, DayEndingEventArgs e)
     {
+        SyncBlacksmithUpgradeState(Game1.player);
         RemoveRuntimeToolCopies(Game1.player);
     }
 
     private void OnSaving(object? sender, SavingEventArgs e)
     {
+        SyncBlacksmithUpgradeState(Game1.player);
         RemoveRuntimeToolCopies(Game1.player);
     }
 
     private void OnUpdateTicked(object? sender, UpdateTickedEventArgs e)
     {
-        if (PendingToolUse is null || !Context.IsWorldReady)
+        if (!Context.IsWorldReady)
             return;
 
-        if (!IsPlayerUsingTool(Game1.player))
+        SyncBlacksmithUpgradeState(Game1.player);
+
+        if (PendingToolUse is not null && !IsPlayerUsingTool(Game1.player))
             RestoreTemporaryTool(Game1.player);
     }
 
@@ -457,27 +464,28 @@ public sealed class ModEntry : Mod
         {
             foreach (BlacksmithExposure exposure in ActiveBlacksmithExposures)
             {
-                bool upgradeStarted = IsWalletToolBeingUpgraded(player, exposure.Kind, exposure.Tool);
                 Tool? exposedTool = FindExposedTool(player, exposure);
+                bool vanillaHasUpgrade = IsWalletToolBeingUpgraded(player, exposure.Kind, exposure.Tool);
 
-                if (upgradeStarted)
+                if (!vanillaHasUpgrade && exposedTool is null)
                 {
-                    StoredTools.Remove(exposure.Kind);
-                    changed = true;
+                    TransferWalletToolToVanillaUpgrade(player, exposure.Tool);
+                    vanillaHasUpgrade = IsWalletToolBeingUpgraded(player, exposure.Kind, exposure.Tool);
                 }
-                else if (exposedTool is null)
+
+                if (vanillaHasUpgrade)
                 {
-                    StoredTools.Remove(exposure.Kind);
-                    changed = true;
+                    PrepareToolForVanillaUpgrade(player, exposure.Kind);
+                    RemoveInventoryCopiesOfToolKind(player, exposure.Kind, GetToolBeingUpgraded(player));
+                    if (StoredTools.Remove(exposure.Kind))
+                        changed = true;
                 }
-                else
+                else if (exposedTool is not null)
                 {
                     StoredTools[exposure.Kind] = WalletToolState.FromTool(exposure.Kind, exposedTool);
+                    RemoveExposedTool(player, exposedTool);
                     changed = true;
                 }
-
-                if (exposedTool is not null)
-                    RemoveExposedTool(player, exposedTool);
 
                 RestoreExposureSlot(player, exposure);
             }
@@ -491,6 +499,16 @@ public sealed class ModEntry : Mod
 
         if (changed)
             SaveStoredTools();
+    }
+
+    private static void TransferWalletToolToVanillaUpgrade(Farmer player, Tool tool)
+    {
+        tool.modData.Remove(RuntimeToolMarker);
+        tool.modData.Remove(RuntimeToolKindMarker);
+        player.toolBeingUpgraded.Value = tool;
+
+        if (player.daysLeftForToolUpgrade.Value <= 0)
+            player.daysLeftForToolUpgrade.Value = 2;
     }
 
     private static bool IsWalletToolBeingUpgraded(Farmer player, WalletToolKind kind, Tool exposedTool)
@@ -578,6 +596,47 @@ public sealed class ModEntry : Mod
                 player.modData[key] = "true";
             else
                 player.modData.Remove(key);
+        }
+    }
+
+    private static void PrepareToolForVanillaUpgrade(Farmer player, WalletToolKind kind)
+    {
+        Tool? upgradingTool = GetToolBeingUpgraded(player);
+        if (upgradingTool is null || !TryGetWalletKind(upgradingTool, out WalletToolKind upgradingKind) || upgradingKind != kind)
+            return;
+
+        upgradingTool.modData.Remove(RuntimeToolMarker);
+        upgradingTool.modData.Remove(RuntimeToolKindMarker);
+    }
+
+    private void SyncBlacksmithUpgradeState(Farmer player)
+    {
+        if (!Config.ModEnabled)
+            return;
+
+        Tool? upgradingTool = GetToolBeingUpgraded(player);
+        if (upgradingTool is null || !TryGetWalletKind(upgradingTool, out WalletToolKind upgradingKind) || !IsWalletEnabled(upgradingKind))
+            return;
+
+        upgradingTool.modData.Remove(RuntimeToolMarker);
+        upgradingTool.modData.Remove(RuntimeToolKindMarker);
+
+        bool changed = StoredTools.Remove(upgradingKind);
+        RemoveInventoryCopiesOfToolKind(player, upgradingKind, upgradingTool);
+
+        if (changed)
+            SaveStoredTools();
+    }
+
+    private static void RemoveInventoryCopiesOfToolKind(Farmer player, WalletToolKind kind, Tool? exceptTool)
+    {
+        for (int i = 0; i < player.Items.Count; i++)
+        {
+            if (player.Items[i] is not Tool tool || ReferenceEquals(tool, exceptTool))
+                continue;
+
+            if (TryGetWalletKind(tool, out WalletToolKind itemKind) && itemKind == kind)
+                player.Items[i] = null;
         }
     }
 
@@ -1194,7 +1253,7 @@ internal sealed class WalletToolState
 
         foreach (KeyValuePair<string, string> pair in tool.modData.Pairs)
         {
-            if (pair.Key == "ThaleTheGreat.WalletTools/RuntimeTool")
+            if (pair.Key == "ThaleTheGreat.WalletTools/RuntimeTool" || pair.Key == "ThaleTheGreat.WalletTools/RuntimeToolKind")
                 continue;
 
             state.ModData[pair.Key] = pair.Value;
@@ -1252,7 +1311,7 @@ internal sealed class WalletToolState
             SetIntMember(tool, UpgradeLevel, "UpgradeLevel", "upgradeLevel");
             foreach (KeyValuePair<string, string> pair in ModData)
             {
-                if (pair.Key == "ThaleTheGreat.WalletTools/RuntimeTool")
+                if (pair.Key == "ThaleTheGreat.WalletTools/RuntimeTool" || pair.Key == "ThaleTheGreat.WalletTools/RuntimeToolKind")
                     continue;
 
                 tool.modData[pair.Key] = pair.Value;
