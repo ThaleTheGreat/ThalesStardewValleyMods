@@ -1,5 +1,11 @@
 {
   "Format": "2.8.0",
+  "ConfigSchema": {
+    "BridgeSet": {
+      "AllowValues": "Original, Torii",
+      "Default": "Original"
+    }
+  },
   "Changes": [
     {
       "Action": "EditMap",
@@ -18,6 +24,7 @@
         "Height": 5
       },
       "When": {
+        "BridgeSet": "Original",
         "Season": "spring"
       }
     },
@@ -38,6 +45,7 @@
         "Height": 5
       },
       "When": {
+        "BridgeSet": "Original",
         "Season": "spring"
       }
     },
@@ -58,6 +66,7 @@
         "Height": 5
       },
       "When": {
+        "BridgeSet": "Original",
         "Season": "summer"
       }
     },
@@ -78,6 +87,7 @@
         "Height": 5
       },
       "When": {
+        "BridgeSet": "Original",
         "Season": "summer"
       }
     },
@@ -98,6 +108,7 @@
         "Height": 5
       },
       "When": {
+        "BridgeSet": "Original",
         "Season": "fall"
       }
     },
@@ -118,6 +129,7 @@
         "Height": 5
       },
       "When": {
+        "BridgeSet": "Original",
         "Season": "fall"
       }
     },
@@ -138,6 +150,7 @@
         "Height": 5
       },
       "When": {
+        "BridgeSet": "Original",
         "Season": "winter"
       }
     },
@@ -158,7 +171,48 @@
         "Height": 5
       },
       "When": {
+        "BridgeSet": "Original",
         "Season": "winter"
+      }
+    },
+    {
+      "Action": "EditMap",
+      "Target": "Maps/Town",
+      "FromFile": "assets/bridge_north_torii.tmx",
+      "FromArea": {
+        "X": 0,
+        "Y": 0,
+        "Width": 6,
+        "Height": 5
+      },
+      "ToArea": {
+        "X": 71,
+        "Y": 50,
+        "Width": 6,
+        "Height": 5
+      },
+      "When": {
+        "BridgeSet": "Torii"
+      }
+    },
+    {
+      "Action": "EditMap",
+      "Target": "Maps/Town",
+      "FromFile": "assets/bridge_south_torii.tmx",
+      "FromArea": {
+        "X": 0,
+        "Y": 0,
+        "Width": 6,
+        "Height": 5
+      },
+      "ToArea": {
+        "X": 76,
+        "Y": 91,
+        "Width": 6,
+        "Height": 5
+      },
+      "When": {
+        "BridgeSet": "Torii"
       }
     }
   ]
