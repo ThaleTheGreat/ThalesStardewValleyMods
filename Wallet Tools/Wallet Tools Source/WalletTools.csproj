@@ -11,16 +11,19 @@
     <ModFolderName>Wallet Tools</ModFolderName>
     <EnableHarmony>true</EnableHarmony>
   </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="4.3.0" PrivateAssets="all" />
   </ItemGroup>
+
   <ItemGroup>
     <None Include="manifest.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="LICENSE" CopyToOutputDirectory="PreserveNewest" />
-    <None Remove="assets\**\*" />
-    <Content Remove="assets\**\*" />
   </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="assets\**\*" />
-  </ItemGroup>
+
+  <Target Name="RemoveSourceAssetFoldersFromBuildOutputs" AfterTargets="Build">
+    <RemoveDir Directories="$(TargetDir)assets" />
+    <RemoveDir Directories="$(OutputPath)assets" />
+    <RemoveDir Directories="$(MSBuildProjectDirectory)\..\$(ModFolderName)\assets" />
+  </Target>
 </Project>

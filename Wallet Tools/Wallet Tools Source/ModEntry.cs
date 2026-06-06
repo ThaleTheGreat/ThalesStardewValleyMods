@@ -41,6 +41,7 @@ public sealed class ModEntry : Mod
     private TemporaryToolUse? PendingToolUse;
     private Harmony Harmony = null!;
     private bool SuppressInventoryConversion;
+    private bool PendingInventoryConversion;
     private bool GmcmRegistered;
     private IGenericModConfigMenuApi? GmcmApi;
     private IMobilePhoneApi? MobilePhoneApi;
@@ -280,18 +281,7 @@ public sealed class ModEntry : Mod
 
     private static Texture2D LoadEmbeddedTexture(string fileName)
     {
-        Assembly assembly = Assembly.GetExecutingAssembly();
-        string suffix = $".assets.{fileName}";
-        string? resourceName = assembly.GetManifestResourceNames()
-            .FirstOrDefault(name => name.EndsWith(suffix, StringComparison.OrdinalIgnoreCase));
-
-        if (resourceName is null)
-            throw new FileNotFoundException($"Embedded asset '{fileName}' was not found.");
-
-        using Stream? stream = assembly.GetManifestResourceStream(resourceName);
-        if (stream is null)
-            throw new FileNotFoundException($"Embedded asset '{fileName}' could not be opened.");
-
+        using MemoryStream stream = new(EmbeddedAssets.GetBytes(fileName));
         return Texture2D.FromStream(Game1.graphics.GraphicsDevice, stream);
     }
 
@@ -488,12 +478,24 @@ public sealed class ModEntry : Mod
 
         if (PendingToolUse is not null && !IsPlayerUsingTool(Game1.player))
             RestoreTemporaryTool(Game1.player);
+
+        if (PendingInventoryConversion && CanConvertInventoryTools(Game1.player))
+        {
+            PendingInventoryConversion = false;
+            ConvertInventoryTools(Game1.player);
+        }
     }
 
     private void OnInventoryChanged(object? sender, InventoryChangedEventArgs e)
     {
         if (SuppressInventoryConversion || !Context.IsWorldReady || e.Player.UniqueMultiplayerID != Game1.player.UniqueMultiplayerID || ActiveBlacksmithExposures.Count > 0)
             return;
+
+        if (!CanConvertInventoryTools(e.Player))
+        {
+            PendingInventoryConversion = true;
+            return;
+        }
 
         ConvertInventoryTools(e.Player);
     }
@@ -1286,7 +1288,7 @@ public sealed class ModEntry : Mod
         bool removed = false;
         for (int i = 0; i < player.Items.Count; i++)
         {
-            if (player.Items[i] is not Tool tool || ReferenceEquals(tool, exceptTool))
+            if (player.Items[i] is not Tool tool || ReferenceEquals(tool, exceptTool) || IsRuntimeTool(tool) || IsCurrentlySelectedTool(player, i, tool))
                 continue;
 
             if (ToolMatchesWalletKind(tool, kind))
@@ -1300,9 +1302,17 @@ public sealed class ModEntry : Mod
         return removed;
     }
 
+    private bool CanConvertInventoryTools(Farmer player)
+    {
+        return Config.ModEnabled
+            && PendingToolUse is null
+            && ActiveBlacksmithExposures.Count == 0
+            && !IsPlayerUsingTool(player);
+    }
+
     private void ConvertInventoryTools(Farmer player)
     {
-        if (!Config.ModEnabled || ActiveBlacksmithExposures.Count > 0)
+        if (!CanConvertInventoryTools(player))
             return;
 
         bool changed = false;
@@ -1311,7 +1321,7 @@ public sealed class ModEntry : Mod
         {
             for (int i = 0; i < player.Items.Count; i++)
             {
-                if (player.Items[i] is not Tool tool || IsOvernightExposure(tool, out _) || !TryGetWalletKindForStorage(tool, out WalletToolKind kind))
+                if (player.Items[i] is not Tool tool || IsRuntimeTool(tool) || IsOvernightExposure(tool, out _) || IsCurrentlySelectedTool(player, i, tool) || !TryGetWalletKindForStorage(tool, out WalletToolKind kind))
                     continue;
 
                 if (TryReplaceStoredToolIfBetter(kind, tool))
@@ -1891,6 +1901,14 @@ public sealed class ModEntry : Mod
                 return;
             }
         }
+    }
+
+    private static bool IsCurrentlySelectedTool(Farmer player, int slot, Tool tool)
+    {
+        if (slot == player.CurrentToolIndex)
+            return true;
+
+        return ReferenceEquals(player.CurrentTool, tool);
     }
 
     private static bool IsPlayerUsingTool(Farmer player)
