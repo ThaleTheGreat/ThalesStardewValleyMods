@@ -93,6 +93,8 @@ public sealed class ModEntry : Mod
             AddPower(powers, WalletToolKind.Hoe);
             AddPower(powers, WalletToolKind.WateringCan);
             AddPower(powers, WalletToolKind.Pan);
+            AddPower(powers, WalletToolKind.MilkPail);
+            AddPower(powers, WalletToolKind.Shears);
         });
     }
 
@@ -120,6 +122,8 @@ public sealed class ModEntry : Mod
             WalletToolKind.Hoe => "Hoe",
             WalletToolKind.WateringCan => "Watering Can",
             WalletToolKind.Pan => "Pan",
+            WalletToolKind.MilkPail => "Milk Pail",
+            WalletToolKind.Shears => "Shears",
             _ => "Tool"
         };
     }
@@ -133,6 +137,8 @@ public sealed class ModEntry : Mod
             WalletToolKind.Hoe => new Point(32, 32),
             WalletToolKind.WateringCan => new Point(16, 32),
             WalletToolKind.Pan => new Point(192, 0),
+            WalletToolKind.MilkPail => new Point(128, 0),
+            WalletToolKind.Shears => new Point(176, 0),
             _ => new Point(64, 32)
         };
     }
@@ -328,6 +334,8 @@ public sealed class ModEntry : Mod
             AddKeybind(GmcmApi, nameof(Config.UseHoeHotkey), () => Config.UseHoeHotkey, value => Config.UseHoeHotkey = value, "Use Hoe", "Immediately use the wallet hoe.");
             AddKeybind(GmcmApi, nameof(Config.UseWateringCanHotkey), () => Config.UseWateringCanHotkey, value => Config.UseWateringCanHotkey = value, "Use Watering Can", "Immediately use the wallet watering can.");
             AddKeybind(GmcmApi, nameof(Config.UsePanHotkey), () => Config.UsePanHotkey, value => Config.UsePanHotkey = value, "Use Pan", "Immediately use the wallet pan.");
+            AddKeybind(GmcmApi, nameof(Config.UseMilkPailHotkey), () => Config.UseMilkPailHotkey, value => Config.UseMilkPailHotkey = value, "Use Milk Pail", "Immediately use the wallet milk pail.");
+            AddKeybind(GmcmApi, nameof(Config.UseShearsHotkey), () => Config.UseShearsHotkey, value => Config.UseShearsHotkey = value, "Use Shears", "Immediately use the wallet shears.");
 
 
 
@@ -525,6 +533,10 @@ public sealed class ModEntry : Mod
             return WalletToolKind.WateringCan;
         if (Config.UsePanHotkey.JustPressed())
             return WalletToolKind.Pan;
+        if (Config.UseMilkPailHotkey.JustPressed())
+            return WalletToolKind.MilkPail;
+        if (Config.UseShearsHotkey.JustPressed())
+            return WalletToolKind.Shears;
 
         return null;
     }
@@ -976,6 +988,8 @@ public sealed class ModEntry : Mod
         yield return WalletToolKind.Hoe;
         yield return WalletToolKind.WateringCan;
         yield return WalletToolKind.Pan;
+        yield return WalletToolKind.MilkPail;
+        yield return WalletToolKind.Shears;
     }
 
     private void ReconcileLoadedToolState(Farmer player, string reason)
@@ -1419,9 +1433,19 @@ public sealed class ModEntry : Mod
             kind = WalletToolKind.WateringCan;
             return true;
         }
-        if (tool is Pan)
+        if (WalletToolState.IsPanTool(tool))
         {
             kind = WalletToolKind.Pan;
+            return true;
+        }
+        if (WalletToolState.IsMilkPailTool(tool))
+        {
+            kind = WalletToolKind.MilkPail;
+            return true;
+        }
+        if (WalletToolState.IsShearsTool(tool))
+        {
+            kind = WalletToolKind.Shears;
             return true;
         }
 
@@ -1555,6 +1579,18 @@ public sealed class ModEntry : Mod
         if (toolType == typeof(Pan))
         {
             kind = WalletToolKind.Pan;
+            return HasStoredEnabledTool(kind);
+        }
+
+        if (toolType == typeof(MilkPail))
+        {
+            kind = WalletToolKind.MilkPail;
+            return HasStoredEnabledTool(kind);
+        }
+
+        if (toolType == typeof(Shears))
+        {
+            kind = WalletToolKind.Shears;
             return HasStoredEnabledTool(kind);
         }
 
@@ -1932,7 +1968,9 @@ internal enum WalletToolKind
     Pickaxe,
     Hoe,
     WateringCan,
-    Pan
+    Pan,
+    MilkPail,
+    Shears
 }
 
 internal sealed class BlacksmithExposure
@@ -1988,7 +2026,7 @@ internal sealed class WalletToolState
             Name = tool.Name,
             DisplayName = tool.DisplayName,
             Description = tool.getDescription(),
-            UpgradeLevel = GetIntMember(tool, "UpgradeLevel", "upgradeLevel"),
+            UpgradeLevel = GetEffectiveUpgradeLevel(kind, tool),
             MenuSpriteIndex = GetToolMenuSpriteIndex(tool),
             TexturePath = GetToolTexturePath(tool)
         };
@@ -2070,25 +2108,34 @@ internal sealed class WalletToolState
 
     public Tool? CreateTool(IMonitor? monitor)
     {
-        string itemId = string.IsNullOrWhiteSpace(QualifiedItemId) ? GetDefaultQualifiedItemId(Kind) : QualifiedItemId;
-        try
+        Exception? lastException = null;
+        foreach (string itemId in GetCreationQualifiedItemIds())
         {
-            Tool tool = ItemRegistry.Create<Tool>(itemId);
-            SetIntMember(tool, UpgradeLevel, "UpgradeLevel", "upgradeLevel");
-            foreach (KeyValuePair<string, string> pair in ModData)
+            try
             {
-                if (pair.Key == "ThaleTheGreat.WalletTools/RuntimeTool" || pair.Key == "ThaleTheGreat.WalletTools/RuntimeToolKind" || pair.Key == "ThaleTheGreat.WalletTools/OvernightExposure" || pair.Key == "ThaleTheGreat.WalletTools/OvernightExposureKind")
-                    continue;
+                Tool tool = ItemRegistry.Create<Tool>(itemId);
+                SetIntMember(tool, UpgradeLevel, "UpgradeLevel", "upgradeLevel");
+                foreach (KeyValuePair<string, string> pair in ModData)
+                {
+                    if (pair.Key == "ThaleTheGreat.WalletTools/RuntimeTool" || pair.Key == "ThaleTheGreat.WalletTools/RuntimeToolKind" || pair.Key == "ThaleTheGreat.WalletTools/OvernightExposure" || pair.Key == "ThaleTheGreat.WalletTools/OvernightExposureKind")
+                        continue;
 
-                tool.modData[pair.Key] = pair.Value;
+                    tool.modData[pair.Key] = pair.Value;
+                }
+
+                if (!IsErrorTool(tool))
+                    return tool;
             }
-            return tool;
+            catch (Exception ex)
+            {
+                lastException = ex;
+            }
         }
-        catch (Exception ex)
-        {
-            monitor?.Log($"Could not recreate wallet tool '{Name}' ({itemId}): {ex.Message}", LogLevel.Warn);
-            return null;
-        }
+
+        if (lastException is not null)
+            monitor?.Log($"Could not recreate wallet tool '{Name}' ({QualifiedItemId}): {lastException.Message}", LogLevel.Warn);
+
+        return null;
     }
 
     private static string GetFallbackName(WalletToolKind kind)
@@ -2100,10 +2147,104 @@ internal sealed class WalletToolState
             WalletToolKind.Hoe => "Hoe",
             WalletToolKind.WateringCan => "Watering Can",
             WalletToolKind.Pan => "Pan",
+            WalletToolKind.MilkPail => "Milk Pail",
+            WalletToolKind.Shears => "Shears",
             _ => "Tool"
         };
     }
 
+
+    private IEnumerable<string> GetCreationQualifiedItemIds()
+    {
+        string itemId = string.IsNullOrWhiteSpace(QualifiedItemId) ? GetDefaultQualifiedItemId(Kind) : QualifiedItemId;
+        string primaryItemId = itemId;
+        if (Kind == WalletToolKind.Pan && IsBasicPanItemId(itemId) && UpgradeLevel > 0)
+            primaryItemId = GetDefaultPanQualifiedItemId(UpgradeLevel);
+
+        yield return primaryItemId;
+
+        if (Kind == WalletToolKind.Pan)
+        {
+            string levelItemId = GetDefaultPanQualifiedItemId(UpgradeLevel);
+            if (!levelItemId.Equals(primaryItemId, StringComparison.OrdinalIgnoreCase))
+                yield return levelItemId;
+
+            if (!"(T)Pan".Equals(primaryItemId, StringComparison.OrdinalIgnoreCase))
+                yield return "(T)Pan";
+        }
+    }
+
+    public static bool IsPanTool(Tool tool)
+    {
+        if (tool is Pan)
+            return true;
+
+        string text = string.Join("\n", tool.ItemId, tool.QualifiedItemId, tool.Name, tool.DisplayName);
+        return text.Contains("Pan", StringComparison.OrdinalIgnoreCase)
+            && !text.Contains("Pants", StringComparison.OrdinalIgnoreCase);
+    }
+
+    public static bool IsMilkPailTool(Tool tool)
+    {
+        if (tool is MilkPail)
+            return true;
+
+        string text = string.Join("\n", tool.ItemId, tool.QualifiedItemId, tool.Name, tool.DisplayName);
+        return text.Contains("MilkPail", StringComparison.OrdinalIgnoreCase)
+            || text.Contains("Milk Pail", StringComparison.OrdinalIgnoreCase);
+    }
+
+    public static bool IsShearsTool(Tool tool)
+    {
+        if (tool is Shears)
+            return true;
+
+        string text = string.Join("\n", tool.ItemId, tool.QualifiedItemId, tool.Name, tool.DisplayName);
+        return text.Contains("Shears", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static int GetEffectiveUpgradeLevel(WalletToolKind kind, Tool tool)
+    {
+        int upgradeLevel = GetIntMember(tool, "UpgradeLevel", "upgradeLevel");
+        if (kind == WalletToolKind.Pan)
+            upgradeLevel = Math.Max(upgradeLevel, GetPanUpgradeLevel(tool));
+
+        return Math.Clamp(upgradeLevel, 0, 4);
+    }
+
+    private static int GetPanUpgradeLevel(Tool tool)
+    {
+        string text = string.Join("\n", tool.ItemId, tool.QualifiedItemId, tool.Name, tool.DisplayName);
+        if (text.Contains("IridiumPan", StringComparison.OrdinalIgnoreCase) || text.Contains("Iridium Pan", StringComparison.OrdinalIgnoreCase))
+            return 4;
+        if (text.Contains("GoldPan", StringComparison.OrdinalIgnoreCase) || text.Contains("Gold Pan", StringComparison.OrdinalIgnoreCase))
+            return 3;
+        if (text.Contains("SteelPan", StringComparison.OrdinalIgnoreCase) || text.Contains("Steel Pan", StringComparison.OrdinalIgnoreCase))
+            return 2;
+        if (text.Contains("CopperPan", StringComparison.OrdinalIgnoreCase) || text.Contains("Copper Pan", StringComparison.OrdinalIgnoreCase))
+            return 1;
+
+        return 0;
+    }
+
+    private static bool IsBasicPanItemId(string itemId)
+    {
+        string normalized = itemId.Trim();
+        return normalized.Equals("Pan", StringComparison.OrdinalIgnoreCase)
+            || normalized.Equals("(T)Pan", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string GetDefaultPanQualifiedItemId(int upgradeLevel)
+    {
+        return Math.Clamp(upgradeLevel, 0, 4) switch
+        {
+            1 => "(T)CopperPan",
+            2 => "(T)SteelPan",
+            3 => "(T)GoldPan",
+            4 => "(T)IridiumPan",
+            _ => "(T)Pan"
+        };
+    }
 
     private static int GetToolMenuSpriteIndex(Tool tool)
     {
@@ -2210,6 +2351,8 @@ internal sealed class WalletToolState
             WalletToolKind.Hoe => new Point(32 + level * 16, 32),
             WalletToolKind.Axe => new Point(64 + level * 16, 32),
             WalletToolKind.Pan => new Point(192 + level * 16, 0),
+            WalletToolKind.MilkPail => new Point(128, 0),
+            WalletToolKind.Shears => new Point(176, 0),
             _ => new Point(64, 32)
         };
     }
@@ -2223,6 +2366,8 @@ internal sealed class WalletToolState
             WalletToolKind.Hoe => "(T)Hoe",
             WalletToolKind.WateringCan => "(T)WateringCan",
             WalletToolKind.Pan => "(T)Pan",
+            WalletToolKind.MilkPail => "(T)MilkPail",
+            WalletToolKind.Shears => "(T)Shears",
             _ => "(T)Axe"
         };
     }
