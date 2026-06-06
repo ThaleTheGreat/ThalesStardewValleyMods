@@ -10,6 +10,8 @@ namespace ThaleTheGreat.Mapster
         public bool ShowLocationDropdown { get; set; } = true;
         public bool ShowMiniMap { get; set; } = true;
         public string MiniMapSize { get; set; } = "Medium";
+        public int MiniMapXPercent { get; set; } = 0;
+        public int MiniMapYPercent { get; set; } = 0;
         public bool ShowNpcMapLocationsOnMap { get; set; } = true;
         public bool ShowNpcMapLocationsOnMiniMap { get; set; } = true;
         public bool ShowNpcMapLocationTooltipsOnMap { get; set; } = true;

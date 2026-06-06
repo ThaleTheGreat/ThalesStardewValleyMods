@@ -93,8 +93,10 @@ namespace ThaleTheGreat.Mapster
             gmcm.AddBoolOption(ModManifest, () => Config.ModEnabled, value => Config.ModEnabled = value, () => "Mod Enabled");
             gmcm.AddBoolOption(ModManifest, () => Config.AllowTeleport, value => Config.AllowTeleport = value, () => "Allow Teleport From Preview");
             gmcm.AddBoolOption(ModManifest, () => Config.ShowLocationDropdown, value => Config.ShowLocationDropdown = value, () => "Show Location Dropdown", () => "Show the searchable location dropdown. Disable this to only preview the player's current location.");
-            gmcm.AddBoolOption(ModManifest, () => Config.ShowMiniMap, value => Config.ShowMiniMap = value, () => "Show Mini Map", () => "Show a small local map in the top-left corner during normal gameplay.");
-            gmcm.AddTextOption(ModManifest, () => Config.MiniMapSize, value => Config.MiniMapSize = NormalizeMiniMapSize(value), () => "Mini Map Size", () => "Choose the size of the top-left mini map.", MiniMapSizeOptions);
+            gmcm.AddBoolOption(ModManifest, () => Config.ShowMiniMap, value => Config.ShowMiniMap = value, () => "Show Mini Map", () => "Show a small local map during normal gameplay.");
+            gmcm.AddTextOption(ModManifest, () => Config.MiniMapSize, value => Config.MiniMapSize = NormalizeMiniMapSize(value), () => "Mini Map Size", () => "Choose the size of the mini map.", MiniMapSizeOptions);
+            gmcm.AddNumberOption(ModManifest, () => Config.MiniMapXPercent, value => Config.MiniMapXPercent = Math.Clamp(value, 0, 100), () => "Mini Map X Position", () => "Set the mini map window's horizontal position as a percentage of available screen space. 0 is left, 100 is right.", 0, 100, 1);
+            gmcm.AddNumberOption(ModManifest, () => Config.MiniMapYPercent, value => Config.MiniMapYPercent = Math.Clamp(value, 0, 100), () => "Mini Map Y Position", () => "Set the mini map window's vertical position as a percentage of available screen space. 0 is top, 100 is bottom.", 0, 100, 1);
             gmcm.AddBoolOption(ModManifest, () => Config.ShowNpcMapLocationsOnMap, value => Config.ShowNpcMapLocationsOnMap = value, () => "NPC Map Locations On Full Map", () => "If NPC Map Locations is installed, show NPC and player markers on Mapster's full map.");
             gmcm.AddBoolOption(ModManifest, () => Config.ShowNpcMapLocationsOnMiniMap, value => Config.ShowNpcMapLocationsOnMiniMap = value, () => "NPC Map Locations On Mini Map", () => "If NPC Map Locations is installed, show NPC and player markers on Mapster's mini map.");
             gmcm.AddBoolOption(ModManifest, () => Config.ShowNpcMapLocationTooltipsOnMap, value => Config.ShowNpcMapLocationTooltipsOnMap = value, () => "NPC Tooltips On Full Map", () => "Show a name tooltip when hovering NPC Map Locations markers on Mapster's full map.");
@@ -500,8 +502,9 @@ namespace ThaleTheGreat.Mapster
             if (location?.map is null || location.map.Layers.Count == 0)
                 return;
 
-            int mapPixelWidth = Math.Max(Game1.tileSize, location.map.Layers[0].LayerWidth * Game1.tileSize);
-            int mapPixelHeight = Math.Max(Game1.tileSize, location.map.Layers[0].LayerHeight * Game1.tileSize);
+            Point mapPixelSize = GetMapPixelSize(location);
+            int mapPixelWidth = mapPixelSize.X;
+            int mapPixelHeight = mapPixelSize.Y;
             int renderWidth = mapPixelWidth;
             int renderHeight = mapPixelHeight;
             int startX = 0;
@@ -518,7 +521,7 @@ namespace ThaleTheGreat.Mapster
             else
             {
                 DisposePreview();
-                target = new RenderTarget2D(Game1.graphics.GraphicsDevice, renderWidth, renderHeight, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+                target = new RenderTarget2D(Game1.graphics.GraphicsDevice, renderWidth, renderHeight, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.DiscardContents);
                 previewTexture = target;
             }
 
@@ -537,6 +540,7 @@ namespace ThaleTheGreat.Mapster
                 Game1.currentLocation = location;
                 previewWorldRect = new Rectangle(startX, startY, renderWidth, renderHeight);
                 Game1.viewport = new xTile.Dimensions.Rectangle(startX, startY, renderWidth, renderHeight);
+                ClearRenderTarget(target);
 
                 if (refreshOnly && Config.AnimatePreview && !ReferenceEquals(location, oldLocation))
                     AdvancePreviewAnimations(location);
@@ -572,8 +576,9 @@ namespace ThaleTheGreat.Mapster
             if (location?.map is null || location.map.Layers.Count == 0)
                 return;
 
-            int renderWidth = Math.Max(Game1.tileSize, location.map.Layers[0].LayerWidth * Game1.tileSize);
-            int renderHeight = Math.Max(Game1.tileSize, location.map.Layers[0].LayerHeight * Game1.tileSize);
+            Point mapPixelSize = GetMapPixelSize(location);
+            int renderWidth = mapPixelSize.X;
+            int renderHeight = mapPixelSize.Y;
 
             if (miniMapTexture is RenderTarget2D existing && (existing.Width != renderWidth || existing.Height != renderHeight))
                 DisposeMiniMap();
@@ -586,7 +591,7 @@ namespace ThaleTheGreat.Mapster
             else
             {
                 DisposeMiniMap();
-                target = new RenderTarget2D(Game1.graphics.GraphicsDevice, renderWidth, renderHeight, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+                target = new RenderTarget2D(Game1.graphics.GraphicsDevice, renderWidth, renderHeight, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.DiscardContents);
                 miniMapTexture = target;
             }
 
@@ -595,6 +600,7 @@ namespace ThaleTheGreat.Mapster
             bool oldDisplayHud = Game1.displayHUD;
             bool oldTakingMapScreenshot = Game1.game1.takingMapScreenshot;
             float oldZoom = Game1.options.baseZoomLevel;
+            List<ReflectedStaticValue> oldLightingValues = new();
 
             try
             {
@@ -602,8 +608,14 @@ namespace ThaleTheGreat.Mapster
                 Game1.displayHUD = false;
                 Game1.game1.takingMapScreenshot = true;
                 Game1.options.baseZoomLevel = 1f;
+                oldLightingValues = SetStaticGame1Values(
+                    ("screenGlow", Color.Transparent),
+                    ("screenGlowHold", false),
+                    ("drawLighting", false)
+                );
                 Game1.currentLocation = location;
                 Game1.viewport = new xTile.Dimensions.Rectangle(0, 0, renderWidth, renderHeight);
+                ClearRenderTarget(target);
 
                 MethodInfo? drawMethod = typeof(Game1).GetMethod("_draw", BindingFlags.Instance | BindingFlags.NonPublic);
                 if (drawMethod is null)
@@ -622,6 +634,7 @@ namespace ThaleTheGreat.Mapster
                 Game1.displayHUD = oldDisplayHud;
                 Game1.game1.takingMapScreenshot = oldTakingMapScreenshot;
                 Game1.options.baseZoomLevel = oldZoom;
+                RestoreStaticGame1Values(oldLightingValues);
                 Game1.currentLocation = oldLocation;
                 Game1.viewport = oldViewport;
                 isCapturingMiniMap = false;
@@ -633,16 +646,25 @@ namespace ThaleTheGreat.Mapster
             if (miniMapTexture is null || miniMapLocation is null)
                 return;
 
-            int frameX = 24;
-            int frameY = 24;
-            Point frameSize = GetMiniMapFrameSize();
-            Rectangle frame = new(frameX, frameY, frameSize.X, frameSize.Y);
+            Rectangle frame = GetMiniMapFrameRect();
             Rectangle interior = new(frame.X + MiniMapPad, frame.Y + MiniMapPad, Math.Max(1, frame.Width - MiniMapPad * 2), Math.Max(1, frame.Height - MiniMapPad * 2));
             Rectangle map = GetMiniMapDestinationRect(interior);
 
-            IClickableMenu.drawTextureBox(b, frame.X, frame.Y, frame.Width, frame.Height, Color.White);
+            IClickableMenu.drawTextureBox(
+                b,
+                Game1.menuTexture,
+                new Rectangle(0, 256, 60, 60),
+                frame.X,
+                frame.Y,
+                frame.Width,
+                frame.Height,
+                Color.White,
+                1f,
+                false
+            );
             b.Draw(Game1.staminaRect, interior, Color.Black * 0.9f);
             b.Draw(miniMapTexture, map, Color.White);
+            DrawMiniMapTimeOverlay(b, miniMapLocation, map);
             Rectangle sourceRect = new(0, 0, miniMapTexture.Width, miniMapTexture.Height);
             DrawNpcMapLocationMarkers(b, miniMapLocation, map, sourceRect, true);
             DrawNpcMapLocationTooltip(b, miniMapLocation, map, sourceRect, true);
@@ -660,6 +682,66 @@ namespace ThaleTheGreat.Mapster
             return new Rectangle(bounds.X + (bounds.Width - width) / 2, bounds.Y + (bounds.Height - height) / 2, width, height);
         }
 
+        private static void DrawMiniMapTimeOverlay(SpriteBatch b, GameLocation location, Rectangle destination)
+        {
+            float alpha = GetMiniMapTimeOverlayAlpha(location);
+            if (alpha <= 0f)
+                return;
+
+            b.Draw(Game1.fadeToBlackRect, destination, new Color(18, 28, 55) * alpha);
+        }
+
+        private static float GetMiniMapTimeOverlayAlpha(GameLocation location)
+        {
+            if (!IsOutdoorLocation(location))
+                return 0f;
+
+            int minutes = TimeOfDayToMinutes(Game1.timeOfDay);
+            const int duskStart = 18 * 60;
+            const int nightStart = 20 * 60;
+            const int lateNightStart = 22 * 60;
+            const int maxTime = 26 * 60;
+
+            if (minutes < duskStart)
+                return 0f;
+
+            if (minutes < nightStart)
+                return Lerp(0f, 0.22f, (minutes - duskStart) / (float)(nightStart - duskStart));
+
+            if (minutes < lateNightStart)
+                return Lerp(0.22f, 0.36f, (minutes - nightStart) / (float)(lateNightStart - nightStart));
+
+            return Lerp(0.36f, 0.52f, Math.Clamp((minutes - lateNightStart) / (float)(maxTime - lateNightStart), 0f, 1f));
+        }
+
+        private static int TimeOfDayToMinutes(int timeOfDay)
+        {
+            int hour = Math.Clamp(timeOfDay / 100, 0, 26);
+            int minute = Math.Clamp(timeOfDay % 100, 0, 59);
+            return hour * 60 + minute;
+        }
+
+        private static float Lerp(float from, float to, float amount)
+        {
+            amount = Math.Clamp(amount, 0f, 1f);
+            return from + (to - from) * amount;
+        }
+
+        private static bool IsOutdoorLocation(GameLocation location)
+        {
+            const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+
+            PropertyInfo? property = location.GetType().GetProperty("IsOutdoors", flags);
+            if (property?.PropertyType == typeof(bool) && property.GetValue(location) is bool propertyValue)
+                return propertyValue;
+
+            FieldInfo? field = location.GetType().GetField("isOutdoors", flags);
+            if (field?.FieldType == typeof(bool) && field.GetValue(location) is bool fieldValue)
+                return fieldValue;
+
+            return true;
+        }
+
         private Point GetMiniMapFrameSize()
         {
             return NormalizeMiniMapSize(Config.MiniMapSize) switch
@@ -669,6 +751,22 @@ namespace ThaleTheGreat.Mapster
                 "Extra Large" => new Point(420, 290),
                 _ => new Point(280, 195)
             };
+        }
+
+        private Rectangle GetMiniMapFrameRect()
+        {
+            Point frameSize = GetMiniMapFrameSize();
+            int maxX = Math.Max(0, Game1.uiViewport.Width - frameSize.X);
+            int maxY = Math.Max(0, Game1.uiViewport.Height - frameSize.Y);
+            int x = PercentToScreenPosition(Config.MiniMapXPercent, maxX);
+            int y = PercentToScreenPosition(Config.MiniMapYPercent, maxY);
+            return new Rectangle(x, y, frameSize.X, frameSize.Y);
+        }
+
+        private static int PercentToScreenPosition(int percent, int maxPosition)
+        {
+            int clamped = Math.Clamp(percent, 0, 100);
+            return (int)Math.Round(maxPosition * (clamped / 100f));
         }
 
         private static string NormalizeMiniMapSize(string? value)
@@ -683,6 +781,96 @@ namespace ThaleTheGreat.Mapster
                 return "Extra Large";
 
             return "Medium";
+        }
+
+        private static Point GetMapPixelSize(GameLocation location)
+        {
+            int width = Game1.tileSize;
+            int height = Game1.tileSize;
+
+            foreach (xTile.Layers.Layer layer in location.map.Layers)
+            {
+                width = Math.Max(width, layer.LayerWidth * Game1.tileSize);
+                height = Math.Max(height, layer.LayerHeight * Game1.tileSize);
+            }
+
+            return new Point(width, height);
+        }
+
+        private static void ClearRenderTarget(RenderTarget2D target)
+        {
+            GraphicsDevice device = Game1.graphics.GraphicsDevice;
+            RenderTargetBinding[] oldTargets = device.GetRenderTargets();
+
+            try
+            {
+                device.SetRenderTarget(target);
+                device.Clear(Color.Transparent);
+            }
+            finally
+            {
+                if (oldTargets.Length > 0)
+                    device.SetRenderTargets(oldTargets);
+                else
+                    device.SetRenderTarget(null);
+            }
+        }
+
+        private sealed class ReflectedStaticValue
+        {
+            public ReflectedStaticValue(MemberInfo member, object? value)
+            {
+                Member = member;
+                Value = value;
+            }
+
+            public MemberInfo Member { get; }
+            public object? Value { get; }
+        }
+
+        private static List<ReflectedStaticValue> SetStaticGame1Values(params (string Name, object? Value)[] values)
+        {
+            List<ReflectedStaticValue> oldValues = new();
+            const BindingFlags flags = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
+
+            foreach ((string name, object? value) in values)
+            {
+                FieldInfo? field = typeof(Game1).GetField(name, flags);
+                if (field is not null && CanAssignValue(field.FieldType, value))
+                {
+                    oldValues.Add(new ReflectedStaticValue(field, field.GetValue(null)));
+                    field.SetValue(null, value);
+                    continue;
+                }
+
+                PropertyInfo? property = typeof(Game1).GetProperty(name, flags);
+                if (property is not null && property.CanRead && property.CanWrite && CanAssignValue(property.PropertyType, value))
+                {
+                    oldValues.Add(new ReflectedStaticValue(property, property.GetValue(null)));
+                    property.SetValue(null, value);
+                }
+            }
+
+            return oldValues;
+        }
+
+        private static void RestoreStaticGame1Values(IEnumerable<ReflectedStaticValue> values)
+        {
+            foreach (ReflectedStaticValue value in values)
+            {
+                if (value.Member is FieldInfo field)
+                    field.SetValue(null, value.Value);
+                else if (value.Member is PropertyInfo property && property.CanWrite)
+                    property.SetValue(null, value.Value);
+            }
+        }
+
+        private static bool CanAssignValue(Type targetType, object? value)
+        {
+            if (value is null)
+                return !targetType.IsValueType || Nullable.GetUnderlyingType(targetType) is not null;
+
+            return targetType.IsAssignableFrom(value.GetType());
         }
 
         private void AdvancePreviewAnimations(GameLocation location)
@@ -1499,8 +1687,9 @@ namespace ThaleTheGreat.Mapster
             Rectangle source = GetMapSourceRect();
             int worldX = previewWorldRect.X + source.X + (int)Math.Round(source.Width * xRatio);
             int worldY = previewWorldRect.Y + source.Y + (int)Math.Round(source.Height * yRatio);
-            int tileX = Math.Clamp(worldX / Game1.tileSize, 0, viewedLocation.map.Layers[0].LayerWidth - 1);
-            int tileY = Math.Clamp(worldY / Game1.tileSize, 0, viewedLocation.map.Layers[0].LayerHeight - 1);
+            Point mapPixelSize = GetMapPixelSize(viewedLocation);
+            int tileX = Math.Clamp(worldX / Game1.tileSize, 0, Math.Max(0, mapPixelSize.X / Game1.tileSize - 1));
+            int tileY = Math.Clamp(worldY / Game1.tileSize, 0, Math.Max(0, mapPixelSize.Y / Game1.tileSize - 1));
 
             Game1.warpFarmer(GetLocationName(viewedLocation), tileX, tileY, false);
             CloseMap(false);
