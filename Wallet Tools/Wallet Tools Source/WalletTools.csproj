@@ -6,7 +6,7 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <AssemblyName>WalletTools</AssemblyName>
     <RootNamespace>ThaleTheGreat.WalletTools</RootNamespace>
-    <Version>1.1.0</Version>
+    <Version>1.4.0</Version>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <ModFolderName>Wallet Tools</ModFolderName>
     <EnableHarmony>true</EnableHarmony>
@@ -17,8 +17,10 @@
   <ItemGroup>
     <None Include="manifest.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="LICENSE" CopyToOutputDirectory="PreserveNewest" />
+    <None Remove="assets\**\*" />
+    <Content Remove="assets\**\*" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="assets\**\*" CopyToOutputDirectory="PreserveNewest" />
+    <EmbeddedResource Include="assets\**\*" />
   </ItemGroup>
 </Project>
