@@ -62,6 +62,7 @@ public sealed class ModEntry : Mod
         helper.Events.Content.AssetRequested += OnAssetRequested;
         helper.Events.GameLoop.GameLaunched += OnGameLaunched;
         helper.Events.GameLoop.SaveLoaded += OnSaveLoaded;
+        helper.Events.GameLoop.ReturnedToTitle += OnReturnedToTitle;
         helper.Events.GameLoop.DayStarted += OnDayStarted;
         helper.Events.GameLoop.DayEnding += OnDayEnding;
         helper.Events.GameLoop.Saving += OnSaving;
@@ -82,7 +83,7 @@ public sealed class ModEntry : Mod
             return;
         }
 
-        if (!e.NameWithoutLocale.IsEquivalentTo("Data/Powers") || !Config.ModEnabled)
+        if (!e.NameWithoutLocale.IsEquivalentTo("Data/Powers") || !Config.ModEnabled || !Context.IsWorldReady)
             return;
 
         e.Edit(asset =>
@@ -100,8 +101,9 @@ public sealed class ModEntry : Mod
 
     private void AddPower(IDictionary<string, PowersData> powers, WalletToolKind kind)
     {
-        if (!TryGetWalletDisplayState(kind, out WalletToolState state))
-            return;
+        WalletToolState state = TryGetWalletDisplayState(kind, out WalletToolState storedState)
+            ? storedState
+            : CreateLockedPowerDisplayState(kind);
 
         powers[$"{PowerPrefix}{kind}"] = new PowersData
         {
@@ -110,6 +112,20 @@ public sealed class ModEntry : Mod
             TexturePath = state.GetTexturePath(),
             TexturePosition = state.GetTexturePosition(),
             UnlockedCondition = $"PLAYER_MOD_DATA Current {FlagPrefix}{kind} true"
+        };
+    }
+
+    private static WalletToolState CreateLockedPowerDisplayState(WalletToolKind kind)
+    {
+        string name = GetFallbackDisplayName(kind);
+        return new WalletToolState
+        {
+            Kind = kind,
+            Name = name,
+            DisplayName = name,
+            UpgradeLevel = 0,
+            TexturePath = ToolTexturePath,
+            MenuSpriteIndex = -1
         };
     }
 
@@ -441,6 +457,8 @@ public sealed class ModEntry : Mod
 
     private void OnSaveLoaded(object? sender, SaveLoadedEventArgs e)
     {
+        ClearVolatileWalletState(invalidatePowers: false);
+
         if (!Config.ModEnabled)
         {
             ClearStoredWalletState();
@@ -451,6 +469,25 @@ public sealed class ModEntry : Mod
         CollectOvernightExposedTools(Game1.player, "save load");
         ReconcileLoadedToolState(Game1.player, "save load");
         ConvertInventoryTools(Game1.player);
+    }
+
+
+    private void OnReturnedToTitle(object? sender, ReturnedToTitleEventArgs e)
+    {
+        ClearVolatileWalletState();
+    }
+
+    private void ClearVolatileWalletState(bool invalidatePowers = true)
+    {
+        StoredTools.Clear();
+        ToolSmartSwitchToolCache.Clear();
+        ActiveBlacksmithExposures.Clear();
+        PendingToolUse = null;
+        PendingInventoryConversion = false;
+        SuppressInventoryConversion = false;
+
+        if (invalidatePowers)
+            InvalidatePowers();
     }
 
     private void OnDayStarted(object? sender, DayStartedEventArgs e)
@@ -697,16 +734,17 @@ public sealed class ModEntry : Mod
         if (!Config.ModEnabled || StoredTools.Count == 0)
             return;
 
-        bool changed = MaterializeStoredToolsToInventory(player, markForOvernight: true, clearStoredState: false, reason: reason);
+        bool changed = MaterializeStoredToolsToInventory(player, markForOvernight: true, clearStoredState: true, reason: reason);
         if (!changed && !HasAnyOvernightExposure(player))
             return;
 
-        Helper.Data.WriteSaveData<Dictionary<WalletToolKind, WalletToolState>>(SaveDataKey, null);
+        ClearLegacyStoredToolsData();
         ClearWalletFlagModData(player);
+        ToolSmartSwitchToolCache.Clear();
         InvalidatePowers();
 
         if (changed)
-            Monitor.Log($"Wallet Tools exposed stored tools during {reason} so the save contains real upgraded tools.", LogLevel.Trace);
+            Monitor.Log($"Wallet Tools exposed wallet tools during {reason} so the save contains real tools.", LogLevel.Trace);
     }
 
     private bool MaterializeStoredToolsToInventory(Farmer player, bool markForOvernight, bool clearStoredState, string reason)
@@ -894,13 +932,7 @@ public sealed class ModEntry : Mod
     {
         StoredTools.Clear();
         ToolSmartSwitchToolCache.Clear();
-        Dictionary<WalletToolKind, WalletToolState>? data = Helper.Data.ReadSaveData<Dictionary<WalletToolKind, WalletToolState>>(SaveDataKey);
-        if (data is not null)
-        {
-            foreach (KeyValuePair<WalletToolKind, WalletToolState> pair in data)
-                StoredTools[pair.Key] = pair.Value;
-        }
-
+        ClearLegacyStoredToolsData();
         UpdateWalletFlags(Game1.player);
         InvalidatePowers();
     }
@@ -908,10 +940,15 @@ public sealed class ModEntry : Mod
     private void SaveStoredTools(bool invalidatePowers = true)
     {
         ToolSmartSwitchToolCache.Clear();
-        Helper.Data.WriteSaveData(SaveDataKey, StoredTools);
+        ClearLegacyStoredToolsData();
         UpdateWalletFlags(Game1.player);
         if (invalidatePowers)
             InvalidatePowers();
+    }
+
+    private void ClearLegacyStoredToolsData()
+    {
+        Helper.Data.WriteSaveData<Dictionary<WalletToolKind, WalletToolState>>(SaveDataKey, null);
     }
 
     private void InvalidatePowers()
@@ -1634,16 +1671,31 @@ public sealed class ModEntry : Mod
 
     private bool TryPrepareWalletToolUse(Farmer player)
     {
-        if (IsExternalSwitchModLoaded())
+        if (PendingToolUse is not null || !Config.ModEnabled || Game1.fadeToBlack || !Context.CanPlayerMove || IsToolUpgradeLocation(player.currentLocation))
             return false;
 
-        if (PendingToolUse is not null || !Config.ModEnabled || Game1.fadeToBlack || !Context.CanPlayerMove)
+        if (TryGetFallbackAnimalToolRequest(player, out Type animalToolType))
+            return TrySupplyRequestedWalletTool(player, animalToolType, false);
+
+        if (IsExternalSwitchModLoaded())
             return false;
 
         if (!TryGetFallbackToolRequest(player, out Type toolType, out bool anyTool))
             return false;
 
         return TrySupplyRequestedWalletTool(player, toolType, anyTool);
+    }
+
+    private static bool TryGetFallbackAnimalToolRequest(Farmer player, out Type toolType)
+    {
+        Vector2 position = !Game1.wasMouseVisibleThisFrame
+            ? player.GetToolLocation(false)
+            : new Vector2(Game1.getOldMouseX() + Game1.viewport.X, Game1.getOldMouseY() + Game1.viewport.Y);
+
+        Vector2 tile = player.GetToolLocation(position, false) / 64f;
+        tile = new Vector2((int)tile.X, (int)tile.Y);
+
+        return TryGetToolRequestForFarmAnimal(player.currentLocation, tile, player, out toolType);
     }
 
     private bool TryGetFallbackToolRequest(Farmer player, out Type toolType, out bool anyTool)
@@ -1654,6 +1706,12 @@ public sealed class ModEntry : Mod
 
         Vector2 tile = player.GetToolLocation(position, false) / 64f;
         tile = new Vector2((int)tile.X, (int)tile.Y);
+
+        if (TryGetToolRequestForFarmAnimal(player.currentLocation, tile, player, out toolType))
+        {
+            anyTool = false;
+            return true;
+        }
 
         if (player.currentLocation.objects.TryGetValue(tile, out Object obj) && TryGetToolRequestForObject(obj, out toolType, out anyTool))
             return true;
@@ -1721,6 +1779,39 @@ public sealed class ModEntry : Mod
 
         toolType = typeof(Axe);
         anyTool = false;
+        return false;
+    }
+
+    private static bool TryGetToolRequestForFarmAnimal(GameLocation location, Vector2 tile, Farmer player, out Type toolType)
+    {
+        if (location is not (Farm or AnimalHouse))
+        {
+            toolType = typeof(Axe);
+            return false;
+        }
+
+        foreach (FarmAnimal animal in location.getAllFarmAnimals())
+        {
+            if (animal.currentLocation != player.currentLocation)
+                continue;
+
+            if (Vector2.Distance(tile, animal.Tile) > 1f)
+                continue;
+
+            if (animal.type.Contains("Cow") || animal.type.Contains("Goat"))
+            {
+                toolType = typeof(MilkPail);
+                return true;
+            }
+
+            if (animal.type.Contains("Sheep"))
+            {
+                toolType = typeof(Shears);
+                return true;
+            }
+        }
+
+        toolType = typeof(Axe);
         return false;
     }
 
@@ -2071,15 +2162,21 @@ internal sealed class WalletToolState
 
     public string GetTexturePath()
     {
+        Tool? tool = CreateTool(null);
+        if (tool is not null)
+        {
+            string currentTexturePath = GetToolTexturePath(tool);
+            if (!string.IsNullOrWhiteSpace(currentTexturePath))
+                return currentTexturePath;
+        }
+
         return string.IsNullOrWhiteSpace(TexturePath) ? "TileSheets/tools" : TexturePath;
     }
 
     public Point GetTexturePosition()
     {
         Tool? tool = CreateTool(null);
-        int menuSpriteIndex = tool is not null
-            ? GetOptionalIntMember(tool, "IndexOfMenuItemView", "indexOfMenuItemView", "currentParentTileIndex", "CurrentParentTileIndex") ?? MenuSpriteIndex
-            : MenuSpriteIndex;
+        int menuSpriteIndex = tool is not null ? GetToolMenuSpriteIndex(tool) : MenuSpriteIndex;
 
         if (menuSpriteIndex >= 0)
             return GetTexturePositionFromMenuIndex(menuSpriteIndex);
@@ -2179,7 +2276,11 @@ internal sealed class WalletToolState
         if (tool is Pan)
             return true;
 
-        string text = string.Join("\n", tool.ItemId, tool.QualifiedItemId, tool.Name, tool.DisplayName);
+        string itemId = NormalizeToolItemId(tool);
+        if (itemId is "Pan" or "CopperPan" or "SteelPan" or "GoldPan" or "IridiumPan")
+            return true;
+
+        string text = string.Join("\n", tool.Name, tool.DisplayName);
         return text.Contains("Pan", StringComparison.OrdinalIgnoreCase)
             && !text.Contains("Pants", StringComparison.OrdinalIgnoreCase);
     }
@@ -2189,7 +2290,11 @@ internal sealed class WalletToolState
         if (tool is MilkPail)
             return true;
 
-        string text = string.Join("\n", tool.ItemId, tool.QualifiedItemId, tool.Name, tool.DisplayName);
+        string itemId = NormalizeToolItemId(tool);
+        if (itemId.Equals("MilkPail", StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        string text = string.Join("\n", tool.Name, tool.DisplayName);
         return text.Contains("MilkPail", StringComparison.OrdinalIgnoreCase)
             || text.Contains("Milk Pail", StringComparison.OrdinalIgnoreCase);
     }
@@ -2199,8 +2304,28 @@ internal sealed class WalletToolState
         if (tool is Shears)
             return true;
 
-        string text = string.Join("\n", tool.ItemId, tool.QualifiedItemId, tool.Name, tool.DisplayName);
+        string itemId = NormalizeToolItemId(tool);
+        if (itemId.Equals("Shears", StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        string text = string.Join("\n", tool.Name, tool.DisplayName);
         return text.Contains("Shears", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string NormalizeToolItemId(Tool tool)
+    {
+        string itemId = string.IsNullOrWhiteSpace(tool.QualifiedItemId) ? tool.ItemId : tool.QualifiedItemId;
+        if (string.IsNullOrWhiteSpace(itemId))
+            return string.Empty;
+
+        if (itemId.StartsWith("(T)", StringComparison.OrdinalIgnoreCase))
+            itemId = itemId[3..];
+
+        int slash = itemId.LastIndexOf('/');
+        if (slash >= 0 && slash < itemId.Length - 1)
+            itemId = itemId[(slash + 1)..];
+
+        return itemId.Trim();
     }
 
     private static int GetEffectiveUpgradeLevel(WalletToolKind kind, Tool tool)
