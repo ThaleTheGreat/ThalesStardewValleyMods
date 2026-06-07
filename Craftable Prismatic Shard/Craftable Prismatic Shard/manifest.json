@@ -1,0 +1,12 @@
+{
+  "Name": "Craftable Prismatic Shard",
+  "Author": "ThaleTheGreat",
+  "Version": "1.0.0",
+  "Description": "Adds a crafting recipe for Prismatic Shards.",
+  "UniqueID": "ThaleTheGreat.CraftablePrismaticShard",
+  "EntryDll": "CraftablePrismaticShard.dll",
+  "MinimumApiVersion": "4.0.0",
+  "UpdateKeys": [
+    "Nexus:47249"
+  ]
+}
