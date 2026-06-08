@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -19,6 +20,8 @@ public sealed class ModEntry : Mod
     private const string WalletFlagKey = "ThaleTheGreat.WalletScepter/HasReturnScepter";
     private const string LegacyWalletFlagKey = "ThaleTheGreat.ReturnScepterWallet/HasReturnScepter";
     private const string WalletPowerId = "ThaleTheGreat.WalletScepter_ReturnScepter";
+    private const string SaveMaterializedMarker = "ThaleTheGreat.WalletScepter/SaveMaterialized";
+    private const string PowerCategoryId = "ThaleTheGreat.WalletScepter";
     private const string DefaultToolTexturePath = "TileSheets/tools";
     private const string DefaultHomeLocationName = "FarmHouse";
     private const int DefaultHomeWarpTileX = 9;
@@ -34,8 +37,10 @@ public sealed class ModEntry : Mod
     private string PendingSleepHomeLocationName = DefaultHomeLocationName;
     private int PendingSleepAttempts;
     private bool GmcmRegistered;
+    private bool SuppressInventoryConversion;
     private IGenericModConfigMenuApi? GmcmApi;
     private IMobilePhoneApi? MobilePhoneApi;
+    private ISpecialPowerAPI? SpecialPowerApi;
     private bool GmcmMissingLogged;
 
     public override void Entry(IModHelper helper)
@@ -46,10 +51,14 @@ public sealed class ModEntry : Mod
         helper.Events.GameLoop.GameLaunched += OnGameLaunched;
         helper.Events.GameLoop.SaveLoaded += OnSaveLoaded;
         helper.Events.GameLoop.DayStarted += OnDayStarted;
+        helper.Events.GameLoop.DayEnding += OnDayEnding;
+        helper.Events.GameLoop.Saving += OnSaving;
+        helper.Events.GameLoop.Saved += OnSaved;
         helper.Events.GameLoop.UpdateTicked += OnUpdateTicked;
         helper.Events.Input.ButtonPressed += OnButtonPressed;
         helper.Events.Player.InventoryChanged += OnInventoryChanged;
     }
+
 
 
     private void OnAssetRequested(object? sender, AssetRequestedEventArgs e)
@@ -59,12 +68,18 @@ public sealed class ModEntry : Mod
 
         e.Edit(asset =>
         {
-            (string texturePath, Point texturePosition) = GetReturnScepterPowerTexture();
-
             IDictionary<string, PowersData> powers = asset.AsDictionary<string, PowersData>().Data;
+
+            if (!Context.IsWorldReady || !HasWalletScepter(Game1.player))
+            {
+                powers.Remove(WalletPowerId);
+                return;
+            }
+
+            (string texturePath, Point texturePosition) = GetReturnScepterPowerTexture();
             powers[WalletPowerId] = new PowersData
             {
-                DisplayName = "Return Scepter",
+                DisplayName = GetReturnScepterDisplayName(),
                 Description = "The golden handle quivers with raw potential. Press the Wallet Scepter hotkey to return home at will.",
                 TexturePath = texturePath,
                 TexturePosition = texturePosition,
@@ -97,6 +112,7 @@ public sealed class ModEntry : Mod
     {
         RegisterGmcm();
         RegisterMobilePhoneApp();
+        RegisterSpecialPowerUtilities();
     }
 
     private void RegisterMobilePhoneApp()
@@ -113,6 +129,30 @@ public sealed class ModEntry : Mod
         catch (Exception ex)
         {
             Monitor.Log($"Failed to register Wallet Scepter Mobile Phone app: {ex.Message}", LogLevel.Warn);
+        }
+    }
+
+    private void RegisterSpecialPowerUtilities()
+    {
+        SpecialPowerApi = Helper.ModRegistry.GetApi<ISpecialPowerAPI>("Spiderbuttons.SpecialPowerUtilities");
+        if (SpecialPowerApi is null)
+        {
+            return;
+        }
+
+        try
+        {
+            SpecialPowerApi.RegisterPowerCategory(
+                PowerCategoryId,
+                () => GetReturnScepterDisplayName(),
+                DefaultToolTexturePath,
+                GetReturnScepterPowerTexture().TexturePosition,
+                new Point(16, 16)
+            );
+        }
+        catch (Exception ex)
+        {
+            Monitor.Log($"Failed to register Wallet Scepter Special Power Utilities category: {ex.Message}", LogLevel.Warn);
         }
     }
 
@@ -207,6 +247,7 @@ public sealed class ModEntry : Mod
                 fieldId: nameof(Config.ShowHudMessageWhenMissing)
             );
 
+
             GmcmRegistered = true;
             Monitor.Log("Registered Wallet Scepter options with Generic Mod Config Menu.", LogLevel.Info);
         }
@@ -220,16 +261,47 @@ public sealed class ModEntry : Mod
     {
         AutoReturnHandledToday = false;
         PendingSleepAfterHomeWarp = false;
+        CollectSaveMaterializedScepters(Game1.player, "save loaded");
+        NormalizePlayerItemsAfterWalletCleanup(Game1.player);
         MigrateLegacyWalletFlag(Game1.player);
         ConvertInventoryScepters(Game1.player);
+        CleanupLostAndFoundScepterDuplicates(Game1.player, "save loaded");
+        InvalidatePowers();
     }
 
     private void OnDayStarted(object? sender, DayStartedEventArgs e)
     {
         AutoReturnHandledToday = false;
         PendingSleepAfterHomeWarp = false;
+        CollectSaveMaterializedScepters(Game1.player, "day start");
+        NormalizePlayerItemsAfterWalletCleanup(Game1.player);
         MigrateLegacyWalletFlag(Game1.player);
         ConvertInventoryScepters(Game1.player);
+        CleanupLostAndFoundScepterDuplicates(Game1.player, "day start");
+        InvalidatePowers();
+    }
+
+    private void OnDayEnding(object? sender, DayEndingEventArgs e)
+    {
+        CollectSaveMaterializedScepters(Game1.player, "day ending cleanup");
+        NormalizePlayerItemsAfterWalletCleanup(Game1.player);
+        CleanupLostAndFoundScepterDuplicates(Game1.player, "day ending");
+    }
+
+    private void OnSaving(object? sender, SavingEventArgs e)
+    {
+        CollectSaveMaterializedScepters(Game1.player, "pre-save cleanup");
+        NormalizePlayerItemsAfterWalletCleanup(Game1.player);
+        CleanupLostAndFoundScepterDuplicates(Game1.player, "saving");
+    }
+
+    private void OnSaved(object? sender, SavedEventArgs e)
+    {
+        CollectSaveMaterializedScepters(Game1.player, "post-save cleanup");
+        NormalizePlayerItemsAfterWalletCleanup(Game1.player);
+        ConvertInventoryScepters(Game1.player);
+        CleanupLostAndFoundScepterDuplicates(Game1.player, "saved");
+        InvalidatePowers();
     }
 
     private void OnUpdateTicked(object? sender, UpdateTickedEventArgs e)
@@ -636,12 +708,17 @@ public sealed class ModEntry : Mod
 
     private void ConvertInventoryScepters(Farmer player)
     {
+        if (SuppressInventoryConversion)
+        {
+            return;
+        }
+
         bool converted = false;
 
         for (int index = player.Items.Count - 1; index >= 0; index--)
         {
             Item? item = player.Items[index];
-            if (!IsReturnScepter(item))
+            if (!IsReturnScepter(item) || IsSaveMaterializedScepter(item))
                 continue;
 
             player.Items[index] = null;
@@ -652,6 +729,8 @@ public sealed class ModEntry : Mod
             return;
 
         player.modData[WalletFlagKey] = "true";
+        NormalizePlayerItemsAfterWalletCleanup(player);
+        InvalidatePowers();
         Game1.addHUDMessage(new HUDMessage("Return Scepter added to wallet.", HUDMessage.newQuest_type));
     }
 
@@ -669,34 +748,218 @@ public sealed class ModEntry : Mod
             return false;
         }
 
-        if (item is not Tool scepter)
-        {
-            Monitor.Log($"ItemRegistry returned '{item.GetType().FullName}' for {ReturnScepterQualifiedItemId}, not a Tool.", LogLevel.Error);
-            return false;
-        }
-
-        Farmer player = Game1.player;
-        int originalToolIndex = player.CurrentToolIndex;
-        int useIndex = Math.Clamp(originalToolIndex, 0, Math.Max(0, player.Items.Count - 1));
-        Item? originalItem = player.Items[useIndex];
-
         try
         {
-            player.CurrentToolIndex = useIndex;
-            player.Items[useIndex] = scepter;
-            Game1.pressUseToolButton();
-            return true;
+            if (item is StardewValley.Object obj)
+            {
+                bool result = obj.performUseAction(Game1.currentLocation);
+                return result;
+            }
+
+            if (item is Tool tool)
+            {
+                tool.DoFunction(
+                    Game1.currentLocation,
+                    (int)Game1.player.Position.X,
+                    (int)Game1.player.Position.Y,
+                    0,
+                    Game1.player
+                );
+                return true;
+            }
+
+            Monitor.Log($"Created Return Scepter item is not an Object or Tool and cannot be activated directly. {DescribeItemIdentity(item)}", LogLevel.Warn);
+            return false;
         }
         catch (Exception ex)
         {
             Monitor.Log($"Failed while activating the real Return Scepter use path: {ex}", LogLevel.Error);
             return false;
         }
+    }
+
+    private void MaterializeWalletScepterForSave(Farmer player)
+    {
+    }
+
+    private void CollectSaveMaterializedScepters(Farmer player, string reason)
+    {
+        bool collected = false;
+
+        SuppressInventoryConversion = true;
+        try
+        {
+            for (int index = player.Items.Count - 1; index >= 0; index--)
+            {
+                Item? item = player.Items[index];
+                if (!IsSaveMaterializedScepter(item))
+                    continue;
+
+                player.Items[index] = null;
+                player.modData[WalletFlagKey] = "true";
+                collected = true;
+            }
+        }
         finally
         {
-            player.Items[useIndex] = originalItem;
-            player.CurrentToolIndex = originalToolIndex;
+            SuppressInventoryConversion = false;
         }
+
+        if (collected)
+            NormalizePlayerItemsAfterWalletCleanup(player);
+    }
+
+    private static bool HasSaveMaterializedScepter(Farmer player)
+    {
+        foreach (Item? item in player.Items)
+        {
+            if (IsSaveMaterializedScepter(item))
+                return true;
+        }
+
+        return false;
+    }
+
+    private static void AddScepterToInventoryOrAppend(Farmer player, Item item)
+    {
+        int maxItems = GetPlayerMaxItemCount(player);
+        int searchCount = Math.Min(player.Items.Count, maxItems);
+
+        for (int i = 0; i < searchCount; i++)
+        {
+            if (player.Items[i] is null)
+            {
+                player.Items[i] = item;
+                return;
+            }
+        }
+
+        if (player.Items.Count < maxItems)
+        {
+            player.Items.Add(item);
+            return;
+        }
+
+        player.Items.Add(item);
+    }
+
+    private static void NormalizePlayerItemsAfterWalletCleanup(Farmer player)
+    {
+        int maxItems = GetPlayerMaxItemCount(player);
+        if (player.Items.Count <= maxItems)
+            return;
+
+        for (int i = maxItems; i < player.Items.Count; i++)
+        {
+            if (player.Items[i] is not null)
+                return;
+        }
+
+        while (player.Items.Count > maxItems)
+            player.Items.RemoveAt(player.Items.Count - 1);
+    }
+
+    private static int GetPlayerMaxItemCount(Farmer player)
+    {
+        int maxItems = GetIntMember(player, "MaxItems", "maxItems");
+        return Math.Max(12, maxItems <= 0 ? 36 : maxItems);
+    }
+
+    private static int GetIntMember(object instance, params string[] memberNames)
+    {
+        Type type = instance.GetType();
+        foreach (string memberName in memberNames)
+        {
+            PropertyInfo? property = type.GetProperty(memberName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            if (property?.GetValue(instance) is int propertyValue)
+                return propertyValue;
+
+            FieldInfo? field = type.GetField(memberName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            if (field?.GetValue(instance) is int fieldValue)
+                return fieldValue;
+        }
+
+        return 0;
+    }
+
+    private string GetReturnScepterDisplayName()
+    {
+        try
+        {
+            return ItemRegistry.Create(ReturnScepterQualifiedItemId).DisplayName;
+        }
+        catch (Exception)
+        {
+            return "Return Scepter";
+        }
+    }
+
+    private void CleanupLostAndFoundScepterDuplicates(Farmer player, string reason)
+    {
+        if (!HasWalletScepter(player))
+        {
+            return;
+        }
+
+        if (!TryGetLostAndFoundItems(player, out IList? lostAndFoundItems) || lostAndFoundItems is null)
+        {
+            return;
+        }
+
+        for (int index = lostAndFoundItems.Count - 1; index >= 0; index--)
+        {
+            if (lostAndFoundItems[index] is not Item item || !IsReturnScepter(item))
+                continue;
+
+            lostAndFoundItems.RemoveAt(index);
+            player.modData[WalletFlagKey] = "true";
+        }
+
+    }
+
+    private static bool TryGetLostAndFoundItems(Farmer player, out IList? lostAndFoundItems)
+    {
+        lostAndFoundItems = null;
+
+        object? team = GetMemberValue(player, "team", "Team") ?? GetMemberValue(Game1.player, "team", "Team");
+        if (team is null)
+            return false;
+
+        object? list = GetMemberValue(team, "lostAndFoundItems", "LostAndFoundItems");
+        if (list is IList itemList)
+        {
+            lostAndFoundItems = itemList;
+            return true;
+        }
+
+        return false;
+    }
+
+    private static object? GetMemberValue(object instance, params string[] memberNames)
+    {
+        Type type = instance.GetType();
+        foreach (string memberName in memberNames)
+        {
+            PropertyInfo? property = type.GetProperty(memberName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            if (property is not null)
+                return property.GetValue(instance);
+
+            FieldInfo? field = type.GetField(memberName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            if (field is not null)
+                return field.GetValue(instance);
+        }
+
+        return null;
+    }
+
+    private static string DescribeItemIdentity(Item item)
+    {
+        return $"type='{item.GetType().FullName}', qualifiedId='{item.QualifiedItemId}', itemId='{item.ItemId}', name='{item.Name}', displayName='{item.DisplayName}', saveMaterialized='{IsSaveMaterializedScepter(item)}'";
+    }
+
+    private void InvalidatePowers()
+    {
+        Helper.GameContent.InvalidateCache("Data/Powers");
     }
 
     private static void MigrateLegacyWalletFlag(Farmer player)
@@ -722,14 +985,20 @@ public sealed class ModEntry : Mod
             && string.Equals(value, "true", StringComparison.OrdinalIgnoreCase);
     }
 
+    private static bool IsSaveMaterializedScepter(Item? item)
+    {
+        return IsReturnScepter(item)
+            && item!.modData.TryGetValue(SaveMaterializedMarker, out string? value)
+            && string.Equals(value, "true", StringComparison.OrdinalIgnoreCase);
+    }
+
     private static bool IsReturnScepter(Item? item)
     {
         if (item is null)
             return false;
 
         return string.Equals(item.QualifiedItemId, ReturnScepterQualifiedItemId, StringComparison.OrdinalIgnoreCase)
-            || string.Equals(item.ItemId, "ReturnScepter", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(item.Name, "Return Scepter", StringComparison.OrdinalIgnoreCase);
+            || string.Equals(item.ItemId, "ReturnScepter", StringComparison.OrdinalIgnoreCase);
     }
 
 }

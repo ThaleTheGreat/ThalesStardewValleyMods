@@ -1,7 +1,7 @@
 {
   "Name": "Wallet Scepter",
   "Author": "ThaleTheGreat",
-  "Version": "1.1.0",
+  "Version": "1.2.0",
   "Description": "Puts the Return Scepter into the Wallet",
   "UniqueID": "ThaleTheGreat.WalletScepter",
   "EntryDll": "WalletScepter.dll",
@@ -16,6 +16,10 @@
     },
     {
       "UniqueID": "spacechase0.GenericModConfigMenu",
+      "IsRequired": false
+    },
+    {
+      "UniqueID": "Spiderbuttons.SpecialPowerUtilities",
       "IsRequired": false
     }
   ]

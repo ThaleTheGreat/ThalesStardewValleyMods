@@ -13,4 +13,5 @@ internal sealed class ModConfig
     public bool RequireWalletUnlock { get; set; } = true;
 
     public bool ShowHudMessageWhenMissing { get; set; } = true;
+
 }
