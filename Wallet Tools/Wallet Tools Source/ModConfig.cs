@@ -6,6 +6,13 @@ namespace ThaleTheGreat.WalletTools;
 internal sealed class ModConfig
 {
     public bool ModEnabled { get; set; } = true;
+    public bool AxeEnabled { get; set; } = true;
+    public bool PickaxeEnabled { get; set; } = true;
+    public bool HoeEnabled { get; set; } = true;
+    public bool WateringCanEnabled { get; set; } = true;
+    public bool PanEnabled { get; set; } = true;
+    public bool MilkPailEnabled { get; set; } = true;
+    public bool ShearsEnabled { get; set; } = true;
 
     public KeybindList UseAxeHotkey { get; set; } = new(new Keybind(SButton.LeftControl, SButton.D1));
     public KeybindList UsePickaxeHotkey { get; set; } = new(new Keybind(SButton.LeftControl, SButton.D2));

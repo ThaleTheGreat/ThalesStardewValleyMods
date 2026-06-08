@@ -1,7 +1,7 @@
 {
   "Name": "Wallet Tools",
   "Author": "ThaleTheGreat",
-  "Version": "1.5.1",
+  "Version": "1.7.0",
   "Description": "Puts your main tools into the Wallet",
   "UniqueID": "ThaleTheGreat.WalletTools",
   "EntryDll": "WalletTools.dll",
