@@ -1,0 +1,18 @@
+{
+  "Name": "Clear Build Sites",
+  "Author": "ThaleTheGreat",
+  "Version": "1.0.0",
+  "Description": "Lets building placement clear the selected build site.",
+  "UniqueID": "ThaleTheGreat.ClearBuildSites",
+  "EntryDll": "ClearBuildSites.dll",
+  "MinimumApiVersion": "4.0.0",
+  "UpdateKeys": [
+    "Nexus:47329"
+  ],
+  "Dependencies": [
+    {
+      "UniqueID": "spacechase0.GenericModConfigMenu",
+      "IsRequired": false
+    }
+  ]
+}
