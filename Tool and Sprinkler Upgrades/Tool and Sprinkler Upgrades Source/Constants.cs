@@ -17,16 +17,17 @@ internal static class Constants
     public const int PrismaticSprinklerSpriteIndex = 505;
     public const int RadioactiveSprinklerSpriteIndex = 504;
 
-
     public const int AxeSpriteIndex = 245;
     public const int PickaxeSpriteIndex = 161;
     public const int HoeSpriteIndex = 77;
-    public const int WateringCanSpriteIndex = 329;
+    public const int WateringCanSpriteIndex = 352;
+    public const int PanSpriteIndex = 20;
 
     public const int AxeMenuSpriteIndex = 271;
     public const int PickaxeMenuSpriteIndex = 187;
     public const int HoeMenuSpriteIndex = 103;
-    public const int WateringCanMenuSpriteIndex = 354;
+    public const int WateringCanMenuSpriteIndex = 352;
+    public const int PanMenuSpriteIndex = 20;
 
     public const string CobaltBarId = "ThaleTheGreat.ToolAndSprinklerUpgrades_CobaltBar";
     public const string CobaltSprinklerId = "ThaleTheGreat.ToolAndSprinklerUpgrades_CobaltSprinkler";
@@ -51,4 +52,21 @@ internal static class Constants
     public const string RadioactivePickaxeId = "ThaleTheGreat.ToolAndSprinklerUpgrades_RadioactivePickaxe";
     public const string RadioactiveHoeId = "ThaleTheGreat.ToolAndSprinklerUpgrades_RadioactiveHoe";
     public const string RadioactiveWateringCanId = "ThaleTheGreat.ToolAndSprinklerUpgrades_RadioactiveWateringCan";
+
+    public const string CobaltPanId = "ThaleTheGreat.ToolAndSprinklerUpgrades_CobaltPan";
+    public const string PrismaticPanId = "ThaleTheGreat.ToolAndSprinklerUpgrades_PrismaticPan";
+    public const string RadioactivePanId = "ThaleTheGreat.ToolAndSprinklerUpgrades_RadioactivePan";
+
+    public const string CobaltFishingRodId = "ThaleTheGreat.ToolAndSprinklerUpgrades_CobaltFishingRod";
+    public const string PrismaticFishingRodId = "ThaleTheGreat.ToolAndSprinklerUpgrades_PrismaticFishingRod";
+    public const string RadioactiveFishingRodId = "ThaleTheGreat.ToolAndSprinklerUpgrades_RadioactiveFishingRod";
+
+    public const string IridiumRodId = "IridiumRod";
+    public const string AdvancedIridiumRodId = "AdvancedIridiumRod";
+    public const string FishingMasteryMailId = "Mastery_Fishing";
+    public const string FishingMasteryAlternateMailId = "fishingMastery";
+    public const string IridiumRodPurchasedMailId = "ThaleTheGreat.ToolAndSprinklerUpgrades_IridiumRodPurchased";
+    public const string CobaltFishingRodPurchasedMailId = "ThaleTheGreat.ToolAndSprinklerUpgrades_CobaltFishingRodPurchased";
+    public const string PrismaticFishingRodPurchasedMailId = "ThaleTheGreat.ToolAndSprinklerUpgrades_PrismaticFishingRodPurchased";
+    public const string RadioactiveFishingRodPurchasedMailId = "ThaleTheGreat.ToolAndSprinklerUpgrades_RadioactiveFishingRodPurchased";
 }

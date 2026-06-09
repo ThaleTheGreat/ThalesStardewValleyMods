@@ -196,6 +196,21 @@ internal static class RadioactivePickaxeOneHitPatch
 }
 
 
+[HarmonyPatch(typeof(Farmer), "get_FishingLevel")]
+internal static class FishingRodLevelBonusPatch
+{
+    public static void Postfix(Farmer __instance, ref int __result)
+    {
+        if (__instance.CurrentTool is not FishingRod rod)
+            return;
+
+        int bonus = ToolTierUtility.GetFishingRodLevelBonus(rod.UpgradeLevel);
+        if (bonus > 0)
+            __result += bonus;
+    }
+}
+
+
 internal static class CustomSprinklerRecognitionPatch
 {
     public static void AfterIsSprinkler(SObject __instance, ref bool __result)

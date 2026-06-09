@@ -3134,13 +3134,6 @@ internal sealed class WalletToolState
 
     public string GetTexturePath()
     {
-        if (Kind == WalletToolKind.Pan)
-        {
-            string panTexturePath = GetTexturePathForQualifiedItemId(GetDefaultPanQualifiedItemId(UpgradeLevel));
-            if (!string.IsNullOrWhiteSpace(panTexturePath))
-                return panTexturePath;
-        }
-
         Tool? tool = CreateTool(null);
         if (tool is not null)
         {
@@ -3149,23 +3142,39 @@ internal sealed class WalletToolState
                 return currentTexturePath;
         }
 
-        return string.IsNullOrWhiteSpace(TexturePath) ? "TileSheets/tools" : TexturePath;
+        if (!string.IsNullOrWhiteSpace(TexturePath))
+            return TexturePath;
+
+        if (Kind == WalletToolKind.Pan && IsBasicPanItemId(QualifiedItemId))
+        {
+            string panTexturePath = GetTexturePathForQualifiedItemId(GetDefaultPanQualifiedItemId(UpgradeLevel));
+            if (!string.IsNullOrWhiteSpace(panTexturePath))
+                return panTexturePath;
+        }
+
+        return "TileSheets/tools";
     }
 
     public Point GetTexturePosition()
     {
-        if (Kind == WalletToolKind.Pan)
+        if (Kind == WalletToolKind.Pan && IsToolAndSprinklerPanIdentity(QualifiedItemId, Name, DisplayName))
+            return GetTexturePositionFromMenuIndex(GetToolAndSprinklerPanMenuSpriteIndex());
+
+        Tool? tool = CreateTool(null);
+        if (tool is not null && IsToolAndSprinklerPanTool(tool))
+            return GetTexturePositionFromMenuIndex(GetToolAndSprinklerPanMenuSpriteIndex());
+
+        int menuSpriteIndex = tool is not null ? GetToolMenuSpriteIndex(tool) : MenuSpriteIndex;
+
+        if (menuSpriteIndex >= 0)
+            return GetTexturePositionFromMenuIndex(menuSpriteIndex);
+
+        if (Kind == WalletToolKind.Pan && IsBasicPanItemId(QualifiedItemId))
         {
             int panSpriteIndex = GetMenuSpriteIndexForQualifiedItemId(GetDefaultPanQualifiedItemId(UpgradeLevel));
             if (panSpriteIndex >= 0)
                 return GetTexturePositionFromMenuIndex(panSpriteIndex);
         }
-
-        Tool? tool = CreateTool(null);
-        int menuSpriteIndex = tool is not null ? GetToolMenuSpriteIndex(tool) : MenuSpriteIndex;
-
-        if (menuSpriteIndex >= 0)
-            return GetTexturePositionFromMenuIndex(menuSpriteIndex);
 
         return GetFallbackTexturePosition(Kind, UpgradeLevel);
     }
@@ -3244,12 +3253,13 @@ internal sealed class WalletToolState
     {
         string itemId = string.IsNullOrWhiteSpace(QualifiedItemId) ? GetDefaultQualifiedItemId(Kind) : QualifiedItemId;
         string primaryItemId = itemId;
+
         if (Kind == WalletToolKind.Pan && IsBasicPanItemId(itemId) && UpgradeLevel > 0)
             primaryItemId = GetDefaultPanQualifiedItemId(UpgradeLevel);
 
         yield return primaryItemId;
 
-        if (Kind == WalletToolKind.Pan)
+        if (Kind == WalletToolKind.Pan && IsVanillaPanItemId(primaryItemId))
         {
             string levelItemId = GetDefaultPanQualifiedItemId(UpgradeLevel);
             if (!levelItemId.Equals(primaryItemId, StringComparison.OrdinalIgnoreCase))
@@ -3348,9 +3358,37 @@ internal sealed class WalletToolState
         return 0;
     }
 
+    private static bool IsToolAndSprinklerPanTool(Tool tool)
+    {
+        return IsToolAndSprinklerPanIdentity(tool.ItemId, tool.QualifiedItemId, tool.Name, tool.DisplayName);
+    }
+
+    private static bool IsToolAndSprinklerPanIdentity(params string[] values)
+    {
+        return values.Any(value =>
+            !string.IsNullOrWhiteSpace(value)
+            && (value.Contains("ToolAndSprinklerUpgrades_CobaltPan", StringComparison.OrdinalIgnoreCase)
+                || value.Contains("ToolAndSprinklerUpgrades_PrismaticPan", StringComparison.OrdinalIgnoreCase)
+                || value.Contains("ToolAndSprinklerUpgrades_RadioactivePan", StringComparison.OrdinalIgnoreCase)
+                || value.Equals("Cobalt Pan", StringComparison.OrdinalIgnoreCase)
+                || value.Equals("Prismatic Pan", StringComparison.OrdinalIgnoreCase)
+                || value.Equals("Radioactive Pan", StringComparison.OrdinalIgnoreCase)));
+    }
+
+    private static int GetToolAndSprinklerPanMenuSpriteIndex()
+    {
+        return 20;
+    }
+
     private static int GetPanUpgradeLevel(Tool tool)
     {
         string text = string.Join("\n", tool.ItemId, tool.QualifiedItemId, tool.Name, tool.DisplayName);
+        if (text.Contains("ToolAndSprinklerUpgrades_RadioactivePan", StringComparison.OrdinalIgnoreCase) || text.Contains("Radioactive Pan", StringComparison.OrdinalIgnoreCase))
+            return 7;
+        if (text.Contains("ToolAndSprinklerUpgrades_PrismaticPan", StringComparison.OrdinalIgnoreCase) || text.Contains("Prismatic Pan", StringComparison.OrdinalIgnoreCase))
+            return 6;
+        if (text.Contains("ToolAndSprinklerUpgrades_CobaltPan", StringComparison.OrdinalIgnoreCase) || text.Contains("Cobalt Pan", StringComparison.OrdinalIgnoreCase))
+            return 5;
         if (text.Contains("IridiumPan", StringComparison.OrdinalIgnoreCase) || text.Contains("Iridium Pan", StringComparison.OrdinalIgnoreCase))
             return 3;
         if (text.Contains("GoldPan", StringComparison.OrdinalIgnoreCase) || text.Contains("Gold Pan", StringComparison.OrdinalIgnoreCase))
@@ -3370,6 +3408,19 @@ internal sealed class WalletToolState
             || normalized.Equals("(T)Pan", StringComparison.OrdinalIgnoreCase);
     }
 
+    private static bool IsVanillaPanItemId(string itemId)
+    {
+        string normalized = itemId.Trim();
+        if (normalized.StartsWith("(T)", StringComparison.OrdinalIgnoreCase))
+            normalized = normalized[3..];
+
+        return normalized.Equals("Pan", StringComparison.OrdinalIgnoreCase)
+            || normalized.Equals("CopperPan", StringComparison.OrdinalIgnoreCase)
+            || normalized.Equals("SteelPan", StringComparison.OrdinalIgnoreCase)
+            || normalized.Equals("GoldPan", StringComparison.OrdinalIgnoreCase)
+            || normalized.Equals("IridiumPan", StringComparison.OrdinalIgnoreCase);
+    }
+
     private static string GetDefaultPanQualifiedItemId(int upgradeLevel)
     {
         return Math.Max(0, Math.Min(upgradeLevel, 3)) switch
@@ -3383,13 +3434,23 @@ internal sealed class WalletToolState
 
     private static int GetToolMenuSpriteIndex(Tool tool)
     {
+        if (IsToolAndSprinklerPanTool(tool))
+            return GetToolAndSprinklerPanMenuSpriteIndex();
+
+        object? data = GetParsedItemData(tool);
+        int? dataMenuIndex = GetOptionalIntMemberFromObject(data, "MenuSpriteIndex", "menuSpriteIndex", "IndexOfMenuItemView", "indexOfMenuItemView");
+        if (dataMenuIndex.HasValue && dataMenuIndex.Value >= 0)
+            return dataMenuIndex.Value;
+
+        int? dataSpriteIndex = GetOptionalIntMemberFromObject(data, "SpriteIndex", "spriteIndex");
+        if (dataSpriteIndex.HasValue && dataSpriteIndex.Value >= 0)
+            return dataSpriteIndex.Value;
+
         int? directIndex = GetOptionalIntMember(tool, "IndexOfMenuItemView", "indexOfMenuItemView", "currentParentTileIndex", "CurrentParentTileIndex");
         if (directIndex.HasValue && directIndex.Value >= 0)
             return directIndex.Value;
 
-        object? data = GetParsedItemData(tool);
-        int? dataIndex = GetOptionalIntMemberFromObject(data, "SpriteIndex", "spriteIndex");
-        return dataIndex ?? -1;
+        return -1;
     }
 
     private static string GetToolTexturePath(Tool tool)
@@ -3402,8 +3463,12 @@ internal sealed class WalletToolState
     private static int GetMenuSpriteIndexForQualifiedItemId(string qualifiedItemId)
     {
         object? data = GetParsedItemData(qualifiedItemId);
-        int? dataIndex = GetOptionalIntMemberFromObject(data, "SpriteIndex", "spriteIndex");
-        return dataIndex ?? -1;
+        int? dataMenuIndex = GetOptionalIntMemberFromObject(data, "MenuSpriteIndex", "menuSpriteIndex", "IndexOfMenuItemView", "indexOfMenuItemView");
+        if (dataMenuIndex.HasValue && dataMenuIndex.Value >= 0)
+            return dataMenuIndex.Value;
+
+        int? dataSpriteIndex = GetOptionalIntMemberFromObject(data, "SpriteIndex", "spriteIndex");
+        return dataSpriteIndex ?? -1;
     }
 
     private static string GetTexturePathForQualifiedItemId(string qualifiedItemId)

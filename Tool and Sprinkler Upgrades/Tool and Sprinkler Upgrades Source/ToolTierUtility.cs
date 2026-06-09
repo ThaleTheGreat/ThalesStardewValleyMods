@@ -33,6 +33,17 @@ internal static class ToolTierUtility
         };
     }
 
+    public static int GetFishingRodLevelBonus(int level)
+    {
+        return level switch
+        {
+            Constants.CobaltLevel => 1,
+            Constants.PrismaticLevel => 2,
+            Constants.RadioactiveLevel => 3,
+            _ => 0
+        };
+    }
+
     public static int GetUpgradeCost(int level)
     {
         return level switch
@@ -89,6 +100,8 @@ internal static class ToolTierUtility
             Axe => tier + " Axe",
             Pickaxe => tier + " Pickaxe",
             Hoe => tier + " Hoe",
+            Pan => tier + " Pan",
+            FishingRod => tier + " Rod",
             _ => tier + " " + tool.BaseName
         };
     }

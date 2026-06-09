@@ -6,6 +6,7 @@ using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
 using StardewValley.GameData.Objects;
+using StardewValley.GameData.Shops;
 using StardewValley.GameData.Tools;
 using StardewValley.TerrainFeatures;
 using StardewValley.Tools;
@@ -154,6 +155,16 @@ public sealed class ModEntry : Mod
             return;
         }
 
+        if (e.NameWithoutLocale.IsEquivalentTo("Data/Shops"))
+        {
+            e.Edit(asset =>
+            {
+                IDictionary<string, ShopData> data = asset.AsDictionary<string, ShopData>().Data;
+                AddWillyFishingRodShopItems(data);
+            });
+            return;
+        }
+
         if (e.NameWithoutLocale.IsEquivalentTo("Data/CraftingRecipes"))
         {
             e.Edit(asset =>
@@ -200,8 +211,111 @@ public sealed class ModEntry : Mod
         AddTool(data, "IridiumPickaxe", Constants.RadioactivePickaxeId, "Radioactive Pickaxe", "Used to break stones.", Constants.RadioactiveLevel, "(T)" + Constants.PrismaticPickaxeId, Constants.VanillaRadioactiveBarId, Constants.RadioactiveTextureAsset, ModEntry.Config.RadioactiveUpgradeCost, ModEntry.Config.RadioactiveBarsRequired);
         AddTool(data, "IridiumHoe", Constants.RadioactiveHoeId, "Radioactive Hoe", "Used to dig and till soil.", Constants.RadioactiveLevel, "(T)" + Constants.PrismaticHoeId, Constants.VanillaRadioactiveBarId, Constants.RadioactiveTextureAsset, ModEntry.Config.RadioactiveUpgradeCost, ModEntry.Config.RadioactiveBarsRequired);
         AddTool(data, "IridiumWateringCan", Constants.RadioactiveWateringCanId, "Radioactive Watering Can", "Used to water crops. It can be refilled at any water source.", Constants.RadioactiveLevel, "(T)" + Constants.PrismaticWateringCanId, Constants.VanillaRadioactiveBarId, Constants.RadioactiveTextureAsset, ModEntry.Config.RadioactiveUpgradeCost, ModEntry.Config.RadioactiveBarsRequired);
+        AddTool(data, "IridiumPan", Constants.CobaltPanId, "Cobalt Pan", "Use this to gather ore from streams.", Constants.CobaltLevel, "(T)IridiumPan", Constants.CobaltBarId, Constants.CobaltTextureAsset, ModEntry.Config.CobaltUpgradeCost, ModEntry.Config.CobaltBarsRequired);
+        AddTool(data, "IridiumPan", Constants.PrismaticPanId, "Prismatic Pan", "Use this to gather ore from streams.", Constants.PrismaticLevel, "(T)" + Constants.CobaltPanId, Constants.PrismaticBarId, Constants.PrismaticTextureAsset, ModEntry.Config.PrismaticUpgradeCost, ModEntry.Config.PrismaticBarsRequired);
+        AddTool(data, "IridiumPan", Constants.RadioactivePanId, "Radioactive Pan", "Use this to gather ore from streams.", Constants.RadioactiveLevel, "(T)" + Constants.PrismaticPanId, Constants.VanillaRadioactiveBarId, Constants.RadioactiveTextureAsset, ModEntry.Config.RadioactiveUpgradeCost, ModEntry.Config.RadioactiveBarsRequired);
+
+        AddShopTool(data, Constants.AdvancedIridiumRodId, Constants.CobaltFishingRodId, "Cobalt Rod", "Use in the water to catch fish.", Constants.CobaltLevel, Constants.CobaltTextureAsset);
+        AddShopTool(data, Constants.AdvancedIridiumRodId, Constants.PrismaticFishingRodId, "Prismatic Rod", "Use in the water to catch fish.", Constants.PrismaticLevel, Constants.PrismaticTextureAsset);
+        AddShopTool(data, Constants.AdvancedIridiumRodId, Constants.RadioactiveFishingRodId, "Radioactive Rod", "Use in the water to catch fish.", Constants.RadioactiveLevel, Constants.RadioactiveTextureAsset);
     }
 
+
+    private static void AddWillyFishingRodShopItems(IDictionary<string, ShopData> shops)
+    {
+        if (!shops.TryGetValue("FishShop", out ShopData? fishShop))
+            return;
+
+        fishShop.Items ??= new List<ShopItemData>();
+        AddPurchaseMailAction(fishShop.Items, Constants.IridiumRodId, Constants.IridiumRodPurchasedMailId);
+        AddPurchaseMailAction(fishShop.Items, Constants.AdvancedIridiumRodId, Constants.IridiumRodPurchasedMailId);
+
+        string masteryCondition = GetVanillaAdvancedIridiumRodCondition(fishShop.Items);
+        AddFishingRodShopItem(fishShop.Items, Constants.CobaltFishingRodId, ModEntry.Config.CobaltUpgradeCost, GetCobaltFishingRodCondition(masteryCondition), Constants.CobaltFishingRodPurchasedMailId);
+        AddFishingRodShopItem(fishShop.Items, Constants.PrismaticFishingRodId, ModEntry.Config.PrismaticUpgradeCost, GetPrismaticFishingRodCondition(masteryCondition), Constants.PrismaticFishingRodPurchasedMailId);
+        AddFishingRodShopItem(fishShop.Items, Constants.RadioactiveFishingRodId, ModEntry.Config.RadioactiveUpgradeCost, GetRadioactiveFishingRodCondition(masteryCondition), Constants.RadioactiveFishingRodPurchasedMailId);
+    }
+
+    private static void AddPurchaseMailAction(List<ShopItemData> items, string itemId, string purchaseMailId)
+    {
+        ShopItemData? item = items.FirstOrDefault(entry => entry.ItemId == "(T)" + itemId);
+        if (item == null)
+            return;
+
+        item.ActionsOnPurchase ??= new List<string>();
+        string action = "AddMail Current " + purchaseMailId + " received";
+        if (!item.ActionsOnPurchase.Contains(action))
+            item.ActionsOnPurchase.Add(action);
+    }
+
+    private static void AddFishingRodShopItem(List<ShopItemData> items, string itemId, int price, string condition, string purchaseMailId)
+    {
+        if (items.Any(item => item.Id == itemId))
+            return;
+
+        items.Add(new ShopItemData
+        {
+            Id = itemId,
+            ItemId = "(T)" + itemId,
+            Price = price,
+            Condition = condition,
+            ActionsOnPurchase = new List<string>
+            {
+                "AddMail Current " + purchaseMailId + " received"
+            }
+        });
+    }
+
+    private static string GetVanillaAdvancedIridiumRodCondition(List<ShopItemData> items)
+    {
+        string? condition = items.FirstOrDefault(item => item.ItemId == "(T)" + Constants.AdvancedIridiumRodId)?.Condition;
+        if (!string.IsNullOrWhiteSpace(condition))
+            return condition;
+
+        return "ANY \"PLAYER_HAS_MAIL Current " + Constants.FishingMasteryMailId + " Received\" \"PLAYER_HAS_MAIL Current " + Constants.FishingMasteryAlternateMailId + " Received\"";
+    }
+
+    private static string GetCobaltFishingRodCondition(string masteryCondition)
+    {
+        return masteryCondition + ", PLAYER_HAS_MAIL Current " + Constants.IridiumRodPurchasedMailId + " Received, PLAYER_HAS_CRAFTING_RECIPE Current Cobalt Bar";
+    }
+
+    private static string GetPrismaticFishingRodCondition(string masteryCondition)
+    {
+        return masteryCondition + ", PLAYER_HAS_MAIL Current " + Constants.CobaltFishingRodPurchasedMailId + " Received, PLAYER_HAS_CRAFTING_RECIPE Current Prismatic Bar";
+    }
+
+    private static string GetRadioactiveFishingRodCondition(string masteryCondition)
+    {
+        return masteryCondition + ", PLAYER_HAS_MAIL Current " + Constants.PrismaticFishingRodPurchasedMailId + " Received, PLAYER_HAS_ITEM Current (O)" + Constants.VanillaRadioactiveBarId;
+    }
+
+    private static void AddShopTool(IDictionary<string, ToolData> data, string templateId, string id, string name, string description, int level, string textureAsset)
+    {
+        if (!data.TryGetValue(templateId, out ToolData? template))
+            return;
+
+        data[id] = new ToolData
+        {
+            ClassName = template.ClassName,
+            Name = name,
+            DisplayName = name,
+            Description = description,
+            Texture = textureAsset,
+            SpriteIndex = template.SpriteIndex,
+            MenuSpriteIndex = template.MenuSpriteIndex,
+            AttachmentSlots = template.AttachmentSlots,
+            SalePrice = template.SalePrice,
+            UpgradeLevel = level,
+            CanBeLostOnDeath = template.CanBeLostOnDeath,
+            SetProperties = template.SetProperties,
+            ModData = new Dictionary<string, string>
+            {
+                [Constants.ModId + "/Tier"] = ToolTierUtility.GetTierName(level),
+                [Constants.ModId + "/UpgradeLevel"] = level.ToString()
+            }
+        };
+    }
 
     private static int GetWorldSpriteIndexForToolId(string id, ToolData template)
     {
@@ -213,6 +327,8 @@ public sealed class ModEntry : Mod
             return Constants.HoeSpriteIndex;
         if (id.EndsWith("WateringCan", StringComparison.Ordinal))
             return Constants.WateringCanSpriteIndex;
+        if (id.EndsWith("Pan", StringComparison.Ordinal))
+            return Constants.PanSpriteIndex;
 
         return template.SpriteIndex;
     }
@@ -227,6 +343,8 @@ public sealed class ModEntry : Mod
             return Constants.HoeMenuSpriteIndex;
         if (id.EndsWith("WateringCan", StringComparison.Ordinal))
             return Constants.WateringCanMenuSpriteIndex;
+        if (id.EndsWith("Pan", StringComparison.Ordinal))
+            return Constants.PanMenuSpriteIndex;
 
         return template.MenuSpriteIndex;
     }
@@ -270,11 +388,13 @@ public sealed class ModEntry : Mod
 
     private void OnSaveLoaded(object? sender, SaveLoadedEventArgs e)
     {
+        MarkKnownRodPurchases();
         UnlockKnownRecipes();
     }
 
     private void OnDayStarted(object? sender, DayStartedEventArgs e)
     {
+        MarkKnownRodPurchases();
         UnlockKnownRecipes();
         foreach (GameLocation location in Game1.locations)
         {
@@ -392,6 +512,20 @@ public sealed class ModEntry : Mod
 
         dirt.fertilizer.Value = fertilizer.ItemId;
         return true;
+    }
+
+
+    private static void MarkKnownRodPurchases()
+    {
+        Farmer player = Game1.player;
+        if (HasItem(player, Constants.IridiumRodId) || HasItem(player, Constants.AdvancedIridiumRodId))
+            player.mailReceived.Add(Constants.IridiumRodPurchasedMailId);
+        if (HasItem(player, Constants.CobaltFishingRodId))
+            player.mailReceived.Add(Constants.CobaltFishingRodPurchasedMailId);
+        if (HasItem(player, Constants.PrismaticFishingRodId))
+            player.mailReceived.Add(Constants.PrismaticFishingRodPurchasedMailId);
+        if (HasItem(player, Constants.RadioactiveFishingRodId))
+            player.mailReceived.Add(Constants.RadioactiveFishingRodPurchasedMailId);
     }
 
     private static void UnlockKnownRecipes()
