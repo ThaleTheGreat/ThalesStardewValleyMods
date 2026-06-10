@@ -43,9 +43,11 @@ public sealed class ModEntry : Mod
     private ModConfig Config = new();
     private readonly Dictionary<WalletToolKind, WalletToolState> StoredTools = new();
     private TemporaryToolUse? PendingToolUse;
+    private SButton? PendingManualUseHotkey;
     private Harmony Harmony = null!;
     private bool SuppressInventoryConversion;
     private bool PendingInventoryConversion;
+    private bool MayHaveMenuVirtualToolsInInventory;
     private bool GmcmRegistered;
     private IGenericModConfigMenuApi? GmcmApi;
     private IMobilePhoneApi? MobilePhoneApi;
@@ -76,12 +78,12 @@ public sealed class ModEntry : Mod
         helper.Events.GameLoop.UpdateTicked += OnUpdateTicked;
         helper.Events.Player.InventoryChanged += OnInventoryChanged;
         helper.Events.Input.ButtonPressed += OnButtonPressed;
+        helper.Events.Input.ButtonReleased += OnButtonReleased;
 
         Harmony = new Harmony(ModManifest.UniqueID);
         Harmony.PatchAll(Assembly.GetExecutingAssembly());
         PatchBlacksmithToolUpgradeFlow();
     }
-
 
 
     public override object GetApi()
@@ -365,13 +367,24 @@ public sealed class ModEntry : Mod
             GmcmApi.Register(ModManifest, reset: () => { Config = new ModConfig(); ApplyConfigVisibilityState(); }, save: () => { ApplyConfigVisibilityState(); Helper.WriteConfig(Config); });
 
             AddBool(GmcmApi, nameof(Config.ModEnabled), () => Config.ModEnabled, SetModEnabled, "Mod Enabled", "Enables or disables Wallet Tools.");
-            AddBool(GmcmApi, nameof(Config.AxeEnabled), () => Config.AxeEnabled, value => SetToolEnabled(WalletToolKind.Axe, value), "Axe Enabled", "Store and use the axe from the wallet.");
-            AddBool(GmcmApi, nameof(Config.PickaxeEnabled), () => Config.PickaxeEnabled, value => SetToolEnabled(WalletToolKind.Pickaxe, value), "Pickaxe Enabled", "Store and use the pickaxe from the wallet.");
-            AddBool(GmcmApi, nameof(Config.HoeEnabled), () => Config.HoeEnabled, value => SetToolEnabled(WalletToolKind.Hoe, value), "Hoe Enabled", "Store and use the hoe from the wallet.");
-            AddBool(GmcmApi, nameof(Config.WateringCanEnabled), () => Config.WateringCanEnabled, value => SetToolEnabled(WalletToolKind.WateringCan, value), "Watering Can Enabled", "Store and use the watering can from the wallet.");
-            AddBool(GmcmApi, nameof(Config.PanEnabled), () => Config.PanEnabled, value => SetToolEnabled(WalletToolKind.Pan, value), "Pan Enabled", "Store and use the pan from the wallet.");
-            AddBool(GmcmApi, nameof(Config.MilkPailEnabled), () => Config.MilkPailEnabled, value => SetToolEnabled(WalletToolKind.MilkPail, value), "Milk Pail Enabled", "Store and use the milk pail from the wallet.");
-            AddBool(GmcmApi, nameof(Config.ShearsEnabled), () => Config.ShearsEnabled, value => SetToolEnabled(WalletToolKind.Shears, value), "Shears Enabled", "Store and use the shears from the wallet.");
+            AddBool(GmcmApi, nameof(Config.PlayToolSwapSound), () => Config.PlayToolSwapSound, value => Config.PlayToolSwapSound = value, "Play Tool Swap Sound", "Play the Wallet Tools tool swap sound when a wallet tool is readied for use.");
+            AddBool(GmcmApi, nameof(Config.AxeEnabled), () => Config.AxeEnabled, value => SetToolEnabled(WalletToolKind.Axe, value), "Wallet Axe", "Store and use the axe from the wallet.");
+            AddBool(GmcmApi, nameof(Config.PickaxeEnabled), () => Config.PickaxeEnabled, value => SetToolEnabled(WalletToolKind.Pickaxe, value), "Wallet Pickaxe", "Store and use the pickaxe from the wallet.");
+            AddBool(GmcmApi, nameof(Config.HoeEnabled), () => Config.HoeEnabled, value => SetToolEnabled(WalletToolKind.Hoe, value), "Wallet Hoe", "Store and use the hoe from the wallet.");
+            AddBool(GmcmApi, nameof(Config.WateringCanEnabled), () => Config.WateringCanEnabled, value => SetToolEnabled(WalletToolKind.WateringCan, value), "Wallet Watering Can", "Store and use the watering can from the wallet.");
+            AddBool(GmcmApi, nameof(Config.PanEnabled), () => Config.PanEnabled, value => SetToolEnabled(WalletToolKind.Pan, value), "Wallet Pan", "Store and use the pan from the wallet.");
+            AddBool(GmcmApi, nameof(Config.MilkPailEnabled), () => Config.MilkPailEnabled, value => SetToolEnabled(WalletToolKind.MilkPail, value), "Wallet Milk Pail", "Store and use the milk pail from the wallet.");
+            AddBool(GmcmApi, nameof(Config.ShearsEnabled), () => Config.ShearsEnabled, value => SetToolEnabled(WalletToolKind.Shears, value), "Wallet Shears", "Store and use the shears from the wallet.");
+
+            AddBool(GmcmApi, nameof(Config.AutoUseEnabled), () => Config.AutoUseEnabled, value => SetAutoUseMasterEnabled(value, showMessage: false), "Auto Use Enabled", "Master toggle for automatic Wallet Tools logic. Manual wallet hotkeys still work.");
+            AddKeybind(GmcmApi, nameof(Config.ToggleAutoUseHotkey), () => Config.ToggleAutoUseHotkey, value => Config.ToggleAutoUseHotkey = value, "Toggle Auto Use", "Hotkey to toggle automatic Wallet Tools logic on or off.");
+            AddBool(GmcmApi, nameof(Config.AxeAutoUseEnabled), () => Config.AxeAutoUseEnabled, value => SetToolAutoUseEnabled(WalletToolKind.Axe, value), "Auto Axe", "Allows automatic axe supply. Manual axe hotkey still works when this is off.");
+            AddBool(GmcmApi, nameof(Config.PickaxeAutoUseEnabled), () => Config.PickaxeAutoUseEnabled, value => SetToolAutoUseEnabled(WalletToolKind.Pickaxe, value), "Auto Pickaxe", "Allows automatic pickaxe supply. Manual pickaxe hotkey still works when this is off.");
+            AddBool(GmcmApi, nameof(Config.HoeAutoUseEnabled), () => Config.HoeAutoUseEnabled, value => SetToolAutoUseEnabled(WalletToolKind.Hoe, value), "Auto Hoe", "Allows automatic hoe supply. Manual hoe hotkey still works when this is off.");
+            AddBool(GmcmApi, nameof(Config.WateringCanAutoUseEnabled), () => Config.WateringCanAutoUseEnabled, value => SetToolAutoUseEnabled(WalletToolKind.WateringCan, value), "Auto Watering Can", "Allows automatic watering can supply. Manual watering can hotkey still works when this is off.");
+            AddBool(GmcmApi, nameof(Config.PanAutoUseEnabled), () => Config.PanAutoUseEnabled, value => SetToolAutoUseEnabled(WalletToolKind.Pan, value), "Auto Pan", "Allows automatic pan supply. Manual pan hotkey still works when this is off.");
+            AddBool(GmcmApi, nameof(Config.MilkPailAutoUseEnabled), () => Config.MilkPailAutoUseEnabled, value => SetToolAutoUseEnabled(WalletToolKind.MilkPail, value), "Auto Milk Pail", "Allows automatic milk pail supply. Manual milk pail hotkey still works when this is off.");
+            AddBool(GmcmApi, nameof(Config.ShearsAutoUseEnabled), () => Config.ShearsAutoUseEnabled, value => SetToolAutoUseEnabled(WalletToolKind.Shears, value), "Auto Shears", "Allows automatic shears supply. Manual shears hotkey still works when this is off.");
 
             AddKeybind(GmcmApi, nameof(Config.UseAxeHotkey), () => Config.UseAxeHotkey, value => Config.UseAxeHotkey = value, "Use Axe", "Immediately use the wallet axe.");
             AddKeybind(GmcmApi, nameof(Config.UsePickaxeHotkey), () => Config.UsePickaxeHotkey, value => Config.UsePickaxeHotkey = value, "Use Pickaxe", "Immediately use the wallet pickaxe.");
@@ -380,9 +393,6 @@ public sealed class ModEntry : Mod
             AddKeybind(GmcmApi, nameof(Config.UsePanHotkey), () => Config.UsePanHotkey, value => Config.UsePanHotkey = value, "Use Pan", "Immediately use the wallet pan.");
             AddKeybind(GmcmApi, nameof(Config.UseMilkPailHotkey), () => Config.UseMilkPailHotkey, value => Config.UseMilkPailHotkey = value, "Use Milk Pail", "Immediately use the wallet milk pail.");
             AddKeybind(GmcmApi, nameof(Config.UseShearsHotkey), () => Config.UseShearsHotkey, value => Config.UseShearsHotkey = value, "Use Shears", "Immediately use the wallet shears.");
-
-
-
 
 
             GmcmRegistered = true;
@@ -502,7 +512,7 @@ public sealed class ModEntry : Mod
 
         if (tool is null || WalletToolState.IsErrorTool(tool))
         {
-            SaveStoredTools();
+            RefreshWalletStateAfterStoredToolChange();
             return false;
         }
 
@@ -517,7 +527,7 @@ public sealed class ModEntry : Mod
             SuppressInventoryConversion = false;
         }
 
-        SaveStoredTools();
+        RefreshWalletStateAfterStoredToolChange();
         return true;
     }
 
@@ -560,6 +570,88 @@ public sealed class ModEntry : Mod
                 break;
             case WalletToolKind.Shears:
                 Config.ShearsEnabled = enabled;
+                break;
+        }
+    }
+
+    private void SetAutoUseMasterEnabled(bool enabled, bool showMessage)
+    {
+        if (Config.AutoUseEnabled == enabled)
+            return;
+
+        Config.AutoUseEnabled = enabled;
+        ToolSmartSwitchToolCache.Clear();
+
+        if (Context.IsWorldReady)
+        {
+            if (!enabled && PendingToolUse is not null)
+                RestoreTemporaryTool(Game1.player);
+
+            if (showMessage)
+                Game1.addHUDMessage(new HUDMessage(enabled ? "Wallet Tools auto use enabled." : "Wallet Tools auto use disabled.", HUDMessage.newQuest_type));
+        }
+
+        Helper.WriteConfig(Config);
+    }
+
+    private bool IsAutoUseEnabled(WalletToolKind kind)
+    {
+        return IsWalletEnabled(kind) && Config.AutoUseEnabled && GetToolAutoUseEnabled(kind);
+    }
+
+    private bool GetToolAutoUseEnabled(WalletToolKind kind)
+    {
+        return kind switch
+        {
+            WalletToolKind.Axe => Config.AxeAutoUseEnabled,
+            WalletToolKind.Pickaxe => Config.PickaxeAutoUseEnabled,
+            WalletToolKind.Hoe => Config.HoeAutoUseEnabled,
+            WalletToolKind.WateringCan => Config.WateringCanAutoUseEnabled,
+            WalletToolKind.Pan => Config.PanAutoUseEnabled,
+            WalletToolKind.MilkPail => Config.MilkPailAutoUseEnabled,
+            WalletToolKind.Shears => Config.ShearsAutoUseEnabled,
+            _ => false
+        };
+    }
+
+    private void SetToolAutoUseEnabled(WalletToolKind kind, bool enabled)
+    {
+        if (GetToolAutoUseEnabled(kind) == enabled)
+            return;
+
+        SetToolAutoUseEnabledValue(kind, enabled);
+        ToolSmartSwitchToolCache.Remove(kind);
+
+        if (Context.IsWorldReady && !enabled && PendingToolUse?.Kind == kind)
+            RestoreTemporaryTool(Game1.player);
+
+        Helper.WriteConfig(Config);
+    }
+
+    private void SetToolAutoUseEnabledValue(WalletToolKind kind, bool enabled)
+    {
+        switch (kind)
+        {
+            case WalletToolKind.Axe:
+                Config.AxeAutoUseEnabled = enabled;
+                break;
+            case WalletToolKind.Pickaxe:
+                Config.PickaxeAutoUseEnabled = enabled;
+                break;
+            case WalletToolKind.Hoe:
+                Config.HoeAutoUseEnabled = enabled;
+                break;
+            case WalletToolKind.WateringCan:
+                Config.WateringCanAutoUseEnabled = enabled;
+                break;
+            case WalletToolKind.Pan:
+                Config.PanAutoUseEnabled = enabled;
+                break;
+            case WalletToolKind.MilkPail:
+                Config.MilkPailAutoUseEnabled = enabled;
+                break;
+            case WalletToolKind.Shears:
+                Config.ShearsAutoUseEnabled = enabled;
                 break;
         }
     }
@@ -640,7 +732,9 @@ public sealed class ModEntry : Mod
         ToolSmartSwitchToolCache.Clear();
         ActiveBlacksmithExposures.Clear();
         PendingToolUse = null;
+        PendingManualUseHotkey = null;
         PendingInventoryConversion = false;
+        MayHaveMenuVirtualToolsInInventory = false;
         SuppressInventoryConversion = false;
 
         if (invalidatePowers)
@@ -683,21 +777,50 @@ public sealed class ModEntry : Mod
         if (!Context.IsWorldReady)
             return;
 
+        UpdateBlacksmithAndCompatibilityMenus();
+        UpdatePeriodicLostFoundScan(e);
+        UpdatePendingTemporaryToolUse();
+        UpdatePendingInventoryConversion();
+    }
+
+    private void UpdateBlacksmithAndCompatibilityMenus()
+    {
         SyncBlacksmithUpgradeState(Game1.player);
         TrackWalletCompatibilityMenus(Game1.player);
-        CollectMenuVirtualToolsFromInventory(Game1.player, "update tick safety");
 
+        if (MayHaveMenuVirtualToolsInInventory)
+            CollectMenuVirtualToolsFromInventory(Game1.player, "update tick safety");
+    }
+
+    private void UpdatePeriodicLostFoundScan(UpdateTickedEventArgs e)
+    {
         if (Config.ModEnabled && e.IsMultipleOf(300))
             ScanLostFoundForWalletTools("periodic lost and found scan");
+    }
 
-        if (PendingToolUse is not null && !IsPlayerUsingTool(Game1.player))
-            RestoreTemporaryTool(Game1.player);
+    private void UpdatePendingTemporaryToolUse()
+    {
+        if (PendingToolUse is null)
+            return;
 
-        if (PendingInventoryConversion && CanConvertInventoryTools(Game1.player))
+        if (PendingManualUseHotkey.HasValue)
         {
-            PendingInventoryConversion = false;
-            ConvertInventoryTools(Game1.player);
+            if (IsManualWalletToolHotkeyPhysicallyHeld())
+                UpdateManualWalletToolCharge(Game1.player);
+            else
+                FinishManualWalletToolHotkeyUse(Game1.player);
         }
+        else if (!IsPlayerUsingTool(Game1.player))
+            RestoreTemporaryTool(Game1.player);
+    }
+
+    private void UpdatePendingInventoryConversion()
+    {
+        if (!PendingInventoryConversion || !CanConvertInventoryTools(Game1.player))
+            return;
+
+        PendingInventoryConversion = false;
+        ConvertInventoryTools(Game1.player);
     }
 
     private void OnInventoryChanged(object? sender, InventoryChangedEventArgs e)
@@ -720,6 +843,13 @@ public sealed class ModEntry : Mod
         if (!Context.IsWorldReady || !Config.ModEnabled || Game1.fadeToBlack)
             return;
 
+        if (Config.ToggleAutoUseHotkey.JustPressed())
+        {
+            Helper.Input.Suppress(e.Button);
+            SetAutoUseMasterEnabled(!Config.AutoUseEnabled, showMessage: true);
+            return;
+        }
+
         if (Game1.activeClickableMenu is not null)
         {
             if (TryHandleForgeWalletHotkey(e.Button))
@@ -735,7 +865,70 @@ public sealed class ModEntry : Mod
             return;
 
         Helper.Input.Suppress(e.Button);
-        TryUseWalletToolHotkey(Game1.player, requested.Value);
+        TryUseWalletToolHotkey(Game1.player, requested.Value, e.Button);
+    }
+
+    private void OnButtonReleased(object? sender, ButtonReleasedEventArgs e)
+    {
+        if (!Context.IsWorldReady || PendingManualUseHotkey != e.Button)
+            return;
+
+        if (IsManualWalletToolHotkeyPhysicallyHeld())
+            return;
+
+        FinishManualWalletToolHotkeyUse(Game1.player);
+    }
+
+    private void UpdateManualWalletToolCharge(Farmer player)
+    {
+        if (PendingToolUse is null || PendingManualUseHotkey is null || player.CurrentTool is null)
+            return;
+
+        if (Game1.dialogueUp || player.Stamina < 1f)
+            return;
+
+        player.canReleaseTool = true;
+    }
+
+    private void FinishManualWalletToolHotkeyUse(Farmer player)
+    {
+        if (PendingManualUseHotkey is null)
+            return;
+
+        bool vanillaStartedToolUse = player.UsingTool && player.CurrentTool is not null;
+        PendingManualUseHotkey = null;
+
+        if (vanillaStartedToolUse)
+            player.EndUsingTool();
+        else if (PendingToolUse is not null && player.CurrentTool is not null)
+        {
+            Game1.pressUseToolButton();
+            if (player.UsingTool)
+                player.EndUsingTool();
+        }
+
+        if (PendingToolUse is not null && !IsPlayerUsingTool(player))
+            RestoreTemporaryTool(player);
+    }
+
+    private bool IsManualWalletToolHotkeyHeld()
+    {
+        return Context.IsWorldReady
+            && Config.ModEnabled
+            && PendingToolUse is not null
+            && PendingManualUseHotkey.HasValue
+            && IsManualWalletToolHotkeyPhysicallyHeld();
+    }
+
+    private bool IsManualWalletToolHotkeyPhysicallyHeld()
+    {
+        return PendingManualUseHotkey.HasValue
+            && (Helper.Input.IsDown(PendingManualUseHotkey.Value) || Helper.Input.IsSuppressed(PendingManualUseHotkey.Value));
+    }
+
+    private static bool IsUseToolButtonBinding(InputButton[] keys)
+    {
+        return ReferenceEquals(keys, Game1.options?.useToolButton);
     }
 
     private WalletToolKind? GetRequestedHotkeyTool()
@@ -964,6 +1157,7 @@ public sealed class ModEntry : Mod
 
         ClearWalletMarkers(tool);
         MarkMenuVirtualTool(tool, kind, purpose);
+        MayHaveMenuVirtualToolsInInventory = true;
         return tool;
     }
 
@@ -1084,7 +1278,7 @@ public sealed class ModEntry : Mod
             return;
 
         StoredTools.Remove(storedKind);
-        SaveStoredTools();
+        RefreshWalletStateAfterStoredToolChange();
     }
 
     private static bool TrySetForgeHeldItem(object forgeMenu, Tool tool)
@@ -1176,12 +1370,16 @@ public sealed class ModEntry : Mod
         }
 
         if (changed)
-            SaveStoredTools();
+        {
+            MayHaveMenuVirtualToolsInInventory = true;
+            RefreshWalletStateAfterStoredToolChange();
+        }
     }
 
     private void CollectMenuVirtualToolsFromInventory(Farmer player, string reason)
     {
         bool changed = false;
+        bool foundVirtualTool = false;
         SuppressInventoryConversion = true;
         try
         {
@@ -1190,6 +1388,7 @@ public sealed class ModEntry : Mod
                 if (!IsMenuVirtualTool(player.Items[i], out WalletToolKind kind, out string purpose) || player.Items[i] is not Tool tool)
                     continue;
 
+                foundVirtualTool = true;
                 ClearMenuVirtualMarkers(tool);
                 if (IsWalletEnabled(kind))
                 {
@@ -1207,8 +1406,10 @@ public sealed class ModEntry : Mod
             SuppressInventoryConversion = false;
         }
 
+        MayHaveMenuVirtualToolsInInventory = foundVirtualTool || ActiveForgeMenu is not null || PatchedBlacksmithMenu is not null;
+
         if (changed)
-            SaveStoredTools();
+            RefreshWalletStateAfterStoredToolChange();
     }
 
     private IEnumerable<Item?> EnumerateItemsInObject(object owner)
@@ -1231,15 +1432,15 @@ public sealed class ModEntry : Mod
         }
     }
 
-    private void TryUseWalletToolHotkey(Farmer player, WalletToolKind requestedKind)
+    private void TryUseWalletToolHotkey(Farmer player, WalletToolKind requestedKind, SButton pressedButton)
     {
         if (!TryFindStoredEnabledToolForRequest(requestedKind, out WalletToolKind storedKind))
             return;
 
-        if (!TrySetTemporaryWalletTool(player, storedKind))
+        if (!TryMaterializeWalletToolForManualUse(player, storedKind))
             return;
 
-        Game1.pressUseToolButton();
+        PendingManualUseHotkey = pressedButton;
     }
 
     private static bool IsToolUpgradeLocation(GameLocation? location)
@@ -1509,7 +1710,7 @@ public sealed class ModEntry : Mod
 
         if (changed)
         {
-            SaveStoredTools();
+            RefreshWalletStateAfterStoredToolChange();
         }
     }
 
@@ -1613,7 +1814,7 @@ public sealed class ModEntry : Mod
         InvalidatePowers();
     }
 
-    private void SaveStoredTools(bool invalidatePowers = true)
+    private void RefreshWalletStateAfterStoredToolChange(bool invalidatePowers = true)
     {
         ToolSmartSwitchToolCache.Clear();
         ClearLegacyStoredToolsData();
@@ -1712,13 +1913,11 @@ public sealed class ModEntry : Mod
 
         if (changed)
         {
-            SaveStoredTools();
+            RefreshWalletStateAfterStoredToolChange();
             UpdateWalletFlags(player);
             InvalidatePowers();
         }
     }
-
-
 
 
     private static Tool? GetToolBeingUpgraded(Farmer player)
@@ -1801,7 +2000,7 @@ public sealed class ModEntry : Mod
 
         if (changed)
         {
-            SaveStoredTools();
+            RefreshWalletStateAfterStoredToolChange();
         }
         else
         {
@@ -1863,7 +2062,7 @@ public sealed class ModEntry : Mod
         if (!changed)
             return;
 
-        SaveStoredTools();
+        RefreshWalletStateAfterStoredToolChange();
     }
 
     private static bool RemoveLostFoundCopiesOfToolKind(WalletToolKind kind)
@@ -2129,7 +2328,7 @@ public sealed class ModEntry : Mod
         if (changed)
         {
             NormalizePlayerItemsAfterWalletCleanup(player);
-            SaveStoredTools();
+            RefreshWalletStateAfterStoredToolChange();
             Game1.addHUDMessage(new HUDMessage("Tool moved to wallet.", HUDMessage.newQuest_type));
         }
     }
@@ -2229,10 +2428,7 @@ public sealed class ModEntry : Mod
 
     private static bool IsToolAndSprinklerUpgradeTool(Tool tool, string suffix)
     {
-        string text = GetToolIdentityText(tool);
-        return text.Contains($"ToolAndSprinklerUpgrades_Cobalt{suffix}", StringComparison.OrdinalIgnoreCase)
-            || text.Contains($"ToolAndSprinklerUpgrades_Prismatic{suffix}", StringComparison.OrdinalIgnoreCase)
-            || text.Contains($"ToolAndSprinklerUpgrades_Radioactive{suffix}", StringComparison.OrdinalIgnoreCase);
+        return ToolAndSprinklerUpgradesCompat.IsUpgradeTool(tool, suffix);
     }
 
     private static string GetToolIdentityText(Tool tool)
@@ -2260,7 +2456,7 @@ public sealed class ModEntry : Mod
 
         foreach (WalletToolKind kind in Enum.GetValues<WalletToolKind>())
         {
-            if (!IsWalletEnabled(kind) || !StoredTools.ContainsKey(kind))
+            if (!IsAutoUseEnabled(kind) || !StoredTools.ContainsKey(kind))
                 continue;
 
             int index = GetToolSmartSwitchIndex(kind);
@@ -2295,10 +2491,10 @@ public sealed class ModEntry : Mod
         if (kind is null)
             return false;
 
-        if (!TryFindStoredEnabledToolForRequest(kind.Value, out WalletToolKind storedKind))
+        if (!TryFindStoredAutoUseToolForRequest(kind.Value, out WalletToolKind storedKind))
             return false;
 
-        return TrySetTemporaryWalletTool(player, storedKind);
+        return TryMaterializeWalletToolForAutomaticUse(player, storedKind);
     }
 
     private static int GetToolSmartSwitchIndex(WalletToolKind kind)
@@ -2317,7 +2513,7 @@ public sealed class ModEntry : Mod
 
     private bool TrySupplyRequestedWalletTool(Farmer player, Type toolType, bool anyTool)
     {
-        if (PendingToolUse is not null || !Config.ModEnabled || IsToolUpgradeLocation(player.currentLocation))
+        if (PendingToolUse is not null || !Config.ModEnabled || !Config.AutoUseEnabled || IsToolUpgradeLocation(player.currentLocation))
             return false;
 
         if (PlayerIsHoldingRequestedTool(player, toolType, anyTool))
@@ -2326,7 +2522,10 @@ public sealed class ModEntry : Mod
         if (!TryGetWalletKindForRequestedType(toolType, anyTool, out WalletToolKind kind))
             return false;
 
-        return TrySetTemporaryWalletTool(player, kind);
+        if (!IsAutoUseEnabled(kind))
+            return false;
+
+        return TryMaterializeWalletToolForAutomaticUse(player, kind);
     }
 
     private static bool PlayerIsHoldingRequestedTool(Farmer player, Type toolType, bool anyTool)
@@ -2345,46 +2544,46 @@ public sealed class ModEntry : Mod
     private bool TryGetWalletKindForRequestedType(Type toolType, bool anyTool, out WalletToolKind kind)
     {
         if (toolType == typeof(Axe))
-            return TryFindStoredEnabledToolForRequest(WalletToolKind.Axe, out kind);
+            return TryFindStoredAutoUseToolForRequest(WalletToolKind.Axe, out kind);
 
         if (toolType == typeof(Pickaxe))
-            return TryFindStoredEnabledToolForRequest(WalletToolKind.Pickaxe, out kind);
+            return TryFindStoredAutoUseToolForRequest(WalletToolKind.Pickaxe, out kind);
 
         if (toolType == typeof(Hoe))
         {
             kind = WalletToolKind.Hoe;
-            return HasStoredEnabledTool(kind);
+            return HasStoredAutoUseTool(kind);
         }
 
         if (toolType == typeof(WateringCan))
         {
             kind = WalletToolKind.WateringCan;
-            return HasStoredEnabledTool(kind);
+            return HasStoredAutoUseTool(kind);
         }
 
         if (toolType == typeof(Pan))
         {
             kind = WalletToolKind.Pan;
-            return HasStoredEnabledTool(kind);
+            return HasStoredAutoUseTool(kind);
         }
 
         if (toolType == typeof(MilkPail))
         {
             kind = WalletToolKind.MilkPail;
-            return HasStoredEnabledTool(kind);
+            return HasStoredAutoUseTool(kind);
         }
 
         if (toolType == typeof(Shears))
         {
             kind = WalletToolKind.Shears;
-            return HasStoredEnabledTool(kind);
+            return HasStoredAutoUseTool(kind);
         }
 
         if (anyTool)
         {
             foreach (WalletToolKind candidate in new[] { WalletToolKind.Axe, WalletToolKind.Pickaxe, WalletToolKind.Hoe })
             {
-                if (TryFindStoredEnabledToolForRequest(candidate, out kind))
+                if (TryFindStoredAutoUseToolForRequest(candidate, out kind))
                     return true;
             }
         }
@@ -2411,6 +2610,23 @@ public sealed class ModEntry : Mod
         return false;
     }
 
+    private bool HasStoredAutoUseTool(WalletToolKind kind)
+    {
+        return IsAutoUseEnabled(kind) && StoredTools.ContainsKey(kind);
+    }
+
+    private bool TryFindStoredAutoUseToolForRequest(WalletToolKind requestedKind, out WalletToolKind storedKind)
+    {
+        if (HasStoredAutoUseTool(requestedKind))
+        {
+            storedKind = requestedKind;
+            return true;
+        }
+
+        storedKind = requestedKind;
+        return false;
+    }
+
 
     private bool IsExternalSwitchModLoaded()
     {
@@ -2420,7 +2636,7 @@ public sealed class ModEntry : Mod
 
     private bool TryPrepareWalletToolUse(Farmer player)
     {
-        if (PendingToolUse is not null || !Config.ModEnabled || Game1.fadeToBlack || !Context.CanPlayerMove || IsToolUpgradeLocation(player.currentLocation))
+        if (PendingToolUse is not null || !Config.ModEnabled || !Config.AutoUseEnabled || Game1.fadeToBlack || !Context.CanPlayerMove || IsToolUpgradeLocation(player.currentLocation))
             return false;
 
         if (TryGetFallbackAnimalToolRequest(player, out Type animalToolType))
@@ -2677,6 +2893,16 @@ public sealed class ModEntry : Mod
         return location.objects.TryGetValue(tile, out Object bowl) && bowl.Name.EndsWith("Pet Bowl", StringComparison.OrdinalIgnoreCase);
     }
 
+    private bool TryMaterializeWalletToolForManualUse(Farmer player, WalletToolKind kind)
+    {
+        return TrySetTemporaryWalletTool(player, kind);
+    }
+
+    private bool TryMaterializeWalletToolForAutomaticUse(Farmer player, WalletToolKind kind)
+    {
+        return IsAutoUseEnabled(kind) && TrySetTemporaryWalletTool(player, kind);
+    }
+
     private bool TrySetTemporaryWalletTool(Farmer player, WalletToolKind kind)
     {
         if (PendingToolUse is not null || !Config.ModEnabled || IsToolUpgradeLocation(player.currentLocation) || !StoredTools.TryGetValue(kind, out WalletToolState? state))
@@ -2718,7 +2944,9 @@ public sealed class ModEntry : Mod
             SuppressInventoryConversion = false;
         }
 
-        Game1.playSound("toolSwap");
+        if (Config.PlayToolSwapSound)
+            Game1.playSound("toolSwap");
+
         return true;
     }
 
@@ -2782,7 +3010,7 @@ public sealed class ModEntry : Mod
 
         TemporaryToolUse pending = PendingToolUse;
         PendingToolUse = null;
-
+        PendingManualUseHotkey = null;
         SuppressInventoryConversion = true;
         try
         {
@@ -2791,7 +3019,7 @@ public sealed class ModEntry : Mod
             if (usedTool is not null)
             {
                 StoredTools[pending.Kind] = WalletToolState.FromTool(pending.Kind, usedTool);
-                SaveStoredTools(false);
+                RefreshWalletStateAfterStoredToolChange(false);
             }
             else
             {
@@ -2889,6 +3117,21 @@ public sealed class ModEntry : Mod
         return true;
     }
 
+    internal bool IsToolAutoUseEnabledForApi(string toolKind)
+    {
+        return TryParseWalletToolKind(toolKind, out WalletToolKind kind) && IsAutoUseEnabled(kind);
+    }
+
+    internal IEnumerable<string> GetStoredToolKindsForApi()
+    {
+        foreach (WalletToolKind kind in Enum.GetValues<WalletToolKind>())
+        {
+            if (StoredTools.TryGetValue(kind, out WalletToolState? state) && !state.IsInvalidStoredTool())
+                yield return kind.ToString();
+        }
+    }
+
+
     private static bool TryParseWalletToolKind(string toolKind, out WalletToolKind kind)
     {
         string normalized = (toolKind ?? string.Empty).Replace(" ", string.Empty).Replace("_", string.Empty).Replace("-", string.Empty);
@@ -2902,6 +3145,51 @@ public sealed class ModEntry : Mod
         }
 
         kind = WalletToolKind.Axe;
+        return false;
+    }
+
+    [HarmonyPatch]
+    private static class IsOneOfTheseKeysDownPatch
+    {
+        public static IEnumerable<MethodBase> TargetMethods()
+        {
+            return AccessTools.GetDeclaredMethods(typeof(Game1)).Where(method => method.Name == nameof(Game1.isOneOfTheseKeysDown));
+        }
+
+        public static void Postfix(object[] __args, ref bool __result)
+        {
+            if (!__result && TryGetInputButtons(__args, out InputButton[] keys) && IsUseToolButtonBinding(keys) && Instance?.IsManualWalletToolHotkeyHeld() == true)
+                __result = true;
+        }
+    }
+
+    [HarmonyPatch]
+    private static class AreAllOfTheseKeysUpPatch
+    {
+        public static IEnumerable<MethodBase> TargetMethods()
+        {
+            return AccessTools.GetDeclaredMethods(typeof(Game1)).Where(method => method.Name == nameof(Game1.areAllOfTheseKeysUp));
+        }
+
+        public static void Postfix(object[] __args, ref bool __result)
+        {
+            if (__result && TryGetInputButtons(__args, out InputButton[] keys) && IsUseToolButtonBinding(keys) && Instance?.IsManualWalletToolHotkeyHeld() == true)
+                __result = false;
+        }
+    }
+
+    private static bool TryGetInputButtons(object[] args, out InputButton[] keys)
+    {
+        foreach (object arg in args)
+        {
+            if (arg is InputButton[] inputButtons)
+            {
+                keys = inputButtons;
+                return true;
+            }
+        }
+
+        keys = Array.Empty<InputButton>();
         return false;
     }
 
@@ -2960,6 +3248,57 @@ internal enum WalletToolKind
     Pan,
     MilkPail,
     Shears
+}
+
+internal static class ToolAndSprinklerUpgradesCompat
+{
+    public static bool IsUpgradeTool(Tool tool, string suffix)
+    {
+        string text = GetIdentityText(tool);
+        return text.Contains($"ToolAndSprinklerUpgrades_Cobalt{suffix}", StringComparison.OrdinalIgnoreCase)
+            || text.Contains($"ToolAndSprinklerUpgrades_Prismatic{suffix}", StringComparison.OrdinalIgnoreCase)
+            || text.Contains($"ToolAndSprinklerUpgrades_Radioactive{suffix}", StringComparison.OrdinalIgnoreCase);
+    }
+
+    public static int GetUpgradeLevel(Tool tool)
+    {
+        string text = GetIdentityText(tool);
+        if (text.Contains("ToolAndSprinklerUpgrades_Radioactive", StringComparison.OrdinalIgnoreCase))
+            return 7;
+        if (text.Contains("ToolAndSprinklerUpgrades_Prismatic", StringComparison.OrdinalIgnoreCase))
+            return 6;
+        if (text.Contains("ToolAndSprinklerUpgrades_Cobalt", StringComparison.OrdinalIgnoreCase))
+            return 5;
+
+        return 0;
+    }
+
+    public static bool IsPan(Tool tool)
+    {
+        return IsPanIdentity(tool.ItemId, tool.QualifiedItemId, tool.Name, tool.DisplayName);
+    }
+
+    public static bool IsPanIdentity(params string[] values)
+    {
+        return values.Any(value =>
+            !string.IsNullOrWhiteSpace(value)
+            && (value.Contains("ToolAndSprinklerUpgrades_CobaltPan", StringComparison.OrdinalIgnoreCase)
+                || value.Contains("ToolAndSprinklerUpgrades_PrismaticPan", StringComparison.OrdinalIgnoreCase)
+                || value.Contains("ToolAndSprinklerUpgrades_RadioactivePan", StringComparison.OrdinalIgnoreCase)
+                || value.Equals("Cobalt Pan", StringComparison.OrdinalIgnoreCase)
+                || value.Equals("Prismatic Pan", StringComparison.OrdinalIgnoreCase)
+                || value.Equals("Radioactive Pan", StringComparison.OrdinalIgnoreCase)));
+    }
+
+    public static int GetPanMenuSpriteIndex()
+    {
+        return 20;
+    }
+
+    private static string GetIdentityText(Tool tool)
+    {
+        return string.Join("\n", tool.ItemId, tool.QualifiedItemId, tool.Name, tool.DisplayName);
+    }
 }
 
 internal sealed class BlacksmithExposure
@@ -3347,37 +3686,22 @@ internal sealed class WalletToolState
 
     private static int GetToolAndSprinklerUpgradeLevel(Tool tool)
     {
-        string text = string.Join("\n", tool.ItemId, tool.QualifiedItemId, tool.Name, tool.DisplayName);
-        if (text.Contains("ToolAndSprinklerUpgrades_Radioactive", StringComparison.OrdinalIgnoreCase))
-            return 7;
-        if (text.Contains("ToolAndSprinklerUpgrades_Prismatic", StringComparison.OrdinalIgnoreCase))
-            return 6;
-        if (text.Contains("ToolAndSprinklerUpgrades_Cobalt", StringComparison.OrdinalIgnoreCase))
-            return 5;
-
-        return 0;
+        return ToolAndSprinklerUpgradesCompat.GetUpgradeLevel(tool);
     }
 
     private static bool IsToolAndSprinklerPanTool(Tool tool)
     {
-        return IsToolAndSprinklerPanIdentity(tool.ItemId, tool.QualifiedItemId, tool.Name, tool.DisplayName);
+        return ToolAndSprinklerUpgradesCompat.IsPan(tool);
     }
 
     private static bool IsToolAndSprinklerPanIdentity(params string[] values)
     {
-        return values.Any(value =>
-            !string.IsNullOrWhiteSpace(value)
-            && (value.Contains("ToolAndSprinklerUpgrades_CobaltPan", StringComparison.OrdinalIgnoreCase)
-                || value.Contains("ToolAndSprinklerUpgrades_PrismaticPan", StringComparison.OrdinalIgnoreCase)
-                || value.Contains("ToolAndSprinklerUpgrades_RadioactivePan", StringComparison.OrdinalIgnoreCase)
-                || value.Equals("Cobalt Pan", StringComparison.OrdinalIgnoreCase)
-                || value.Equals("Prismatic Pan", StringComparison.OrdinalIgnoreCase)
-                || value.Equals("Radioactive Pan", StringComparison.OrdinalIgnoreCase)));
+        return ToolAndSprinklerUpgradesCompat.IsPanIdentity(values);
     }
 
     private static int GetToolAndSprinklerPanMenuSpriteIndex()
     {
-        return 20;
+        return ToolAndSprinklerUpgradesCompat.GetPanMenuSpriteIndex();
     }
 
     private static int GetPanUpgradeLevel(Tool tool)

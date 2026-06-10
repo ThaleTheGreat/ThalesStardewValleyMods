@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 
 namespace ThaleTheGreat.WalletTools;
 
@@ -44,5 +45,20 @@ public sealed class WalletToolsApi : IWalletToolsApi
         upgradeLevel = state.GetPowerScore();
         displayName = state.GetDisplayName();
         return true;
+    }
+
+    public bool IsToolStored(string toolKind)
+    {
+        return Mod.TryGetStoredToolForApi(toolKind, out _);
+    }
+
+    public bool IsToolAutoUseEnabled(string toolKind)
+    {
+        return Mod.IsToolAutoUseEnabledForApi(toolKind);
+    }
+
+    public string[] GetStoredToolKinds()
+    {
+        return Mod.GetStoredToolKindsForApi().ToArray();
     }
 }

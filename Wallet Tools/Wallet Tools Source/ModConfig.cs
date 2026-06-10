@@ -14,6 +14,19 @@ internal sealed class ModConfig
     public bool MilkPailEnabled { get; set; } = true;
     public bool ShearsEnabled { get; set; } = true;
 
+    public bool AutoUseEnabled { get; set; } = true;
+    public bool AxeAutoUseEnabled { get; set; } = true;
+    public bool PickaxeAutoUseEnabled { get; set; } = true;
+    public bool HoeAutoUseEnabled { get; set; } = true;
+    public bool WateringCanAutoUseEnabled { get; set; } = true;
+    public bool PanAutoUseEnabled { get; set; } = true;
+    public bool MilkPailAutoUseEnabled { get; set; } = true;
+    public bool ShearsAutoUseEnabled { get; set; } = true;
+
+    public bool PlayToolSwapSound { get; set; } = true;
+
+    public KeybindList ToggleAutoUseHotkey { get; set; } = new(new Keybind(SButton.LeftControl, SButton.D8));
+
     public KeybindList UseAxeHotkey { get; set; } = new(new Keybind(SButton.LeftControl, SButton.D1));
     public KeybindList UsePickaxeHotkey { get; set; } = new(new Keybind(SButton.LeftControl, SButton.D2));
     public KeybindList UseHoeHotkey { get; set; } = new(new Keybind(SButton.LeftControl, SButton.D3));
