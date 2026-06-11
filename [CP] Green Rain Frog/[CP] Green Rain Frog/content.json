@@ -1,0 +1,25 @@
+{
+  "Format": "2.0.0",
+  "Changes": [
+    {
+      "Action": "EditImage",
+      "Target": "TileSheets/Critters",
+      "FromFile": "assets/Critters.png",
+      "FromArea": {
+        "X": 0,
+        "Y": 224,
+        "Width": 112,
+        "Height": 32
+      },
+      "ToArea": {
+        "X": 0,
+        "Y": 224,
+        "Width": 112,
+        "Height": 32
+      },
+      "When": {
+        "Weather": "GreenRain"
+      }
+    }
+  ]
+}
