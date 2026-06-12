@@ -4,11 +4,11 @@
     <LangVersion>10.0</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
-    <AssemblyName>WalletTools</AssemblyName>
-    <RootNamespace>ThaleTheGreat.WalletTools</RootNamespace>
-    <Version>1.9.1</Version>
+    <AssemblyName>WalletToolsForAnimalHusbandry</AssemblyName>
+    <RootNamespace>ThaleTheGreat.WalletToolsForAnimalHusbandry</RootNamespace>
+    <Version>1.0.0</Version>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <ModFolderName>Wallet Tools</ModFolderName>
+    <ModFolderName>Wallet Tools for Animal Husbandry</ModFolderName>
     <EnableHarmony>true</EnableHarmony>
   </PropertyGroup>
 
@@ -20,10 +20,4 @@
     <None Include="manifest.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="LICENSE" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
-
-  <Target Name="RemoveSourceAssetFoldersFromBuildOutputs" AfterTargets="Build">
-    <RemoveDir Directories="$(TargetDir)assets" />
-    <RemoveDir Directories="$(OutputPath)assets" />
-    <RemoveDir Directories="$(MSBuildProjectDirectory)\..\$(ModFolderName)\assets" />
-  </Target>
 </Project>

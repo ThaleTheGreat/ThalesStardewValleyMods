@@ -1,0 +1,30 @@
+{
+  "Name": "Wallet Tools for Animal Husbandry",
+  "Author": "ThaleTheGreat",
+  "Version": "1.0.0",
+  "Description": "Adds Animal Husbandry's Meat Cleaver or Meat Wand to Wallet Tools behavior.",
+  "UniqueID": "ThaleTheGreat.WalletToolsForAnimalHusbandry",
+  "EntryDll": "WalletToolsForAnimalHusbandry.dll",
+  "MinimumApiVersion": "4.0.0",
+  "UpdateKeys": [
+    "Nexus:47465"
+  ],
+  "Dependencies": [
+    {
+      "UniqueID": "ThaleTheGreat.WalletTools",
+      "IsRequired": true
+    },
+    {
+      "UniqueID": "DIGUS.ANIMALHUSBANDRYMOD",
+      "IsRequired": true
+    },
+    {
+      "UniqueID": "spacechase0.GenericModConfigMenu",
+      "IsRequired": false
+    },
+    {
+      "UniqueID": "Spiderbuttons.SpecialPowerUtilities",
+      "IsRequired": false
+    }
+  ]
+}
