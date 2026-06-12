@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Version>1.0.0</Version>
+    <TargetFramework>net6.0</TargetFramework>
+    <AssemblyName>GemIslesSwimToGingerIsland</AssemblyName>
+    <RootNamespace>ThaleTheGreat.GemIslesSwimToGingerIsland</RootNamespace>
+    <ModFolderName>Gem Isles Swim to Ginger Island</ModFolderName>
+    <EnableHarmony>false</EnableHarmony>
+    <Platforms>AnyCPU;x64</Platforms>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="4.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="manifest.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="LICENSE" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

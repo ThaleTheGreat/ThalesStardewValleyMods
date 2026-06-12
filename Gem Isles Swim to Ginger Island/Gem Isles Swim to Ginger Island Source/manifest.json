@@ -1,0 +1,12 @@
+{
+  "Name": "Gem Isles Swim to Ginger Island",
+  "Author": "ThaleTheGreat",
+  "Version": "1.0.0",
+  "Description": "Swim from the beach through the Gem Isles to Ginger Island.",
+  "UniqueID": "ThaleTheGreat.GemIslesSwimToGingerIsland",
+  "EntryDll": "GemIslesSwimToGingerIsland.dll",
+  "MinimumApiVersion": "4.0.0",
+  "UpdateKeys": [
+    "Nexus:47196"
+  ]
+}
