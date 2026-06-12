@@ -6,9 +6,7 @@ namespace ThaleTheGreat.WalletToolsForAnimalHusbandry;
 internal sealed class ModConfig
 {
     public bool ModEnabled { get; set; } = true;
-    public bool MeatToolEnabled { get; set; } = true;
     public bool AutoUseEnabled { get; set; } = true;
-    public bool MeatToolAutoUseEnabled { get; set; } = true;
     public bool RequireLeftShiftForAutoUse { get; set; } = true;
     public bool PlayToolSwapSound { get; set; } = true;
     public bool ShowHudMessageWhenStored { get; set; } = true;

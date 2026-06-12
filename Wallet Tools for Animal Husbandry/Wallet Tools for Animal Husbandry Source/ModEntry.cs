@@ -108,9 +108,7 @@ public sealed class ModEntry : Mod
             gmcm.Unregister(ModManifest);
             gmcm.Register(ModManifest, ResetConfig, SaveConfig);
             AddBool(gmcm, nameof(Config.ModEnabled), () => Config.ModEnabled, SetModEnabled, "Mod Enabled", "Enables Wallet Tools for Animal Husbandry.");
-            AddBool(gmcm, nameof(Config.MeatToolEnabled), () => Config.MeatToolEnabled, SetMeatToolEnabled, "Wallet Meat Cleaver / Meat Wand", "Store Animal Husbandry's Meat Cleaver or Meat Wand in the wallet.");
-            AddBool(gmcm, nameof(Config.AutoUseEnabled), () => Config.AutoUseEnabled, value => SetAutoUseMasterEnabled(value, false), "Auto Use Enabled", "Master toggle for automatic Meat Cleaver / Meat Wand wallet logic. Manual hotkeys still work.");
-            AddBool(gmcm, nameof(Config.MeatToolAutoUseEnabled), () => Config.MeatToolAutoUseEnabled, value => Config.MeatToolAutoUseEnabled = value, "Auto Meat Tool", "Automatically supplies the stored Meat Cleaver or Meat Wand when using it on a nearby farm animal.");
+            AddBool(gmcm, nameof(Config.AutoUseEnabled), () => Config.AutoUseEnabled, value => SetAutoUseMasterEnabled(value, false), "Enable Auto Use", "Automatically supplies the stored Meat Cleaver or Meat Wand when using it on a nearby farm animal. Manual hotkey use still works when this is disabled.");
             AddBool(gmcm, nameof(Config.RequireLeftShiftForAutoUse), () => Config.RequireLeftShiftForAutoUse, value => Config.RequireLeftShiftForAutoUse = value, "Require Left Shift + Click", "Require Left Shift to be held while clicking an animal before the wallet Meat Cleaver or Meat Wand is supplied automatically.");
             AddBool(gmcm, nameof(Config.PlayToolSwapSound), () => Config.PlayToolSwapSound, value => Config.PlayToolSwapSound = value, "Play Tool Swap Sound", "Play the Wallet Tools swap sound when the meat tool is readied.");
             AddBool(gmcm, nameof(Config.ShowHudMessageWhenStored), () => Config.ShowHudMessageWhenStored, value => Config.ShowHudMessageWhenStored = value, "Show Stored Message", "Show a HUD message when the Meat Cleaver or Meat Wand is moved to the wallet.");
@@ -184,36 +182,6 @@ public sealed class ModEntry : Mod
         CollectOvernightExposedTool(Game1.player);
         ReconcileLoadedToolState(Game1.player);
         ConvertInventoryTools(Game1.player);
-    }
-
-    private void SetMeatToolEnabled(bool enabled)
-    {
-        if (Config.MeatToolEnabled == enabled)
-            return;
-
-        Config.MeatToolEnabled = enabled;
-        if (!Context.IsWorldReady)
-            return;
-
-        if (enabled && Config.ModEnabled)
-        {
-            CollectOvernightExposedTool(Game1.player);
-            ReconcileLoadedToolState(Game1.player);
-            ConvertInventoryTools(Game1.player);
-        }
-        else
-        {
-            if (PendingToolUse is not null)
-                RestoreTemporaryTool(Game1.player);
-
-            if (MaterializeStoredToolToInventory(Game1.player, true))
-                Game1.addHUDMessage(new HUDMessage("Animal Husbandry tool returned to inventory.", HUDMessage.newQuest_type));
-
-            RemoveRuntimeToolCopies(Game1.player);
-            ClearWalletMarkersFromInventory(Game1.player);
-            UpdateWalletFlag(Game1.player);
-            InvalidatePowers();
-        }
     }
 
     private void SetAutoUseMasterEnabled(bool enabled, bool showMessage)
@@ -440,12 +408,12 @@ public sealed class ModEntry : Mod
 
     private bool IsMeatToolEnabled()
     {
-        return Config.ModEnabled && Config.MeatToolEnabled;
+        return Config.ModEnabled;
     }
 
     private bool IsAutoUseEnabled()
     {
-        return IsMeatToolEnabled() && Config.AutoUseEnabled && Config.MeatToolAutoUseEnabled;
+        return IsMeatToolEnabled() && Config.AutoUseEnabled;
     }
 
 
@@ -523,11 +491,7 @@ public sealed class ModEntry : Mod
         {
             RemoveRuntimeToolCopies(player);
 
-            if (!Config.MeatToolEnabled)
-            {
-                changed = MaterializeStoredToolToInventory(player, false) || changed;
-            }
-            else if (StoredTool is not null)
+            if (StoredTool is not null)
             {
                 if (RemoveInventoryCopiesOfMeatTool(player))
                     changed = true;
@@ -667,7 +631,7 @@ public sealed class ModEntry : Mod
                     continue;
 
                 ClearWalletMarkers(tool);
-                if (Config.MeatToolEnabled && IsMeatTool(tool))
+                if (IsMeatTool(tool))
                 {
                     StoredTool = MeatToolState.FromTool(tool);
                     player.Items[i] = null;
