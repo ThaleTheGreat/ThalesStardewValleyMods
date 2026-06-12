@@ -1,8 +1,8 @@
 {
   "Name": "It Rubs The Mayo In",
   "Author": "ThaleTheGreat",
-  "Version": "1.0.0",
-  "Description": "Throw mayonnaise and secret notes into the Well for strange dialogue.",
+  "Version": "1.1.0",
+  "Description": "Throw Mayonnaise and Books into the Well for strange dialogue.",
   "UniqueID": "ThaleTheGreat.ItRubsTheMayoIn",
   "EntryDll": "ItRubsTheMayoIn.dll",
   "MinimumApiVersion": "4.0.0",

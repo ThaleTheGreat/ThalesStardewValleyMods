@@ -9,8 +9,7 @@ internal sealed class Config
         "(O)308",
         "(O)807"
     };
-
-    public string SecretNoteItemId { get; set; } = "(O)79";
+    public string BookContextTag { get; set; } = "book_item";
 
     public List<string> MayonnaiseQuotes { get; set; } = new()
     {
@@ -20,7 +19,7 @@ internal sealed class Config
         "Where's my supplies. Yeah, come on man, I thought we had a deal."
     };
 
-    public List<string> SecretNoteQuotes { get; set; } = new()
+    public List<string> BookQuotes { get; set; } = new()
     {
         "Yee! Auto Trader!",
         "Ohh August, I don't got this one.",

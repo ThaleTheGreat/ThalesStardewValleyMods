@@ -10,7 +10,7 @@ internal sealed class ModEntry : Mod
 {
     private const string SaveDataKey = "ItRubsTheMayoInState";
     private const int RareMayonnaiseQuoteMinimumPreviousThrows = 10;
-    private const int RareMayonnaiseQuoteChance = 100;
+    private const int RareMayonnaiseQuoteChance = 50;
     private const string RareMayonnaiseQuote = "At least it ain't a road flare this time.";
 
     private Config Config = new();
@@ -55,7 +55,7 @@ internal sealed class ModEntry : Mod
 
         bool correctItem = State.ExpectingMayonnaise
             ? MatchesAnyItemId(heldItem, Config.MayonnaiseItemIds)
-            : MatchesItemId(heldItem, Config.SecretNoteItemId);
+            : MatchesBookContextTag(heldItem, Config.BookContextTag);
 
         if (!correctItem)
             return;
@@ -77,7 +77,7 @@ internal sealed class ModEntry : Mod
         }
         else
         {
-            quote = TakeNextQuote(State.RemainingSecretNoteQuotes, Config.SecretNoteQuotes);
+            quote = TakeNextQuote(State.RemainingBookQuotes, Config.BookQuotes);
         }
 
         State.ExpectingMayonnaise = !State.ExpectingMayonnaise;
@@ -90,7 +90,7 @@ internal sealed class ModEntry : Mod
     private void SanitizeState()
     {
         State.RemainingMayonnaiseQuotes.RemoveAll(static quote => string.IsNullOrWhiteSpace(quote));
-        State.RemainingSecretNoteQuotes.RemoveAll(static quote => string.IsNullOrWhiteSpace(quote));
+        State.RemainingBookQuotes.RemoveAll(static quote => string.IsNullOrWhiteSpace(quote));
         Config.MayonnaiseItemIds = Config.MayonnaiseItemIds
             .Where(static id => !string.IsNullOrWhiteSpace(id))
             .Distinct(StringComparer.OrdinalIgnoreCase)
@@ -103,6 +103,15 @@ internal sealed class ModEntry : Mod
             return false;
 
         return string.Equals(building.buildingType.Value, "Well", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool MatchesBookContextTag(Item item, string configuredTag)
+    {
+        if (string.IsNullOrWhiteSpace(configuredTag))
+            return false;
+
+        string tag = configuredTag.Trim();
+        return item.HasContextTag(tag);
     }
 
     private static bool MatchesAnyItemId(Item item, IEnumerable<string> configuredIds)
