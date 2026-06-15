@@ -1,0 +1,12 @@
+{
+  "crafting-window": "I can upgrade your tools without the usual wait.",
+  "post-purchase-dialogue": "Thanks. Your upgraded tool should be ready right away.",
+  "gmcm.section.upgrades": "Clint Tool Upgrades",
+  "gmcm.section.upgrades.tooltip": "Options for Clint's tool-upgrade cost and material requirements.",
+  "gmcm.price-multiplier.name": "Upgrade Price",
+  "gmcm.price-multiplier.tooltip": "Adjust Clint's tool upgrade gold cost from 0.10x to 5.00x the active tool upgrade data's base cost. Applies to vanilla and compatible modded tool upgrades.",
+  "gmcm.price-multiplier.format": "{{multiplier}}x",
+  "gmcm.bars-required.name": "Bars Required",
+  "gmcm.bars-required.tooltip": "Adjust the bar cost for Clint's tool upgrades from 0 to 25 bars in 5-bar increments. Uses the active upgrade data's bar type for vanilla and compatible modded tool upgrades.",
+  "gmcm.bars-required.format": "{{bars}} bars"
+}
