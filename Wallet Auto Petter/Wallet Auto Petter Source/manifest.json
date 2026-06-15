@@ -1,7 +1,7 @@
 {
   "Name": "Wallet Auto Petter",
   "Author": "ThaleTheGreat",
-  "Version": "1.0.0",
+  "Version": "1.1.0",
   "Description": "Stores the Auto-Petter in the wallet and applies its daily animal-petting effect farm-wide.",
   "UniqueID": "ThaleTheGreat.WalletAutoPetter",
   "EntryDll": "WalletAutoPetter.dll",

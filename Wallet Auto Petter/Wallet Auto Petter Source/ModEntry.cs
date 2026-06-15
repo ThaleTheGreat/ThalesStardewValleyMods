@@ -85,10 +85,19 @@ public sealed class ModEntry : Mod
 
     private void OnSaveLoaded(object? sender, SaveLoadedEventArgs e)
     {
-        State = Helper.Data.ReadSaveData<SaveState>(StateKey) ?? new SaveState();
-        MigrateStoredAutoPetterCount();
-        SyncWalletFlagFromState();
-        CollectAutoPetterFromInventory(showNotice: false);
+        State = Context.IsMainPlayer
+            ? Helper.Data.ReadSaveData<SaveState>(StateKey) ?? new SaveState()
+            : new SaveState();
+
+        if (Context.IsMainPlayer)
+        {
+            MigrateStoredAutoPetterCount();
+            SyncWalletFlagFromState();
+            CollectAutoPetterFromInventory(showNotice: false);
+        }
+        else
+            SetWalletFlag(Game1.player, false);
+
         InvalidatePowers();
     }
 
@@ -97,11 +106,19 @@ public sealed class ModEntry : Mod
         if (!Context.IsWorldReady)
             return;
 
-        CollectAutoPetterFromInventory(showNotice: false);
-        InvalidatePowers();
+        if (Context.IsMainPlayer)
+        {
+            CollectAutoPetterFromInventory(showNotice: false);
+            InvalidatePowers();
 
-        if (Config.Enabled && HasStoredAutoPetter() && Context.IsMainPlayer)
-            ApplyAutoPetterEffect();
+            if (Config.Enabled && HasStoredAutoPetter())
+                ApplyAutoPetterEffect();
+        }
+        else
+        {
+            SetWalletFlag(Game1.player, false);
+            InvalidatePowers();
+        }
     }
 
     private void OnSaving(object? sender, SavingEventArgs e)
@@ -117,7 +134,7 @@ public sealed class ModEntry : Mod
 
     private void OnInventoryChanged(object? sender, InventoryChangedEventArgs e)
     {
-        if (!Context.IsWorldReady || !e.IsLocalPlayer || !Config.Enabled || !Config.AutoStoreFromInventory)
+        if (!Context.IsWorldReady || !Context.IsMainPlayer || !e.IsLocalPlayer || !Config.Enabled || !Config.AutoStoreFromInventory)
             return;
 
         CollectAutoPetterFromInventory(showNotice: Config.ShowStoredMessage);
@@ -125,7 +142,7 @@ public sealed class ModEntry : Mod
 
     private void OnButtonPressed(object? sender, ButtonPressedEventArgs e)
     {
-        if (!Context.IsWorldReady || !Config.Enabled || !HasStoredAutoPetter() || !Config.ReturnToInventoryKey.JustPressed())
+        if (!Context.IsWorldReady || !Context.IsMainPlayer || !Config.Enabled || !HasStoredAutoPetter() || !Config.ReturnToInventoryKey.JustPressed())
             return;
 
         if (!IsInventoryPageOpen())
@@ -137,7 +154,7 @@ public sealed class ModEntry : Mod
 
     private void OnRenderedActiveMenu(object? sender, RenderedActiveMenuEventArgs e)
     {
-        if (!Context.IsWorldReady || !Config.Enabled || !Config.ShowWalletIcon || !HasStoredAutoPetter() || !IsInventoryPageOpen())
+        if (!Context.IsWorldReady || !Context.IsMainPlayer || !Config.Enabled || !Config.ShowWalletIcon || !HasStoredAutoPetter() || !IsInventoryPageOpen())
             return;
 
         DrawWalletIcon(e.SpriteBatch);
@@ -145,7 +162,7 @@ public sealed class ModEntry : Mod
 
     private void CollectAutoPetterFromInventory(bool showNotice)
     {
-        if (!Config.Enabled || !Config.AutoStoreFromInventory)
+        if (!Context.IsMainPlayer || !Config.Enabled || !Config.AutoStoreFromInventory)
             return;
 
         Farmer player = Game1.player;
@@ -195,7 +212,7 @@ public sealed class ModEntry : Mod
 
     private void ReturnAutoPetterToInventory(bool showNotice)
     {
-        if (!HasStoredAutoPetter())
+        if (!Context.IsMainPlayer || !HasStoredAutoPetter())
             return;
 
         Item item = ItemRegistry.Create(AutoPetterQualifiedId);
@@ -216,6 +233,9 @@ public sealed class ModEntry : Mod
 
     private void ReturnAllAutoPettersToInventory(bool showNotice)
     {
+        if (!Context.IsMainPlayer)
+            return;
+
         while (HasStoredAutoPetter())
             ReturnAutoPetterToInventory(showNotice: false);
 
@@ -551,7 +571,7 @@ public sealed class ModEntry : Mod
 
         gmcm.AddSectionTitle(ModManifest, () => "Animal Effect");
         gmcm.AddBoolOption(ModManifest, () => Config.ApplyFriendshipGain, value => Config.ApplyFriendshipGain = value, () => "Apply friendship gain", () => "Apply a small daily friendship increase when the wallet Auto-Petter pets animals.");
-        gmcm.AddNumberOption(ModManifest, () => Config.FriendshipPointsPerDay, value => Config.FriendshipPointsPerDay = value, () => "Friendship points per day", () => "Daily friendship points added to each affected animal.", min: 0, max: 15, interval: 1);
+        gmcm.AddNumberOption(ModManifest, () => Config.FriendshipPointsPerDay, value => Config.FriendshipPointsPerDay = value, () => "Friendship points per day", () => "Daily friendship points added to each affected animal.", min: 0, max: 15, interval: 1, formatValue: value => value.ToString());
 
     }
 
@@ -567,6 +587,9 @@ public sealed class ModEntry : Mod
 
     private void SaveState()
     {
+        if (!Context.IsWorldReady || !Context.IsMainPlayer)
+            return;
+
         Helper.Data.WriteSaveData(StateKey, State);
     }
 

@@ -1,7 +1,7 @@
 {
   "Name": "Wallet Scepter",
   "Author": "ThaleTheGreat",
-  "Version": "1.2.0",
+  "Version": "1.3.0",
   "Description": "Puts the Return Scepter into the Wallet",
   "UniqueID": "ThaleTheGreat.WalletScepter",
   "EntryDll": "WalletScepter.dll",

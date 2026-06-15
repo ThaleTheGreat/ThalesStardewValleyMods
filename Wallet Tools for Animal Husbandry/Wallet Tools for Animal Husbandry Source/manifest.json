@@ -1,7 +1,7 @@
 {
   "Name": "Wallet Tools for Animal Husbandry",
   "Author": "ThaleTheGreat",
-  "Version": "1.0.1",
+  "Version": "1.1.0",
   "Description": "Adds Animal Husbandry's Meat Cleaver/Wand to Wallet Tools.",
   "UniqueID": "ThaleTheGreat.WalletToolsForAnimalHusbandry",
   "EntryDll": "WalletToolsForAnimalHusbandry.dll",

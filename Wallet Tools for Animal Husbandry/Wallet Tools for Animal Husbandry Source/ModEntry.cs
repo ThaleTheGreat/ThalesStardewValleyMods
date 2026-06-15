@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
+using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.Characters;
 using StardewValley.GameData.Powers;
@@ -26,6 +27,7 @@ public sealed class ModEntry : Mod
     private const string WalletPowerId = "ThaleTheGreat.WalletTools_AnimalHusbandryMeatTool";
     private const string HasMeatToolFlag = "ThaleTheGreat.WalletToolsForAnimalHusbandry/HasMeatTool";
     private const string RuntimeToolMarker = "ThaleTheGreat.WalletToolsForAnimalHusbandry/RuntimeTool";
+    private const string RuntimeOwnerMarker = "ThaleTheGreat.WalletToolsForAnimalHusbandry/OwnerPlayerId";
     private const string OvernightExposureMarker = "ThaleTheGreat.WalletToolsForAnimalHusbandry/OvernightExposure";
     private const string ToolTexturePath = "Mods/DIGUS.ANIMALHUSBANDRYMOD/Tools";
 
@@ -33,11 +35,40 @@ public sealed class ModEntry : Mod
     private Harmony Harmony = null!;
     private bool GmcmRegistered;
     private bool GmcmMissingLogged;
-    private MeatToolState? StoredTool;
-    private TemporaryToolUse? PendingToolUse;
-    private SButton? PendingManualUseHotkey;
-    private bool SuppressInventoryConversion;
-    private bool PendingInventoryConversion;
+    private readonly Dictionary<long, MeatToolState?> StoredToolByPlayer = new();
+    private MeatToolState? StoredTool
+    {
+        get => GetStoredTool(Game1.player);
+        set => SetStoredTool(Game1.player, value);
+    }
+
+    private readonly PerScreen<TemporaryToolUse?> PendingToolUseScreen = new();
+    private TemporaryToolUse? PendingToolUse
+    {
+        get => PendingToolUseScreen.Value;
+        set => PendingToolUseScreen.Value = value;
+    }
+
+    private readonly PerScreen<SButton?> PendingManualUseHotkeyScreen = new();
+    private SButton? PendingManualUseHotkey
+    {
+        get => PendingManualUseHotkeyScreen.Value;
+        set => PendingManualUseHotkeyScreen.Value = value;
+    }
+
+    private readonly PerScreen<bool> SuppressInventoryConversionScreen = new();
+    private bool SuppressInventoryConversion
+    {
+        get => SuppressInventoryConversionScreen.Value;
+        set => SuppressInventoryConversionScreen.Value = value;
+    }
+
+    private readonly PerScreen<bool> PendingInventoryConversionScreen = new();
+    private bool PendingInventoryConversion
+    {
+        get => PendingInventoryConversionScreen.Value;
+        set => PendingInventoryConversionScreen.Value = value;
+    }
 
     public override void Entry(IModHelper helper)
     {
@@ -58,7 +89,48 @@ public sealed class ModEntry : Mod
         helper.Events.Input.ButtonReleased += OnButtonReleased;
 
         Harmony = new Harmony(ModManifest.UniqueID);
-        Harmony.PatchAll(Assembly.GetExecutingAssembly());
+        PatchCoreGameMethods();
+    }
+
+    private void PatchCoreGameMethods()
+    {
+        MethodInfo? pressUseTool = AccessTools.Method(typeof(Game1), nameof(Game1.pressUseToolButton));
+        MethodInfo? pressUseToolPrefix = AccessTools.Method(typeof(PressUseToolButtonPatch), nameof(PressUseToolButtonPatch.Prefix));
+        if (pressUseTool is not null && pressUseToolPrefix is not null)
+            Harmony.Patch(pressUseTool, prefix: new HarmonyMethod(pressUseToolPrefix));
+    }
+
+    private static long GetWalletOwnerId(Farmer? player)
+    {
+        return player?.UniqueMultiplayerID ?? 0L;
+    }
+
+    private MeatToolState? GetStoredTool(Farmer? player)
+    {
+        StoredToolByPlayer.TryGetValue(GetWalletOwnerId(player), out MeatToolState? state);
+        return state;
+    }
+
+    private void SetStoredTool(Farmer? player, MeatToolState? state)
+    {
+        long ownerId = GetWalletOwnerId(player);
+        if (state is null)
+            StoredToolByPlayer.Remove(ownerId);
+        else
+            StoredToolByPlayer[ownerId] = state;
+    }
+
+    private static bool IsOwnedByPlayer(Tool tool, Farmer player)
+    {
+        if (!tool.modData.TryGetValue(RuntimeOwnerMarker, out string? rawOwnerId))
+            return !Context.IsMultiplayer;
+
+        return long.TryParse(rawOwnerId, out long ownerId) && ownerId == player.UniqueMultiplayerID;
+    }
+
+    private static void MarkWalletOwner(Tool tool, Farmer player)
+    {
+        tool.modData[RuntimeOwnerMarker] = player.UniqueMultiplayerID.ToString();
     }
 
     private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
@@ -74,7 +146,7 @@ public sealed class ModEntry : Mod
         e.Edit(asset =>
         {
             IDictionary<string, PowersData> powers = asset.AsDictionary<string, PowersData>().Data;
-            MeatToolState state = StoredTool ?? MeatToolState.CreatePlaceholder(Monitor);
+            MeatToolState state = GetStoredTool(Game1.player) ?? MeatToolState.CreatePlaceholder(Monitor);
             MeatToolIconData icon = state.GetIconData(Monitor);
             powers[WalletPowerId] = new PowersData
             {
@@ -206,11 +278,14 @@ public sealed class ModEntry : Mod
     {
         ClearVolatileState(false);
 
-        MeatToolState? legacyState = Helper.Data.ReadSaveData<MeatToolState>(LegacySaveDataKey);
-        if (legacyState is not null)
-            StoredTool = legacyState;
+        if (Context.IsMainPlayer)
+        {
+            MeatToolState? legacyState = Helper.Data.ReadSaveData<MeatToolState>(LegacySaveDataKey);
+            if (legacyState is not null)
+                SetStoredTool(Game1.player, legacyState);
 
-        Helper.Data.WriteSaveData<MeatToolState>(LegacySaveDataKey, null);
+            Helper.Data.WriteSaveData<MeatToolState>(LegacySaveDataKey, null);
+        }
 
         if (!Config.ModEnabled)
         {
@@ -230,7 +305,10 @@ public sealed class ModEntry : Mod
 
     private void ClearVolatileState(bool invalidatePowers = true)
     {
-        StoredTool = null;
+        if (Context.IsWorldReady)
+            RestorePendingToolUseToInventoryBeforeVolatileClear(Game1.player);
+
+        StoredToolByPlayer.Clear();
         PendingToolUse = null;
         PendingManualUseHotkey = null;
         PendingInventoryConversion = false;
@@ -250,23 +328,23 @@ public sealed class ModEntry : Mod
 
     private void OnDayEnding(object? sender, DayEndingEventArgs e)
     {
+        RestorePendingToolUseBeforeDestructiveCleanup(Game1.player);
         RemoveRuntimeToolCopies(Game1.player);
         NormalizePlayerItemsAfterCleanup(Game1.player);
     }
 
     private void OnSaving(object? sender, SavingEventArgs e)
     {
-        if (PendingToolUse is not null)
-            RestoreTemporaryTool(Game1.player);
-
+        RestorePendingToolUseBeforeDestructiveCleanup(Game1.player);
         RemoveRuntimeToolCopies(Game1.player);
         NormalizePlayerItemsAfterCleanup(Game1.player);
         ExposeStoredToolForOvernight(Game1.player);
-        Helper.Data.WriteSaveData<MeatToolState>(LegacySaveDataKey, null);
+        ClearLegacySaveData();
     }
 
     private void OnSaved(object? sender, SavedEventArgs e)
     {
+        RestorePendingToolUseBeforeDestructiveCleanup(Game1.player);
         CollectOvernightExposedTool(Game1.player);
         RemoveRuntimeToolCopies(Game1.player);
         NormalizePlayerItemsAfterCleanup(Game1.player);
@@ -359,7 +437,7 @@ public sealed class ModEntry : Mod
 
     private void TryUseWalletToolHotkey(Farmer player, SButton pressedButton)
     {
-        if (!IsMeatToolEnabled() || StoredTool is null)
+        if (!IsMeatToolEnabled() || GetStoredTool(player) is null)
             return;
 
         if (!TrySetTemporaryWalletTool(player))
@@ -458,10 +536,10 @@ public sealed class ModEntry : Mod
         {
             for (int i = 0; i < player.Items.Count; i++)
             {
-                if (player.Items[i] is not Tool tool || IsRuntimeTool(tool) || IsOvernightExposure(tool) || !IsMeatTool(tool))
+                if (player.Items[i] is not Tool tool || IsRuntimeTool(tool) || IsOvernightExposure(tool) || IsCurrentlySelectedItem(player, i, tool) || !IsMeatTool(tool))
                     continue;
 
-                StoredTool = MeatToolState.FromTool(tool);
+                SetStoredTool(player, MeatToolState.FromTool(tool));
                 player.Items[i] = null;
                 changed = true;
             }
@@ -475,7 +553,7 @@ public sealed class ModEntry : Mod
             return;
 
         NormalizePlayerItemsAfterCleanup(player);
-        RefreshWalletStateAfterStoredToolChange();
+        RefreshWalletStateAfterStoredToolChange(player);
         if (Config.ShowHudMessageWhenStored)
             Game1.addHUDMessage(new HUDMessage("Animal Husbandry tool moved to wallet.", HUDMessage.newQuest_type));
     }
@@ -489,24 +567,25 @@ public sealed class ModEntry : Mod
         SuppressInventoryConversion = true;
         try
         {
+            RestorePendingToolUseBeforeDestructiveCleanup(player);
             RemoveRuntimeToolCopies(player);
 
-            if (StoredTool is not null)
+            if (GetStoredTool(player) is not null)
             {
                 if (RemoveInventoryCopiesOfMeatTool(player))
                     changed = true;
-                if (CollectLostFoundMeatTool())
+                if (CollectLostFoundMeatTool(player))
                     changed = true;
             }
             else
             {
                 if (TryTakeInventoryMeatTool(player, out Tool? inventoryTool))
                 {
-                    StoredTool = MeatToolState.FromTool(inventoryTool);
+                    SetStoredTool(player, MeatToolState.FromTool(inventoryTool));
                     changed = true;
                 }
 
-                if (CollectLostFoundMeatTool())
+                if (CollectLostFoundMeatTool(player))
                     changed = true;
             }
         }
@@ -516,7 +595,7 @@ public sealed class ModEntry : Mod
         }
 
         if (changed)
-            RefreshWalletStateAfterStoredToolChange();
+            RefreshWalletStateAfterStoredToolChange(player);
         else
         {
             UpdateWalletFlag(player);
@@ -526,46 +605,34 @@ public sealed class ModEntry : Mod
 
     private bool MaterializeStoredToolToInventory(Farmer player, bool useOverflowMenu)
     {
-        if (StoredTool is null)
+        MeatToolState? storedTool = GetStoredTool(player);
+        if (storedTool is null)
             return false;
 
-        Tool? tool = StoredTool.CreateTool(Monitor);
-        StoredTool = null;
-
-        if (tool is null || MeatToolState.IsErrorTool(tool))
-        {
-            RefreshWalletStateAfterStoredToolChange();
+        Tool? tool = storedTool.CreateTool(Monitor);
+        if (tool is null)
             return false;
-        }
 
-        SuppressInventoryConversion = true;
-        try
-        {
-            ClearWalletMarkers(tool);
-            if (useOverflowMenu)
-                AddToolToInventoryOrOverflowMenu(player, tool);
-            else
-                AddToolToInventoryOrAppend(player, tool);
-        }
-        finally
-        {
-            SuppressInventoryConversion = false;
-        }
+        SetStoredTool(player, null);
+        ClearWalletMarkers(tool);
+        if (useOverflowMenu)
+            AddToolToInventoryOrOverflowMenu(player, tool);
+        else
+            AddToolToInventoryOrAppend(player, tool);
 
-        RefreshWalletStateAfterStoredToolChange();
+        RefreshWalletStateAfterStoredToolChange(player);
         return true;
     }
 
     private void DisableWalletBehavior(Farmer player, bool showMessage)
     {
-        if (PendingToolUse is not null)
-            RestoreTemporaryTool(player);
+        RestorePendingToolUseBeforeDestructiveCleanup(player);
 
         bool returnedTool = MaterializeStoredToolToInventory(player, true);
         RemoveRuntimeToolCopies(player);
         ClearWalletMarkersFromInventory(player);
-        StoredTool = null;
-        Helper.Data.WriteSaveData<MeatToolState>(LegacySaveDataKey, null);
+        SetStoredTool(player, null);
+        ClearLegacySaveData();
         UpdateWalletFlag(player);
         InvalidatePowers();
 
@@ -575,17 +642,15 @@ public sealed class ModEntry : Mod
 
     private void ClearStoredWalletState()
     {
-        if (Context.IsWorldReady && PendingToolUse is not null)
-            RestoreTemporaryTool(Game1.player);
-
         if (Context.IsWorldReady)
         {
+            RestorePendingToolUseBeforeDestructiveCleanup(Game1.player);
             RemoveRuntimeToolCopies(Game1.player);
             ClearWalletMarkersFromInventory(Game1.player);
         }
 
-        StoredTool = null;
-        Helper.Data.WriteSaveData<MeatToolState>(LegacySaveDataKey, null);
+        SetStoredTool(Game1.player, null);
+        ClearLegacySaveData();
         if (Context.IsWorldReady)
             UpdateWalletFlag(Game1.player);
         InvalidatePowers();
@@ -593,55 +658,36 @@ public sealed class ModEntry : Mod
 
     private void ExposeStoredToolForOvernight(Farmer player)
     {
-        if (!IsMeatToolEnabled() || StoredTool is null || HasOvernightExposure(player))
+        MeatToolState? storedTool = GetStoredTool(player);
+        if (!IsMeatToolEnabled() || storedTool is null || HasOvernightExposure(player))
             return;
 
-        Tool? tool = StoredTool.CreateTool(Monitor);
-        if (tool is null || MeatToolState.IsErrorTool(tool))
+        Tool? tool = storedTool.CreateTool(Monitor);
+        if (tool is null)
             return;
 
-        SuppressInventoryConversion = true;
-        try
-        {
-            MarkOvernightExposure(tool);
-            AddToolToInventoryOrAppend(player, tool);
-            StoredTool = null;
-        }
-        finally
-        {
-            SuppressInventoryConversion = false;
-        }
-
-        UpdateWalletFlag(player);
-        InvalidatePowers();
+        MarkOvernightExposure(tool, player);
+        AddToolToInventoryOrAppend(player, tool);
+        SetStoredTool(player, null);
+        RefreshWalletStateAfterStoredToolChange(player);
     }
 
     private void CollectOvernightExposedTool(Farmer player)
     {
-        if (!Config.ModEnabled)
-            return;
-
         bool changed = false;
         SuppressInventoryConversion = true;
         try
         {
-            for (int i = 0; i < player.Items.Count; i++)
+            for (int i = player.Items.Count - 1; i >= 0; i--)
             {
-                if (player.Items[i] is not Tool tool || !IsOvernightExposure(tool))
-                    continue;
-
-                ClearWalletMarkers(tool);
-                if (IsMeatTool(tool))
+                if (player.Items[i] is Tool tool && IsOvernightExposureForPlayer(tool, player) && IsMeatTool(tool))
                 {
-                    StoredTool = MeatToolState.FromTool(tool);
+                    ClearWalletMarkers(tool);
+                    SetStoredTool(player, MeatToolState.FromTool(tool));
                     player.Items[i] = null;
+                    changed = true;
                 }
-
-                changed = true;
             }
-
-            if (changed)
-                NormalizePlayerItemsAfterCleanup(player);
         }
         finally
         {
@@ -649,15 +695,19 @@ public sealed class ModEntry : Mod
         }
 
         if (changed)
-            RefreshWalletStateAfterStoredToolChange();
+        {
+            NormalizePlayerItemsAfterCleanup(player);
+            RefreshWalletStateAfterStoredToolChange(player);
+        }
     }
 
     private bool TrySetTemporaryWalletTool(Farmer player)
     {
-        if (PendingToolUse is not null || !IsMeatToolEnabled() || StoredTool is null)
+        MeatToolState? storedTool = GetStoredTool(player);
+        if (PendingToolUse is not null || !IsMeatToolEnabled() || storedTool is null)
             return false;
 
-        Tool? walletTool = StoredTool.CreateTool(Monitor);
+        Tool? walletTool = storedTool.CreateTool(Monitor);
         if (walletTool is null)
             return false;
 
@@ -667,6 +717,7 @@ public sealed class ModEntry : Mod
             return false;
 
         SuppressInventoryConversion = true;
+        bool leasedFromWallet = false;
         try
         {
             while (player.Items.Count <= previousToolIndex && player.Items.Count < maxItems)
@@ -677,10 +728,24 @@ public sealed class ModEntry : Mod
 
             Item? previousItem = player.Items[previousToolIndex];
             UpdateToolEnchantmentsForSelectedSlot(player, previousItem as Tool, walletTool);
-            MarkRuntimeTool(walletTool);
+            MarkRuntimeTool(walletTool, player);
+            SetStoredTool(player, null);
+            leasedFromWallet = true;
+            RefreshWalletStateAfterStoredToolChange(player, false);
             player.Items[previousToolIndex] = walletTool;
             player.CurrentToolIndex = previousToolIndex;
             PendingToolUse = new TemporaryToolUse(previousToolIndex, walletTool, previousItem);
+        }
+        catch
+        {
+            if (leasedFromWallet)
+            {
+                ClearWalletMarkers(walletTool);
+                SetStoredTool(player, MeatToolState.FromTool(walletTool));
+                RefreshWalletStateAfterStoredToolChange(player, false);
+            }
+
+            throw;
         }
         finally
         {
@@ -704,15 +769,26 @@ public sealed class ModEntry : Mod
         SuppressInventoryConversion = true;
         try
         {
-            Tool? usedTool = FindTemporaryTool(player, pending);
+            int temporarySlot = FindTemporaryToolSlot(player, pending);
+            Tool? usedTool = temporarySlot >= 0 && temporarySlot < player.Items.Count
+                ? player.Items[temporarySlot] as Tool
+                : null;
+
             if (usedTool is not null)
             {
+                if (temporarySlot >= 0 && temporarySlot < player.Items.Count)
+                    player.Items[temporarySlot] = null;
+
                 ClearWalletMarkers(usedTool);
-                StoredTool = MeatToolState.FromTool(usedTool);
-                RefreshWalletStateAfterStoredToolChange(false);
+                SetStoredTool(player, MeatToolState.FromTool(usedTool));
+                RefreshWalletStateAfterStoredToolChange(player, false);
             }
             else
+            {
                 RemoveRuntimeToolCopies(player);
+                SetStoredTool(player, null);
+                RefreshWalletStateAfterStoredToolChange(player, false);
+            }
 
             UpdateToolEnchantmentsForSelectedSlot(player, usedTool, pending.PreviousItem as Tool);
             RestoreTemporaryToolSlot(player, pending);
@@ -725,33 +801,65 @@ public sealed class ModEntry : Mod
         }
     }
 
-    private static Tool? FindTemporaryTool(Farmer player, TemporaryToolUse pending)
+    private static int FindTemporaryToolSlot(Farmer player, TemporaryToolUse pending)
     {
-        if (pending.Slot >= 0 && pending.Slot < player.Items.Count && ReferenceEquals(player.Items[pending.Slot], pending.TemporaryTool))
-            return pending.TemporaryTool;
-
-        foreach (Item? item in player.Items)
+        if (pending.Slot >= 0 && pending.Slot < player.Items.Count)
         {
-            if (ReferenceEquals(item, pending.TemporaryTool))
-                return pending.TemporaryTool;
+            Item? slotItem = player.Items[pending.Slot];
+            if (ReferenceEquals(slotItem, pending.TemporaryTool))
+                return pending.Slot;
+
+            if (IsPendingRuntimeToolForPlayer(slotItem, player))
+                return pending.Slot;
         }
 
-        return null;
+        for (int i = 0; i < player.Items.Count; i++)
+        {
+            Item? item = player.Items[i];
+            if (ReferenceEquals(item, pending.TemporaryTool))
+                return i;
+
+            if (IsPendingRuntimeToolForPlayer(item, player))
+                return i;
+        }
+
+        return -1;
+    }
+
+    private static bool IsPendingRuntimeToolForPlayer(Item? item, Farmer player)
+    {
+        return item is Tool tool && IsRuntimeToolForPlayer(tool, player) && IsMeatTool(tool);
     }
 
     private static void RestoreTemporaryToolSlot(Farmer player, TemporaryToolUse pending)
     {
         if (pending.Slot < 0 || pending.Slot >= player.Items.Count)
+        {
+            if (pending.PreviousItem is not null && !InventoryContainsReference(player, pending.PreviousItem))
+                player.addItemByMenuIfNecessary(pending.PreviousItem);
             return;
+        }
 
-        if (ReferenceEquals(player.Items[pending.Slot], pending.TemporaryTool) || player.Items[pending.Slot] is null)
+        Item? currentItem = player.Items[pending.Slot];
+        if (currentItem is null || ReferenceEquals(currentItem, pending.TemporaryTool) || IsPendingRuntimeToolForPlayer(currentItem, player))
         {
             player.Items[pending.Slot] = pending.PreviousItem;
             return;
         }
 
-        if (pending.PreviousItem is not null)
+        if (pending.PreviousItem is not null && !ReferenceEquals(currentItem, pending.PreviousItem) && !InventoryContainsReference(player, pending.PreviousItem))
             player.addItemByMenuIfNecessary(pending.PreviousItem);
+    }
+
+    private static bool InventoryContainsReference(Farmer player, Item item)
+    {
+        foreach (Item? existingItem in player.Items)
+        {
+            if (ReferenceEquals(existingItem, item))
+                return true;
+        }
+
+        return false;
     }
 
     private void UpdateToolEnchantmentsForSelectedSlot(Farmer player, Tool? oldTool, Tool? newTool)
@@ -783,7 +891,7 @@ public sealed class ModEntry : Mod
     {
         for (int i = 0; i < player.Items.Count; i++)
         {
-            if (player.Items[i] is Tool candidate && IsMeatTool(candidate) && !IsRuntimeTool(candidate) && !IsOvernightExposure(candidate))
+            if (player.Items[i] is Tool candidate && IsMeatTool(candidate) && !IsRuntimeTool(candidate) && !IsOvernightExposure(candidate) && !IsCurrentlySelectedItem(player, i, candidate))
             {
                 ClearWalletMarkers(candidate);
                 player.Items[i] = null;
@@ -802,11 +910,11 @@ public sealed class ModEntry : Mod
         bool removed = false;
         for (int i = 0; i < player.Items.Count; i++)
         {
-            if (player.Items[i] is not Tool tool || IsRuntimeTool(tool) || IsOvernightExposure(tool) || !IsMeatTool(tool))
+            if (player.Items[i] is not Tool tool || IsRuntimeTool(tool) || IsOvernightExposure(tool) || IsCurrentlySelectedItem(player, i, tool) || !IsMeatTool(tool))
                 continue;
 
             ClearWalletMarkers(tool);
-            StoredTool = MeatToolState.FromTool(tool);
+            SetStoredTool(player, MeatToolState.FromTool(tool));
             player.Items[i] = null;
             removed = true;
         }
@@ -817,15 +925,15 @@ public sealed class ModEntry : Mod
         return removed;
     }
 
-    private bool CollectLostFoundMeatTool()
+    private bool CollectLostFoundMeatTool(Farmer player)
     {
         bool changed = false;
         for (int i = 0; i < 16; i++)
         {
-            if (!TryTakeLostFoundMeatTool(out Tool? recoveredTool))
+            if (!TryTakeLostFoundMeatTool(player, out Tool? recoveredTool))
                 break;
 
-            StoredTool = MeatToolState.FromTool(recoveredTool);
+            SetStoredTool(player, MeatToolState.FromTool(recoveredTool));
             changed = true;
         }
 
@@ -837,51 +945,75 @@ public sealed class ModEntry : Mod
         if (!IsMeatToolEnabled() || !Context.IsWorldReady)
             return;
 
-        if (CollectLostFoundMeatTool())
-            RefreshWalletStateAfterStoredToolChange();
+        Farmer player = Game1.player;
+        if (CollectLostFoundMeatTool(player))
+            RefreshWalletStateAfterStoredToolChange(player);
     }
 
-    private static bool TryTakeLostFoundMeatTool(out Tool tool)
+    private static bool IsLikelyLostFoundToolContainer(MemberInfo member, object? value)
+    {
+        if (value is null || value is string)
+            return false;
+
+        string name = member.Name;
+        bool nameLooksRelevant = name.Contains("lost", StringComparison.OrdinalIgnoreCase)
+            || name.Contains("found", StringComparison.OrdinalIgnoreCase)
+            || name.Contains("return", StringComparison.OrdinalIgnoreCase)
+            || name.Contains("Tool", StringComparison.OrdinalIgnoreCase);
+
+        if (!nameLooksRelevant)
+            return false;
+
+        Type valueType = value.GetType();
+        if (typeof(Tool).IsAssignableFrom(valueType) || typeof(IList).IsAssignableFrom(valueType) || typeof(IDictionary).IsAssignableFrom(valueType))
+            return true;
+
+        if (TryGetNetValue(value) is Tool)
+            return true;
+
+        PropertyInfo? valueProperty = valueType.GetProperty("Value", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        return valueProperty is not null && valueProperty.GetIndexParameters().Length == 0 && typeof(Tool).IsAssignableFrom(valueProperty.PropertyType);
+    }
+
+    private static bool TryTakeLostFoundMeatTool(Farmer player, out Tool tool)
     {
         tool = null!;
-        object? team = Game1.player?.team;
+        object? team = player.team;
         if (team is null)
             return false;
 
+        bool requireOwner = Context.IsMultiplayer;
         BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
         foreach (MemberInfo member in team.GetType().GetMembers(flags))
         {
             if (member.MemberType != MemberTypes.Field && member.MemberType != MemberTypes.Property)
                 continue;
 
-            string name = member.Name;
-            if (!name.Contains("lost", StringComparison.OrdinalIgnoreCase)
-                && !name.Contains("found", StringComparison.OrdinalIgnoreCase)
-                && !name.Contains("return", StringComparison.OrdinalIgnoreCase))
+            object? value = GetMemberValue(member, team);
+            if (!IsLikelyLostFoundToolContainer(member, value))
                 continue;
 
-            object? value = GetMemberValue(member, team);
-            if (TryTakeMeatToolFromValue(value, out tool))
+            if (TryTakeMeatToolFromValue(value, out tool, player, requireOwner))
                 return true;
         }
 
         return false;
     }
 
-    private static bool TryTakeMeatToolFromValue(object? value, out Tool tool)
+    private static bool TryTakeMeatToolFromValue(object? value, out Tool tool, Farmer? player = null, bool requireOwner = false)
     {
         tool = null!;
         if (value is null || value is string)
             return false;
 
-        if (TryTakeMeatToolFromWrappedValue(value, out tool))
+        if (TryTakeMeatToolFromWrappedValue(value, out tool, player, requireOwner))
             return true;
 
         object? unwrapped = TryGetNetValue(value);
-        if (!ReferenceEquals(unwrapped, value) && unwrapped is not Tool && TryTakeMeatToolFromValue(unwrapped, out tool))
+        if (!ReferenceEquals(unwrapped, value) && unwrapped is not Tool && TryTakeMeatToolFromValue(unwrapped, out tool, player, requireOwner))
             return true;
 
-        if (value is Tool directTool && IsMeatTool(directTool))
+        if (value is Tool directTool && IsMeatTool(directTool) && ToolIsEligibleForOwner(directTool, player, requireOwner))
         {
             ClearWalletMarkers(directTool);
             tool = directTool;
@@ -892,7 +1024,7 @@ public sealed class ModEntry : Mod
         {
             for (int i = 0; i < list.Count; i++)
             {
-                if (list[i] is Tool candidate && IsMeatTool(candidate))
+                if (list[i] is Tool candidate && IsMeatTool(candidate) && ToolIsEligibleForOwner(candidate, player, requireOwner))
                 {
                     ClearWalletMarkers(candidate);
                     list.RemoveAt(i);
@@ -910,7 +1042,7 @@ public sealed class ModEntry : Mod
                     continue;
 
                 object? dictionaryValue = dictionary[key];
-                if (dictionaryValue is Tool candidate && IsMeatTool(candidate))
+                if (dictionaryValue is Tool candidate && IsMeatTool(candidate) && ToolIsEligibleForOwner(candidate, player, requireOwner))
                 {
                     ClearWalletMarkers(candidate);
                     dictionary.Remove(key);
@@ -918,7 +1050,7 @@ public sealed class ModEntry : Mod
                     return true;
                 }
 
-                if (TryTakeMeatToolFromValue(dictionaryValue, out tool))
+                if (TryTakeMeatToolFromValue(dictionaryValue, out tool, player, requireOwner))
                     return true;
             }
         }
@@ -926,17 +1058,23 @@ public sealed class ModEntry : Mod
         return false;
     }
 
-    private static bool TryTakeMeatToolFromWrappedValue(object value, out Tool tool)
+    private static bool TryTakeMeatToolFromWrappedValue(object value, out Tool tool, Farmer? player = null, bool requireOwner = false)
     {
         tool = null!;
         try
         {
             PropertyInfo? property = value.GetType().GetProperty("Value", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            if (property is null || property.GetIndexParameters().Length != 0 || !property.CanRead || !property.CanWrite)
+            if (property is null || property.GetIndexParameters().Length != 0 || !property.CanRead)
                 return false;
 
             object? inner = property.GetValue(value);
             if (inner is not Tool candidate || !IsMeatTool(candidate))
+                return false;
+
+            if (!ToolIsEligibleForOwner(candidate, player, requireOwner))
+                return false;
+
+            if (!property.CanWrite)
                 return false;
 
             ClearWalletMarkers(candidate);
@@ -948,6 +1086,14 @@ public sealed class ModEntry : Mod
         {
             return false;
         }
+    }
+
+    private static bool ToolIsEligibleForOwner(Tool tool, Farmer? player, bool requireOwner)
+    {
+        if (!requireOwner)
+            return true;
+
+        return player is not null && tool.modData.ContainsKey(RuntimeOwnerMarker) && IsOwnedByPlayer(tool, player);
     }
 
     private static object? TryGetNetValue(object value)
@@ -1018,10 +1164,11 @@ public sealed class ModEntry : Mod
             || text.Contains("Meat Wand", StringComparison.OrdinalIgnoreCase);
     }
 
-    private static void MarkRuntimeTool(Tool tool)
+    private static void MarkRuntimeTool(Tool tool, Farmer player)
     {
         EnsureMeatToolInstanceId(tool);
         tool.modData[RuntimeToolMarker] = "true";
+        MarkWalletOwner(tool, player);
     }
 
     private static bool IsRuntimeTool(Item? item)
@@ -1029,15 +1176,26 @@ public sealed class ModEntry : Mod
         return item is Tool tool && tool.modData.ContainsKey(RuntimeToolMarker);
     }
 
-    private static void MarkOvernightExposure(Tool tool)
+    private static bool IsRuntimeToolForPlayer(Item? item, Farmer player)
+    {
+        return item is Tool tool && tool.modData.ContainsKey(RuntimeToolMarker) && IsOwnedByPlayer(tool, player);
+    }
+
+    private static void MarkOvernightExposure(Tool tool, Farmer player)
     {
         EnsureMeatToolInstanceId(tool);
         tool.modData[OvernightExposureMarker] = "true";
+        MarkWalletOwner(tool, player);
     }
 
     private static bool IsOvernightExposure(Item? item)
     {
         return item is Tool tool && tool.modData.ContainsKey(OvernightExposureMarker);
+    }
+
+    private static bool IsOvernightExposureForPlayer(Item? item, Farmer player)
+    {
+        return item is Tool tool && tool.modData.ContainsKey(OvernightExposureMarker) && IsOwnedByPlayer(tool, player);
     }
 
     private static bool HasOvernightExposure(Farmer player)
@@ -1055,6 +1213,64 @@ public sealed class ModEntry : Mod
     {
         tool.modData.Remove(RuntimeToolMarker);
         tool.modData.Remove(OvernightExposureMarker);
+        tool.modData.Remove(RuntimeOwnerMarker);
+    }
+
+    private void RestorePendingToolUseBeforeDestructiveCleanup(Farmer player)
+    {
+        if (PendingToolUse is not null)
+            RestoreTemporaryTool(player);
+    }
+
+    private void RestorePendingToolUseToInventoryBeforeVolatileClear(Farmer player)
+    {
+        if (PendingToolUse is null)
+            return;
+
+        MeatToolState? storedTool = GetStoredTool(player);
+        TemporaryToolUse pending = PendingToolUse;
+        PendingToolUse = null;
+        PendingManualUseHotkey = null;
+
+        SuppressInventoryConversion = true;
+        try
+        {
+            int temporarySlot = FindTemporaryToolSlot(player, pending);
+            Tool? toolToPreserve = temporarySlot >= 0 && temporarySlot < player.Items.Count
+                ? player.Items[temporarySlot] as Tool
+                : null;
+
+            if (toolToPreserve is not null && temporarySlot >= 0 && temporarySlot < player.Items.Count)
+                player.Items[temporarySlot] = null;
+            else if (storedTool is not null)
+            {
+                toolToPreserve = storedTool.CreateTool(Monitor);
+                SetStoredTool(player, null);
+            }
+
+            if (toolToPreserve is not null)
+                ClearWalletMarkers(toolToPreserve);
+
+            RestoreTemporaryToolSlot(player, pending);
+
+            if (toolToPreserve is not null)
+                AddToolToInventoryOrAppend(player, toolToPreserve);
+
+            player.CurrentToolIndex = Math.Max(0, Math.Min(pending.Slot, Math.Max(0, player.Items.Count - 1)));
+            NormalizePlayerItemsAfterCleanup(player);
+        }
+        finally
+        {
+            SuppressInventoryConversion = false;
+        }
+    }
+
+    private void ClearLegacySaveData()
+    {
+        if (!Context.IsWorldReady || !Context.IsMainPlayer)
+            return;
+
+        Helper.Data.WriteSaveData<MeatToolState>(LegacySaveDataKey, null);
     }
 
     private static void RemoveRuntimeToolCopies(Farmer player)
@@ -1062,7 +1278,7 @@ public sealed class ModEntry : Mod
         bool removed = false;
         for (int i = 0; i < player.Items.Count; i++)
         {
-            if (IsRuntimeTool(player.Items[i]))
+            if (IsRuntimeToolForPlayer(player.Items[i], player))
             {
                 player.Items[i] = null;
                 removed = true;
@@ -1077,7 +1293,7 @@ public sealed class ModEntry : Mod
     {
         foreach (Item? item in player.Items)
         {
-            if (item is Tool tool)
+            if (item is Tool tool && (tool.modData.ContainsKey(RuntimeToolMarker) || tool.modData.ContainsKey(OvernightExposureMarker) || tool.modData.ContainsKey(RuntimeOwnerMarker)))
                 ClearWalletMarkers(tool);
         }
     }
@@ -1186,17 +1402,17 @@ public sealed class ModEntry : Mod
             player.Items.RemoveAt(player.Items.Count - 1);
     }
 
-    private void RefreshWalletStateAfterStoredToolChange(bool invalidatePowers = true)
+    private void RefreshWalletStateAfterStoredToolChange(Farmer player, bool invalidatePowers = true)
     {
-        Helper.Data.WriteSaveData<MeatToolState>(LegacySaveDataKey, null);
-        UpdateWalletFlag(Game1.player);
+        ClearLegacySaveData();
+        UpdateWalletFlag(player);
         if (invalidatePowers)
             InvalidatePowers();
     }
 
     private void UpdateWalletFlag(Farmer player)
     {
-        if (IsMeatToolEnabled() && StoredTool is not null)
+        if (IsMeatToolEnabled() && GetStoredTool(player) is not null)
             player.modData[HasMeatToolFlag] = "true";
         else
             player.modData.Remove(HasMeatToolFlag);
@@ -1206,9 +1422,6 @@ public sealed class ModEntry : Mod
     {
         Helper.GameContent.InvalidateCache("Data/Powers");
     }
-
-
-    [HarmonyPatch(typeof(Game1), nameof(Game1.pressUseToolButton))]
     private static class PressUseToolButtonPatch
     {
         public static void Prefix()

@@ -9,6 +9,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
+using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.Buildings;
 using StardewValley.GameData.Powers;
@@ -37,17 +38,49 @@ public sealed class ModEntry : Mod
     private const string MenuVirtualToolMarker = "ThaleTheGreat.WalletTools/MenuVirtualTool";
     private const string MenuVirtualToolKindMarker = "ThaleTheGreat.WalletTools/MenuVirtualToolKind";
     private const string MenuVirtualToolPurposeMarker = "ThaleTheGreat.WalletTools/MenuVirtualToolPurpose";
+    private const string OwnerPlayerIdMarker = "ThaleTheGreat.WalletTools/OwnerPlayerId";
 
     private static ModEntry? Instance;
 
     private ModConfig Config = new();
-    private readonly Dictionary<WalletToolKind, WalletToolState> StoredTools = new();
-    private TemporaryToolUse? PendingToolUse;
-    private SButton? PendingManualUseHotkey;
+    private readonly Dictionary<long, Dictionary<WalletToolKind, WalletToolState>> StoredToolsByPlayer = new();
+    private Dictionary<WalletToolKind, WalletToolState> StoredTools => GetStoredTools(Game1.player);
+    private readonly PerScreen<TemporaryToolUse?> PendingToolUseScreen = new();
+    private TemporaryToolUse? PendingToolUse
+    {
+        get => PendingToolUseScreen.Value;
+        set => PendingToolUseScreen.Value = value;
+    }
+
+    private readonly PerScreen<SButton?> PendingManualUseHotkeyScreen = new();
+    private SButton? PendingManualUseHotkey
+    {
+        get => PendingManualUseHotkeyScreen.Value;
+        set => PendingManualUseHotkeyScreen.Value = value;
+    }
+
     private Harmony Harmony = null!;
-    private bool SuppressInventoryConversion;
-    private bool PendingInventoryConversion;
-    private bool MayHaveMenuVirtualToolsInInventory;
+    private readonly PerScreen<bool> SuppressInventoryConversionScreen = new();
+    private bool SuppressInventoryConversion
+    {
+        get => SuppressInventoryConversionScreen.Value;
+        set => SuppressInventoryConversionScreen.Value = value;
+    }
+
+    private readonly PerScreen<bool> PendingInventoryConversionScreen = new();
+    private bool PendingInventoryConversion
+    {
+        get => PendingInventoryConversionScreen.Value;
+        set => PendingInventoryConversionScreen.Value = value;
+    }
+
+    private readonly PerScreen<bool> MayHaveMenuVirtualToolsInInventoryScreen = new();
+    private bool MayHaveMenuVirtualToolsInInventory
+    {
+        get => MayHaveMenuVirtualToolsInInventoryScreen.Value;
+        set => MayHaveMenuVirtualToolsInInventoryScreen.Value = value;
+    }
+
     private bool GmcmRegistered;
     private IGenericModConfigMenuApi? GmcmApi;
     private IMobilePhoneApi? MobilePhoneApi;
@@ -57,10 +90,24 @@ public sealed class ModEntry : Mod
     private bool ToolSmartSwitchPatchAttempted;
     private bool AutomateToolSwapPatched;
     private bool AutomateToolSwapPatchAttempted;
-    private readonly Dictionary<WalletToolKind, Tool> ToolSmartSwitchToolCache = new();
-    private readonly List<BlacksmithExposure> ActiveBlacksmithExposures = new();
-    private object? PatchedBlacksmithMenu;
-    private object? ActiveForgeMenu;
+    private readonly Dictionary<long, Dictionary<WalletToolKind, Tool>> ToolSmartSwitchToolCacheByPlayer = new();
+    private readonly PerScreen<List<BlacksmithExposure>> ActiveBlacksmithExposuresScreen = new(() => new List<BlacksmithExposure>());
+    private List<BlacksmithExposure> ActiveBlacksmithExposures => ActiveBlacksmithExposuresScreen.Value;
+
+    private readonly PerScreen<object?> PatchedBlacksmithMenuScreen = new();
+    private object? PatchedBlacksmithMenu
+    {
+        get => PatchedBlacksmithMenuScreen.Value;
+        set => PatchedBlacksmithMenuScreen.Value = value;
+    }
+
+    private readonly PerScreen<object?> ActiveForgeMenuScreen = new();
+    private object? ActiveForgeMenu
+    {
+        get => ActiveForgeMenuScreen.Value;
+        set => ActiveForgeMenuScreen.Value = value;
+    }
+
 
     public override void Entry(IModHelper helper)
     {
@@ -81,10 +128,73 @@ public sealed class ModEntry : Mod
         helper.Events.Input.ButtonReleased += OnButtonReleased;
 
         Harmony = new Harmony(ModManifest.UniqueID);
-        Harmony.PatchAll(Assembly.GetExecutingAssembly());
+        PatchCoreGameMethods();
         PatchBlacksmithToolUpgradeFlow();
     }
 
+
+    private Dictionary<WalletToolKind, WalletToolState> GetStoredTools(Farmer? player)
+    {
+        long playerId = GetWalletOwnerId(player);
+        if (!StoredToolsByPlayer.TryGetValue(playerId, out Dictionary<WalletToolKind, WalletToolState>? tools))
+        {
+            tools = new Dictionary<WalletToolKind, WalletToolState>();
+            StoredToolsByPlayer[playerId] = tools;
+        }
+
+        return tools;
+    }
+
+    private Dictionary<WalletToolKind, Tool> GetToolSmartSwitchToolCache(Farmer? player)
+    {
+        long playerId = GetWalletOwnerId(player);
+        if (!ToolSmartSwitchToolCacheByPlayer.TryGetValue(playerId, out Dictionary<WalletToolKind, Tool>? cache))
+        {
+            cache = new Dictionary<WalletToolKind, Tool>();
+            ToolSmartSwitchToolCacheByPlayer[playerId] = cache;
+        }
+
+        return cache;
+    }
+
+    private void RemoveToolSmartSwitchCachedKind(WalletToolKind kind)
+    {
+        foreach (Dictionary<WalletToolKind, Tool> cache in ToolSmartSwitchToolCacheByPlayer.Values)
+            cache.Remove(kind);
+    }
+
+    private static long GetWalletOwnerId(Farmer? player)
+    {
+        return player?.UniqueMultiplayerID ?? 0L;
+    }
+
+    private static string GetWalletOwnerIdString(Farmer? player)
+    {
+        return GetWalletOwnerId(player).ToString();
+    }
+
+    private static bool IsOwnedByPlayer(Tool tool, Farmer player)
+    {
+        if (!tool.modData.TryGetValue(OwnerPlayerIdMarker, out string? rawOwnerId))
+            return !Context.IsMultiplayer;
+
+        return string.Equals(rawOwnerId, GetWalletOwnerIdString(player), StringComparison.Ordinal);
+    }
+
+    private static bool HasOwnerMarker(Tool tool)
+    {
+        return tool.modData.ContainsKey(OwnerPlayerIdMarker);
+    }
+
+    private static void MarkWalletOwner(Tool tool, Farmer player)
+    {
+        tool.modData[OwnerPlayerIdMarker] = GetWalletOwnerIdString(player);
+    }
+
+    private static void ClearWalletOwner(Tool tool)
+    {
+        tool.modData.Remove(OwnerPlayerIdMarker);
+    }
 
     public override object GetApi()
     {
@@ -188,6 +298,33 @@ public sealed class ModEntry : Mod
         WarnIfNoSwitchModLoaded();
     }
 
+    private void PatchCoreGameMethods()
+    {
+        MethodInfo? keysDownPostfix = AccessTools.Method(typeof(IsOneOfTheseKeysDownPatch), nameof(IsOneOfTheseKeysDownPatch.Postfix));
+        if (keysDownPostfix is not null)
+        {
+            foreach (MethodInfo method in AccessTools.GetDeclaredMethods(typeof(Game1)).Where(method => method.Name == nameof(Game1.isOneOfTheseKeysDown)))
+                Harmony.Patch(method, postfix: new HarmonyMethod(keysDownPostfix));
+        }
+
+        MethodInfo? keysUpPostfix = AccessTools.Method(typeof(AreAllOfTheseKeysUpPatch), nameof(AreAllOfTheseKeysUpPatch.Postfix));
+        if (keysUpPostfix is not null)
+        {
+            foreach (MethodInfo method in AccessTools.GetDeclaredMethods(typeof(Game1)).Where(method => method.Name == nameof(Game1.areAllOfTheseKeysUp)))
+                Harmony.Patch(method, postfix: new HarmonyMethod(keysUpPostfix));
+        }
+
+        MethodInfo? missingTool = AccessTools.Method(typeof(Game1), "checkIsMissingTool");
+        MethodInfo? missingToolPostfix = AccessTools.Method(typeof(CheckIsMissingToolPatch), nameof(CheckIsMissingToolPatch.Postfix));
+        if (missingTool is not null && missingToolPostfix is not null)
+            Harmony.Patch(missingTool, postfix: new HarmonyMethod(missingToolPostfix));
+
+        MethodInfo? pressUseTool = AccessTools.Method(typeof(Game1), nameof(Game1.pressUseToolButton));
+        MethodInfo? pressUseToolPrefix = AccessTools.Method(typeof(PressUseToolButtonPatch), nameof(PressUseToolButtonPatch.Prefix));
+        if (pressUseTool is not null && pressUseToolPrefix is not null)
+            Harmony.Patch(pressUseTool, prefix: new HarmonyMethod(pressUseToolPrefix));
+    }
+
     private void PatchBlacksmithToolUpgradeFlow()
     {
         MethodInfo? prefix = AccessTools.Method(typeof(ModEntry), nameof(BlacksmithToolFlowPrefix));
@@ -200,9 +337,24 @@ public sealed class ModEntry : Mod
         PatchNamedMethods(typeof(GameLocation), "answerDialogue", prefix, postfix);
     }
 
+    private static bool IsSupportedBlacksmithActionMethod(MethodInfo method)
+    {
+        ParameterInfo[] parameters = method.GetParameters();
+        if (method.Name == "performAction")
+            return parameters.Length >= 2 && parameters[0].ParameterType == typeof(string[]);
+
+        if (method.Name == "answerDialogueAction")
+            return parameters.Length >= 2 && parameters[0].ParameterType == typeof(string);
+
+        if (method.Name == "answerDialogue")
+            return parameters.Length >= 1 && parameters[0].ParameterType == typeof(Response);
+
+        return false;
+    }
+
     private void PatchNamedMethods(Type type, string methodName, MethodInfo prefix, MethodInfo postfix)
     {
-        foreach (MethodInfo method in AccessTools.GetDeclaredMethods(type).Where(method => method.Name == methodName))
+        foreach (MethodInfo method in AccessTools.GetDeclaredMethods(type).Where(method => method.Name == methodName && IsSupportedBlacksmithActionMethod(method)))
             Harmony.Patch(method, prefix: new HarmonyMethod(prefix), postfix: new HarmonyMethod(postfix));
     }
 
@@ -494,7 +646,7 @@ public sealed class ModEntry : Mod
         bool returnedTool = MaterializeStoredToolToInventory(player, kind, $"{GetFallbackDisplayName(kind)} disabled");
 
         RemoveRuntimeToolCopies(player);
-        ToolSmartSwitchToolCache.Remove(kind);
+        RemoveToolSmartSwitchCachedKind(kind);
         UpdateWalletFlags(player);
         InvalidatePowers();
 
@@ -504,15 +656,16 @@ public sealed class ModEntry : Mod
 
     private bool MaterializeStoredToolToInventory(Farmer player, WalletToolKind kind, string reason)
     {
-        if (!StoredTools.TryGetValue(kind, out WalletToolState? state))
+        Dictionary<WalletToolKind, WalletToolState> storedTools = GetStoredTools(player);
+        if (!storedTools.TryGetValue(kind, out WalletToolState? state))
             return false;
 
         Tool? tool = state.CreateTool(Monitor);
-        StoredTools.Remove(kind);
+        storedTools.Remove(kind);
 
         if (tool is null || WalletToolState.IsErrorTool(tool))
         {
-            RefreshWalletStateAfterStoredToolChange();
+            RefreshWalletStateAfterStoredToolChange(player);
             return false;
         }
 
@@ -527,7 +680,7 @@ public sealed class ModEntry : Mod
             SuppressInventoryConversion = false;
         }
 
-        RefreshWalletStateAfterStoredToolChange();
+        RefreshWalletStateAfterStoredToolChange(player);
         return true;
     }
 
@@ -580,7 +733,7 @@ public sealed class ModEntry : Mod
             return;
 
         Config.AutoUseEnabled = enabled;
-        ToolSmartSwitchToolCache.Clear();
+        ToolSmartSwitchToolCacheByPlayer.Clear();
 
         if (Context.IsWorldReady)
         {
@@ -620,7 +773,7 @@ public sealed class ModEntry : Mod
             return;
 
         SetToolAutoUseEnabledValue(kind, enabled);
-        ToolSmartSwitchToolCache.Remove(kind);
+        RemoveToolSmartSwitchCachedKind(kind);
 
         if (Context.IsWorldReady && !enabled && PendingToolUse?.Kind == kind)
             RestoreTemporaryTool(Game1.player);
@@ -665,9 +818,9 @@ public sealed class ModEntry : Mod
 
         RemoveRuntimeToolCopies(player);
         ClearWalletMarkersFromInventory(player);
-        StoredTools.Clear();
-        ToolSmartSwitchToolCache.Clear();
-        Helper.Data.WriteSaveData<Dictionary<WalletToolKind, WalletToolState>>(SaveDataKey, null);
+        GetStoredTools(player).Clear();
+        ToolSmartSwitchToolCacheByPlayer.Clear();
+        ClearLegacyStoredToolsData();
         UpdateWalletFlags(player);
         InvalidatePowers();
 
@@ -686,9 +839,9 @@ public sealed class ModEntry : Mod
             ClearWalletMarkersFromInventory(Game1.player);
         }
 
-        StoredTools.Clear();
-        ToolSmartSwitchToolCache.Clear();
-        Helper.Data.WriteSaveData<Dictionary<WalletToolKind, WalletToolState>>(SaveDataKey, null);
+        GetStoredTools(Game1.player).Clear();
+        ToolSmartSwitchToolCacheByPlayer.Clear();
+        ClearLegacyStoredToolsData();
         if (Context.IsWorldReady)
             UpdateWalletFlags(Game1.player);
         InvalidatePowers();
@@ -707,7 +860,6 @@ public sealed class ModEntry : Mod
     private void OnSaveLoaded(object? sender, SaveLoadedEventArgs e)
     {
         ClearVolatileWalletState(invalidatePowers: false);
-
         if (!Config.ModEnabled)
         {
             ClearStoredWalletState();
@@ -728,8 +880,11 @@ public sealed class ModEntry : Mod
 
     private void ClearVolatileWalletState(bool invalidatePowers = true)
     {
-        StoredTools.Clear();
-        ToolSmartSwitchToolCache.Clear();
+        if (Context.IsWorldReady)
+            RestorePendingToolUseToInventoryBeforeVolatileClear(Game1.player);
+
+        StoredToolsByPlayer.Clear();
+        ToolSmartSwitchToolCacheByPlayer.Clear();
         ActiveBlacksmithExposures.Clear();
         PendingToolUse = null;
         PendingManualUseHotkey = null;
@@ -741,6 +896,7 @@ public sealed class ModEntry : Mod
             InvalidatePowers();
     }
 
+
     private void OnDayStarted(object? sender, DayStartedEventArgs e)
     {
         CollectOvernightExposedTools(Game1.player, "day start");
@@ -751,6 +907,7 @@ public sealed class ModEntry : Mod
 
     private void OnDayEnding(object? sender, DayEndingEventArgs e)
     {
+        RestorePendingToolUseBeforeDestructiveCleanup(Game1.player);
         SyncBlacksmithUpgradeState(Game1.player);
         RemoveRuntimeToolCopies(Game1.player);
         NormalizePlayerItemsAfterWalletCleanup(Game1.player);
@@ -758,6 +915,7 @@ public sealed class ModEntry : Mod
 
     private void OnSaving(object? sender, SavingEventArgs e)
     {
+        RestorePendingToolUseBeforeDestructiveCleanup(Game1.player);
         SyncBlacksmithUpgradeState(Game1.player);
         RemoveRuntimeToolCopies(Game1.player);
         NormalizePlayerItemsAfterWalletCleanup(Game1.player);
@@ -766,6 +924,7 @@ public sealed class ModEntry : Mod
 
     private void OnSaved(object? sender, SavedEventArgs e)
     {
+        RestorePendingToolUseBeforeDestructiveCleanup(Game1.player);
         CollectOvernightExposedTools(Game1.player, "post-save cleanup");
         RemoveRuntimeToolCopies(Game1.player);
         NormalizePlayerItemsAfterWalletCleanup(Game1.player);
@@ -958,9 +1117,9 @@ public sealed class ModEntry : Mod
         if (!IsForgeMenu(menu))
             return false;
 
-        if (pressedButton == SButton.Escape && HasMenuVirtualToolInObject(menu!, "Forge"))
+        if (pressedButton == SButton.Escape && HasMenuVirtualToolInObject(menu!, "Forge", Game1.player))
         {
-            CollectMenuVirtualToolsFromObject(menu!, "Forge Escape cancel");
+            CollectMenuVirtualToolsFromObject(menu!, Game1.player, "Forge Escape cancel");
             return true;
         }
 
@@ -989,7 +1148,7 @@ public sealed class ModEntry : Mod
         {
             if (ActiveForgeMenu is not null)
             {
-                CollectMenuVirtualToolsFromObject(ActiveForgeMenu, "Forge menu close");
+                CollectMenuVirtualToolsFromObject(ActiveForgeMenu, player, "Forge menu close");
                 ActiveForgeMenu = null;
             }
 
@@ -1001,7 +1160,7 @@ public sealed class ModEntry : Mod
         {
             if (!ReferenceEquals(PatchedBlacksmithMenu, menu))
             {
-                if (TryInjectWalletToolsIntoItemSelectionMenu(menu, "Clint"))
+                if (TryInjectWalletToolsIntoItemSelectionMenu(menu, player, "Clint"))
                     PatchedBlacksmithMenu = menu;
             }
         }
@@ -1019,7 +1178,7 @@ public sealed class ModEntry : Mod
         }
         else if (ActiveForgeMenu is not null && !ReferenceEquals(ActiveForgeMenu, menu))
         {
-            CollectMenuVirtualToolsFromObject(ActiveForgeMenu, "Forge menu replaced");
+            CollectMenuVirtualToolsFromObject(ActiveForgeMenu, player, "Forge menu replaced");
             ActiveForgeMenu = null;
         }
     }
@@ -1062,7 +1221,7 @@ public sealed class ModEntry : Mod
             or WalletToolKind.Pan;
     }
 
-    private bool TryInjectWalletToolsIntoItemSelectionMenu(object menu, string purpose)
+    private bool TryInjectWalletToolsIntoItemSelectionMenu(object menu, Farmer player, string purpose)
     {
         bool patched = false;
         foreach (object inventoryMenu in EnumerateInventoryMenuMembers(menu))
@@ -1071,7 +1230,7 @@ public sealed class ModEntry : Mod
                 continue;
 
             IList candidateList = list;
-            bool detachedForMenu = !ReferenceEquals(candidateList, Game1.player.Items);
+            bool detachedForMenu = !ReferenceEquals(candidateList, player.Items);
             if (!detachedForMenu)
             {
                 IList? detached = TryCreateDetachedMenuInventory(candidateList);
@@ -1084,7 +1243,7 @@ public sealed class ModEntry : Mod
                 detachedForMenu = true;
             }
 
-            int added = InjectMenuVirtualTools(candidateList, purpose);
+            int added = InjectMenuVirtualTools(candidateList, player, purpose);
             if (added > 0)
             {
                 patched = true;
@@ -1094,15 +1253,15 @@ public sealed class ModEntry : Mod
         return patched;
     }
 
-    private int InjectMenuVirtualTools(IList candidateList, string purpose)
+    private int InjectMenuVirtualTools(IList candidateList, Farmer player, string purpose)
     {
         int added = 0;
-        foreach (WalletToolKind kind in GetMenuCompatibleStoredToolKinds(purpose))
+        foreach (WalletToolKind kind in GetMenuCompatibleStoredToolKinds(player, purpose))
         {
-            if (ContainsMenuVirtualTool(candidateList, kind, purpose))
+            if (ContainsMenuVirtualTool(candidateList, kind, purpose, player))
                 continue;
 
-            Tool? tool = CreateMenuVirtualTool(kind, purpose);
+            Tool? tool = CreateMenuVirtualTool(player, kind, purpose);
             if (tool is null)
                 continue;
 
@@ -1129,11 +1288,12 @@ public sealed class ModEntry : Mod
         }
     }
 
-    private IEnumerable<WalletToolKind> GetMenuCompatibleStoredToolKinds(string purpose)
+    private IEnumerable<WalletToolKind> GetMenuCompatibleStoredToolKinds(Farmer player, string purpose)
     {
+        Dictionary<WalletToolKind, WalletToolState> storedTools = GetStoredTools(player);
         foreach (WalletToolKind kind in GetToolRecoveryOrder())
         {
-            if (!IsWalletEnabled(kind) || !StoredTools.ContainsKey(kind))
+            if (!IsWalletEnabled(kind) || !storedTools.ContainsKey(kind))
                 continue;
 
             if (purpose.Equals("Clint", StringComparison.OrdinalIgnoreCase) && !IsBlacksmithCompatibleKind(kind))
@@ -1146,9 +1306,10 @@ public sealed class ModEntry : Mod
         }
     }
 
-    private Tool? CreateMenuVirtualTool(WalletToolKind kind, string purpose)
+    private Tool? CreateMenuVirtualTool(Farmer player, WalletToolKind kind, string purpose)
     {
-        if (!StoredTools.TryGetValue(kind, out WalletToolState? state))
+        Dictionary<WalletToolKind, WalletToolState> storedTools = GetStoredTools(player);
+        if (!storedTools.TryGetValue(kind, out WalletToolState? state))
             return null;
 
         Tool? tool = state.CreateTool(Monitor);
@@ -1156,16 +1317,17 @@ public sealed class ModEntry : Mod
             return null;
 
         ClearWalletMarkers(tool);
-        MarkMenuVirtualTool(tool, kind, purpose);
+        MarkMenuVirtualTool(tool, kind, purpose, player);
         MayHaveMenuVirtualToolsInInventory = true;
         return tool;
     }
 
-    private static void MarkMenuVirtualTool(Tool tool, WalletToolKind kind, string purpose)
+    private static void MarkMenuVirtualTool(Tool tool, WalletToolKind kind, string purpose, Farmer player)
     {
         tool.modData[MenuVirtualToolMarker] = "true";
         tool.modData[MenuVirtualToolKindMarker] = kind.ToString();
         tool.modData[MenuVirtualToolPurposeMarker] = purpose;
+        MarkWalletOwner(tool, player);
     }
 
     private static bool IsMenuVirtualTool(Item? item, out WalletToolKind kind, out string purpose)
@@ -1183,6 +1345,14 @@ public sealed class ModEntry : Mod
         return true;
     }
 
+    private static bool IsMenuVirtualToolForPlayer(Item? item, Farmer player, out WalletToolKind kind, out string purpose)
+    {
+        if (!IsMenuVirtualTool(item, out kind, out purpose))
+            return false;
+
+        return item is Tool tool && IsOwnedByPlayer(tool, player);
+    }
+
     private static void ClearMenuVirtualMarkers(Tool tool)
     {
         tool.modData.Remove(MenuVirtualToolMarker);
@@ -1190,11 +1360,11 @@ public sealed class ModEntry : Mod
         tool.modData.Remove(MenuVirtualToolPurposeMarker);
     }
 
-    private static bool ContainsMenuVirtualTool(IList list, WalletToolKind kind, string purpose)
+    private static bool ContainsMenuVirtualTool(IList list, WalletToolKind kind, string purpose, Farmer player)
     {
         foreach (object? item in list)
         {
-            if (IsMenuVirtualTool(item as Item, out WalletToolKind existingKind, out string existingPurpose)
+            if (IsMenuVirtualToolForPlayer(item as Item, player, out WalletToolKind existingKind, out string existingPurpose)
                 && existingKind == kind
                 && existingPurpose.Equals(purpose, StringComparison.OrdinalIgnoreCase))
                 return true;
@@ -1264,21 +1434,24 @@ public sealed class ModEntry : Mod
 
     private void TrySupplyWalletToolToForge(object forgeMenu, WalletToolKind requestedKind)
     {
-        if (HasMenuVirtualToolInObject(forgeMenu, "Forge"))
-            CollectMenuVirtualToolsFromObject(forgeMenu, "Forge tool cycle");
+        Farmer player = Game1.player;
+        Dictionary<WalletToolKind, WalletToolState> storedTools = GetStoredTools(player);
 
-        if (!TryFindStoredEnabledToolForRequest(requestedKind, out WalletToolKind storedKind) || !IsForgeCompatibleKind(storedKind))
+        if (HasMenuVirtualToolInObject(forgeMenu, "Forge", player))
+            CollectMenuVirtualToolsFromObject(forgeMenu, player, "Forge tool cycle");
+
+        if (!TryFindStoredEnabledToolForRequest(player, requestedKind, out WalletToolKind storedKind) || !IsForgeCompatibleKind(storedKind))
             return;
 
-        Tool? tool = CreateMenuVirtualTool(storedKind, "Forge");
+        Tool? tool = CreateMenuVirtualTool(player, storedKind, "Forge");
         if (tool is null)
             return;
 
         if (!TrySetForgeHeldItem(forgeMenu, tool) && !TrySetForgeLeftItem(forgeMenu, tool))
             return;
 
-        StoredTools.Remove(storedKind);
-        RefreshWalletStateAfterStoredToolChange();
+        storedTools.Remove(storedKind);
+        RefreshWalletStateAfterStoredToolChange(player);
     }
 
     private static bool TrySetForgeHeldItem(object forgeMenu, Tool tool)
@@ -1347,23 +1520,24 @@ public sealed class ModEntry : Mod
         return type is not null && typeof(Item).IsAssignableFrom(type);
     }
 
-    private bool HasMenuVirtualToolInObject(object owner, string purpose)
+    private bool HasMenuVirtualToolInObject(object owner, string purpose, Farmer player)
     {
-        return EnumerateItemsInObject(owner).Any(item => IsMenuVirtualTool(item, out _, out string itemPurpose) && itemPurpose.Equals(purpose, StringComparison.OrdinalIgnoreCase));
+        return EnumerateItemsInObject(owner).Any(item => IsMenuVirtualToolForPlayer(item, player, out _, out string itemPurpose) && itemPurpose.Equals(purpose, StringComparison.OrdinalIgnoreCase));
     }
 
-    private void CollectMenuVirtualToolsFromObject(object owner, string reason)
+    private void CollectMenuVirtualToolsFromObject(object owner, Farmer player, string reason)
     {
+        Dictionary<WalletToolKind, WalletToolState> storedTools = GetStoredTools(player);
         bool changed = false;
         foreach ((object container, MemberInfo member, Item? item) in EnumerateItemMembersInObject(owner).ToArray())
         {
-            if (!IsMenuVirtualTool(item, out WalletToolKind kind, out string purpose) || item is not Tool tool)
+            if (!IsMenuVirtualToolForPlayer(item, player, out WalletToolKind kind, out string purpose) || item is not Tool tool)
                 continue;
 
             ClearMenuVirtualMarkers(tool);
             if (IsWalletEnabled(kind))
             {
-                StoredTools[kind] = WalletToolState.FromTool(kind, tool);
+                storedTools[kind] = WalletToolState.FromTool(kind, tool);
                 SetMemberValue(member, container, null);
                 changed = true;
             }
@@ -1372,12 +1546,13 @@ public sealed class ModEntry : Mod
         if (changed)
         {
             MayHaveMenuVirtualToolsInInventory = true;
-            RefreshWalletStateAfterStoredToolChange();
+            RefreshWalletStateAfterStoredToolChange(player);
         }
     }
 
     private void CollectMenuVirtualToolsFromInventory(Farmer player, string reason)
     {
+        Dictionary<WalletToolKind, WalletToolState> storedTools = GetStoredTools(player);
         bool changed = false;
         bool foundVirtualTool = false;
         SuppressInventoryConversion = true;
@@ -1385,14 +1560,14 @@ public sealed class ModEntry : Mod
         {
             for (int i = 0; i < player.Items.Count; i++)
             {
-                if (!IsMenuVirtualTool(player.Items[i], out WalletToolKind kind, out string purpose) || player.Items[i] is not Tool tool)
+                if (!IsMenuVirtualToolForPlayer(player.Items[i], player, out WalletToolKind kind, out string purpose) || player.Items[i] is not Tool tool)
                     continue;
 
                 foundVirtualTool = true;
                 ClearMenuVirtualMarkers(tool);
                 if (IsWalletEnabled(kind))
                 {
-                    StoredTools[kind] = WalletToolState.FromTool(kind, tool);
+                    storedTools[kind] = WalletToolState.FromTool(kind, tool);
                     player.Items[i] = null;
                     changed = true;
                 }
@@ -1409,7 +1584,7 @@ public sealed class ModEntry : Mod
         MayHaveMenuVirtualToolsInInventory = foundVirtualTool || ActiveForgeMenu is not null || PatchedBlacksmithMenu is not null;
 
         if (changed)
-            RefreshWalletStateAfterStoredToolChange();
+            RefreshWalletStateAfterStoredToolChange(player);
     }
 
     private IEnumerable<Item?> EnumerateItemsInObject(object owner)
@@ -1434,7 +1609,7 @@ public sealed class ModEntry : Mod
 
     private void TryUseWalletToolHotkey(Farmer player, WalletToolKind requestedKind, SButton pressedButton)
     {
-        if (!TryFindStoredEnabledToolForRequest(requestedKind, out WalletToolKind storedKind))
+        if (!TryFindStoredEnabledToolForRequest(player, requestedKind, out WalletToolKind storedKind))
             return;
 
         if (!TryMaterializeWalletToolForManualUse(player, storedKind))
@@ -1452,9 +1627,52 @@ public sealed class ModEntry : Mod
         return name.Equals("Blacksmith", StringComparison.OrdinalIgnoreCase) || name.Equals("Clint", StringComparison.OrdinalIgnoreCase);
     }
 
+    private static int GetDaysLeftForToolUpgrade(Farmer player)
+    {
+        Type type = player.GetType();
+        foreach (string name in new[] { "daysLeftForToolUpgrade", "DaysLeftForToolUpgrade" })
+        {
+            PropertyInfo? property = type.GetProperty(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            if (property is not null)
+            {
+                object? propertyValue = property.GetValue(player);
+                if (propertyValue is int propertyInt)
+                    return propertyInt;
+                if (propertyValue is Netcode.NetInt propertyNetInt)
+                    return propertyNetInt.Value;
+            }
+
+            FieldInfo? field = type.GetField(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            if (field is not null)
+            {
+                object? fieldValue = field.GetValue(player);
+                if (fieldValue is int fieldInt)
+                    return fieldInt;
+                if (fieldValue is Netcode.NetInt fieldNetInt)
+                    return fieldNetInt.Value;
+            }
+        }
+
+        return 0;
+    }
+
+    private bool IsCompletedBlacksmithToolReadyForVanillaPickup(Farmer player)
+    {
+        Tool? completedTool = GetToolBeingUpgraded(player);
+        return completedTool is not null
+            && GetDaysLeftForToolUpgrade(player) <= 0
+            && TryGetWalletKindForStorage(completedTool, out WalletToolKind kind)
+            && IsWalletEnabled(kind);
+    }
+
     private void PrepareForBlacksmithToolFlow(Farmer player)
     {
         if (!Config.ModEnabled || !IsToolUpgradeLocation(player.currentLocation))
+            return;
+
+        NormalizePlayerItemsAfterWalletCleanup(player);
+
+        if (IsCompletedBlacksmithToolReadyForVanillaPickup(player))
             return;
 
         SyncBlacksmithUpgradeState(player);
@@ -1482,9 +1700,9 @@ public sealed class ModEntry : Mod
         SuppressInventoryConversion = true;
         try
         {
-            foreach (WalletToolKind kind in GetMenuCompatibleStoredToolKinds("Clint"))
+            foreach (WalletToolKind kind in GetMenuCompatibleStoredToolKinds(player, "Clint"))
             {
-                Tool? tool = CreateMenuVirtualTool(kind, "Clint");
+                Tool? tool = CreateMenuVirtualTool(player, kind, "Clint");
                 if (tool is null)
                     continue;
 
@@ -1541,7 +1759,7 @@ public sealed class ModEntry : Mod
 
                 if (exposure.Slot < player.Items.Count && ReferenceEquals(player.Items[exposure.Slot], exposure.Tool))
                 {
-                    ClearMenuVirtualMarkers(exposure.Tool);
+                    ClearWalletMarkers(exposure.Tool);
                     player.Items[exposure.Slot] = exposure.PreviousItem;
                 }
                 else if (becameUpgradeTool)
@@ -1563,7 +1781,8 @@ public sealed class ModEntry : Mod
 
     private void ExposeStoredToolsForOvernight(Farmer player, string reason)
     {
-        if (!Config.ModEnabled || StoredTools.Count == 0)
+        Dictionary<WalletToolKind, WalletToolState> storedTools = GetStoredTools(player);
+        if (!Config.ModEnabled || storedTools.Count == 0)
             return;
 
         bool changed = MaterializeStoredToolsToInventory(player, markForOvernight: true, clearStoredState: true, useOverflowMenu: false, reason: reason);
@@ -1572,14 +1791,15 @@ public sealed class ModEntry : Mod
 
         ClearLegacyStoredToolsData();
         ClearWalletFlagModData(player);
-        ToolSmartSwitchToolCache.Clear();
+        ToolSmartSwitchToolCacheByPlayer.Clear();
         InvalidatePowers();
 
     }
 
     private bool MaterializeStoredToolsToInventory(Farmer player, bool markForOvernight, bool clearStoredState, bool useOverflowMenu, string reason)
     {
-        if (StoredTools.Count == 0)
+        Dictionary<WalletToolKind, WalletToolState> storedTools = GetStoredTools(player);
+        if (storedTools.Count == 0)
             return false;
 
 
@@ -1587,7 +1807,7 @@ public sealed class ModEntry : Mod
         SuppressInventoryConversion = true;
         try
         {
-            foreach (KeyValuePair<WalletToolKind, WalletToolState> pair in StoredTools.ToArray())
+            foreach (KeyValuePair<WalletToolKind, WalletToolState> pair in storedTools.ToArray())
             {
                 WalletToolKind kind = pair.Key;
                 if (!IsWalletEnabled(kind) && markForOvernight)
@@ -1599,21 +1819,21 @@ public sealed class ModEntry : Mod
                 Tool? tool = pair.Value.CreateTool(Monitor);
                 if (tool is null || WalletToolState.IsErrorTool(tool))
                 {
-                    StoredTools.Remove(kind);
+                    storedTools.Remove(kind);
                     changed = true;
                     continue;
                 }
 
                 ClearWalletMarkers(tool);
                 if (markForOvernight)
-                    MarkOvernightExposure(tool, kind);
+                    MarkOvernightExposure(tool, kind, player);
 
                 if (useOverflowMenu)
                     AddToolToInventoryOrOverflowMenu(player, tool);
                 else
                     AddToolToInventoryOrAppend(player, tool);
                 if (clearStoredState)
-                    StoredTools.Remove(kind);
+                    storedTools.Remove(kind);
                 changed = true;
             }
         }
@@ -1680,20 +1900,20 @@ public sealed class ModEntry : Mod
         if (!Config.ModEnabled)
             return;
 
-
+        Dictionary<WalletToolKind, WalletToolState> storedTools = GetStoredTools(player);
         bool changed = false;
         SuppressInventoryConversion = true;
         try
         {
             for (int i = 0; i < player.Items.Count; i++)
             {
-                if (player.Items[i] is not Tool tool || !IsOvernightExposure(tool, out WalletToolKind kind))
+                if (player.Items[i] is not Tool tool || !IsOvernightExposureForPlayer(tool, player, out WalletToolKind kind))
                     continue;
 
                 ClearWalletMarkers(tool);
                 if (IsWalletEnabled(kind) && TryGetWalletKindForStorage(tool, out WalletToolKind storageKind))
                 {
-                    StoredTools[storageKind] = WalletToolState.FromTool(storageKind, tool);
+                    storedTools[storageKind] = WalletToolState.FromTool(storageKind, tool);
                     player.Items[i] = null;
                 }
 
@@ -1710,7 +1930,7 @@ public sealed class ModEntry : Mod
 
         if (changed)
         {
-            RefreshWalletStateAfterStoredToolChange();
+            RefreshWalletStateAfterStoredToolChange(player);
         }
     }
 
@@ -1718,7 +1938,7 @@ public sealed class ModEntry : Mod
     {
         foreach (Item? item in player.Items)
         {
-            if (item is Tool tool && IsOvernightExposure(tool, out WalletToolKind exposedKind) && exposedKind == kind)
+            if (item is Tool tool && IsOvernightExposureForPlayer(tool, player, out WalletToolKind exposedKind) && exposedKind == kind)
                 return true;
         }
 
@@ -1729,7 +1949,7 @@ public sealed class ModEntry : Mod
     {
         foreach (Item? item in player.Items)
         {
-            if (item is Tool tool && IsOvernightExposure(tool, out _))
+            if (item is Tool tool && IsOvernightExposureForPlayer(tool, player, out _))
                 return true;
         }
 
@@ -1740,7 +1960,7 @@ public sealed class ModEntry : Mod
     {
         foreach (Item? item in player.Items)
         {
-            if (item is Tool tool)
+            if (item is Tool tool && HasAnyWalletMarker(tool))
                 ClearWalletMarkers(tool);
         }
     }
@@ -1751,10 +1971,11 @@ public sealed class ModEntry : Mod
             player.modData.Remove($"{FlagPrefix}{kind}");
     }
 
-    private static void MarkOvernightExposure(Tool tool, WalletToolKind kind)
+    private static void MarkOvernightExposure(Tool tool, WalletToolKind kind, Farmer player)
     {
         tool.modData[OvernightExposureMarker] = "true";
         tool.modData[OvernightExposureKindMarker] = kind.ToString();
+        MarkWalletOwner(tool, player);
     }
 
     private static bool IsOvernightExposure(Tool tool, out WalletToolKind kind)
@@ -1768,6 +1989,26 @@ public sealed class ModEntry : Mod
         return false;
     }
 
+    private static bool IsOvernightExposureForPlayer(Tool tool, Farmer player, out WalletToolKind kind)
+    {
+        if (!IsOvernightExposure(tool, out kind))
+            return false;
+
+        return IsOwnedByPlayer(tool, player);
+    }
+
+    private static bool HasAnyWalletMarker(Tool tool)
+    {
+        return tool.modData.ContainsKey(RuntimeToolMarker)
+            || tool.modData.ContainsKey(RuntimeToolKindMarker)
+            || tool.modData.ContainsKey(OvernightExposureMarker)
+            || tool.modData.ContainsKey(OvernightExposureKindMarker)
+            || tool.modData.ContainsKey(MenuVirtualToolMarker)
+            || tool.modData.ContainsKey(MenuVirtualToolKindMarker)
+            || tool.modData.ContainsKey(MenuVirtualToolPurposeMarker)
+            || tool.modData.ContainsKey(OwnerPlayerIdMarker);
+    }
+
     private static void ClearWalletMarkers(Tool tool)
     {
         tool.modData.Remove(RuntimeToolMarker);
@@ -1775,6 +2016,7 @@ public sealed class ModEntry : Mod
         tool.modData.Remove(OvernightExposureMarker);
         tool.modData.Remove(OvernightExposureKindMarker);
         ClearMenuVirtualMarkers(tool);
+        ClearWalletOwner(tool);
     }
 
     private static void NormalizePlayerItemsAfterWalletCleanup(Farmer player)
@@ -1807,8 +2049,8 @@ public sealed class ModEntry : Mod
 
     private void LoadStoredTools()
     {
-        StoredTools.Clear();
-        ToolSmartSwitchToolCache.Clear();
+        GetStoredTools(Game1.player).Clear();
+        ToolSmartSwitchToolCacheByPlayer.Clear();
         ClearLegacyStoredToolsData();
         UpdateWalletFlags(Game1.player);
         InvalidatePowers();
@@ -1816,15 +2058,23 @@ public sealed class ModEntry : Mod
 
     private void RefreshWalletStateAfterStoredToolChange(bool invalidatePowers = true)
     {
-        ToolSmartSwitchToolCache.Clear();
+        RefreshWalletStateAfterStoredToolChange(Game1.player, invalidatePowers);
+    }
+
+    private void RefreshWalletStateAfterStoredToolChange(Farmer player, bool invalidatePowers = true)
+    {
+        ToolSmartSwitchToolCacheByPlayer.Clear();
         ClearLegacyStoredToolsData();
-        UpdateWalletFlags(Game1.player);
+        UpdateWalletFlags(player);
         if (invalidatePowers)
             InvalidatePowers();
     }
 
     private void ClearLegacyStoredToolsData()
     {
+        if (!Context.IsWorldReady || !Context.IsMainPlayer)
+            return;
+
         Helper.Data.WriteSaveData<Dictionary<WalletToolKind, WalletToolState>>(SaveDataKey, null);
     }
 
@@ -1838,7 +2088,7 @@ public sealed class ModEntry : Mod
         foreach (WalletToolKind kind in Enum.GetValues<WalletToolKind>())
         {
             string key = $"{FlagPrefix}{kind}";
-            if (TryGetWalletDisplayState(kind, out _))
+            if (TryGetWalletDisplayState(player, kind, out _))
                 player.modData[key] = "true";
             else
                 player.modData.Remove(key);
@@ -1847,30 +2097,26 @@ public sealed class ModEntry : Mod
 
     private bool TryGetWalletDisplayState(WalletToolKind kind, out WalletToolState state)
     {
+        return TryGetWalletDisplayState(Game1.player, kind, out state);
+    }
+
+    private bool TryGetWalletDisplayState(Farmer player, WalletToolKind kind, out WalletToolState state)
+    {
         if (!IsWalletEnabled(kind))
         {
             state = null!;
             return false;
         }
 
-        if (StoredTools.TryGetValue(kind, out WalletToolState? directState))
+        Dictionary<WalletToolKind, WalletToolState> storedTools = GetStoredTools(player);
+        if (storedTools.TryGetValue(kind, out WalletToolState? directState))
         {
             state = directState;
             return true;
         }
 
-
         state = null!;
         return false;
-    }
-
-    private static void PrepareToolForVanillaUpgrade(Farmer player, WalletToolKind kind)
-    {
-        Tool? upgradingTool = GetToolBeingUpgraded(player);
-        if (upgradingTool is null || !ToolMatchesWalletKind(upgradingTool, kind))
-            return;
-
-        ClearWalletMarkers(upgradingTool);
     }
 
     private void SyncBlacksmithUpgradeState(Farmer player)
@@ -1878,7 +2124,7 @@ public sealed class ModEntry : Mod
         if (!Config.ModEnabled)
             return;
 
-
+        Dictionary<WalletToolKind, WalletToolState> storedTools = GetStoredTools(player);
         Tool? upgradingTool = GetToolBeingUpgraded(player);
         if (upgradingTool is null)
             return;
@@ -1891,7 +2137,7 @@ public sealed class ModEntry : Mod
         ClearWalletMarkers(upgradingTool);
 
         bool changed = false;
-        if (StoredTools.Remove(upgradingKind))
+        if (storedTools.Remove(upgradingKind))
         {
             changed = true;
         }
@@ -1906,14 +2152,14 @@ public sealed class ModEntry : Mod
             changed = true;
         }
 
-        if (RemoveLostFoundCopiesOfToolKind(upgradingKind))
+        if (RemoveLostFoundCopiesOfToolKind(player, upgradingKind))
         {
             changed = true;
         }
 
         if (changed)
         {
-            RefreshWalletStateAfterStoredToolChange();
+            RefreshWalletStateAfterStoredToolChange(player);
             UpdateWalletFlags(player);
             InvalidatePowers();
         }
@@ -1941,13 +2187,13 @@ public sealed class ModEntry : Mod
         if (!Config.ModEnabled)
             return;
 
-
+        Dictionary<WalletToolKind, WalletToolState> storedTools = GetStoredTools(player);
         bool changed = false;
         SuppressInventoryConversion = true;
         try
         {
             RemoveRuntimeToolCopies(player);
-            if (RemoveInvalidStoredTools(reason))
+            if (RemoveInvalidStoredTools(player, reason))
                 changed = true;
 
             Tool? upgradingTool = GetToolBeingUpgraded(player);
@@ -1960,9 +2206,9 @@ public sealed class ModEntry : Mod
                     changed = true;
                 if (RemoveInventoryCopiesOfToolKind(player, kindBeingUpgraded, upgradingTool))
                     changed = true;
-                if (RemoveLostFoundCopiesOfToolKind(kindBeingUpgraded))
+                if (RemoveLostFoundCopiesOfToolKind(player, kindBeingUpgraded))
                     changed = true;
-                if (StoredTools.Remove(kindBeingUpgraded))
+                if (storedTools.Remove(kindBeingUpgraded))
                     changed = true;
             }
 
@@ -1971,25 +2217,25 @@ public sealed class ModEntry : Mod
                 if (!IsWalletEnabled(kind) || upgradingKind == kind)
                     continue;
 
-                if (StoredTools.ContainsKey(kind))
+                if (storedTools.ContainsKey(kind))
                 {
                     if (RemoveInventoryCopiesOfToolKind(player, kind, null))
                         changed = true;
-                    if (CollectLostFoundToolsOfKind(kind))
+                    if (CollectLostFoundToolsOfKind(player, kind))
                         changed = true;
                     continue;
                 }
 
                 if (TryTakeInventoryTool(player, kind, out Tool? inventoryTool))
                 {
-                    StoredTools[kind] = WalletToolState.FromTool(kind, inventoryTool);
-                    if (CollectLostFoundToolsOfKind(kind))
+                    storedTools[kind] = WalletToolState.FromTool(kind, inventoryTool);
+                    if (CollectLostFoundToolsOfKind(player, kind))
                         changed = true;
                     changed = true;
                     continue;
                 }
 
-                if (CollectLostFoundToolsOfKind(kind))
+                if (CollectLostFoundToolsOfKind(player, kind))
                     changed = true;
             }
         }
@@ -2000,7 +2246,7 @@ public sealed class ModEntry : Mod
 
         if (changed)
         {
-            RefreshWalletStateAfterStoredToolChange();
+            RefreshWalletStateAfterStoredToolChange(player);
         }
         else
         {
@@ -2029,13 +2275,18 @@ public sealed class ModEntry : Mod
 
     private bool CollectLostFoundToolsOfKind(WalletToolKind kind)
     {
+        return CollectLostFoundToolsOfKind(Game1.player, kind);
+    }
+
+    private bool CollectLostFoundToolsOfKind(Farmer player, WalletToolKind kind)
+    {
         bool changed = false;
         for (int i = 0; i < 16; i++)
         {
-            if (!TryTakeLostFoundTool(kind, out Tool? recoveredTool))
+            if (!TryTakeLostFoundTool(player, kind, out Tool? recoveredTool))
                 break;
 
-            if (TryReplaceStoredToolIfBetter(kind, recoveredTool))
+            if (TryReplaceStoredToolIfBetter(player, kind, recoveredTool))
                 changed = true;
 
             changed = true;
@@ -2049,28 +2300,34 @@ public sealed class ModEntry : Mod
         if (!Config.ModEnabled || !Context.IsWorldReady)
             return;
 
+        Farmer player = Game1.player;
         bool changed = false;
         foreach (WalletToolKind kind in GetToolRecoveryOrder())
         {
             if (!IsWalletEnabled(kind))
                 continue;
 
-            if (CollectLostFoundToolsOfKind(kind))
+            if (CollectLostFoundToolsOfKind(player, kind))
                 changed = true;
         }
 
         if (!changed)
             return;
 
-        RefreshWalletStateAfterStoredToolChange();
+        RefreshWalletStateAfterStoredToolChange(player);
     }
 
-    private static bool RemoveLostFoundCopiesOfToolKind(WalletToolKind kind)
+    private bool RemoveLostFoundCopiesOfToolKind(WalletToolKind kind)
+    {
+        return RemoveLostFoundCopiesOfToolKind(Game1.player, kind);
+    }
+
+    private bool RemoveLostFoundCopiesOfToolKind(Farmer player, WalletToolKind kind)
     {
         bool removed = false;
         for (int i = 0; i < 16; i++)
         {
-            if (!TryTakeLostFoundTool(kind, out _))
+            if (!TryTakeLostFoundTool(player, kind, out _))
                 break;
 
             removed = true;
@@ -2079,12 +2336,44 @@ public sealed class ModEntry : Mod
         return removed;
     }
 
-    private static bool TryTakeLostFoundTool(WalletToolKind kind, out Tool tool)
+    private static bool IsLikelyLostFoundToolContainer(MemberInfo member, object? value)
+    {
+        if (value is null || value is string)
+            return false;
+
+        string name = member.Name;
+        bool nameLooksRelevant = name.Contains("lost", StringComparison.OrdinalIgnoreCase)
+            || name.Contains("found", StringComparison.OrdinalIgnoreCase)
+            || name.Contains("return", StringComparison.OrdinalIgnoreCase)
+            || name.Contains("Tool", StringComparison.OrdinalIgnoreCase);
+
+        if (!nameLooksRelevant)
+            return false;
+
+        Type valueType = value.GetType();
+        if (typeof(Tool).IsAssignableFrom(valueType) || typeof(IList).IsAssignableFrom(valueType) || typeof(IDictionary).IsAssignableFrom(valueType))
+            return true;
+
+        if (TryGetNetValue(value) is Tool)
+            return true;
+
+        PropertyInfo? valueProperty = valueType.GetProperty("Value", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        return valueProperty is not null && valueProperty.GetIndexParameters().Length == 0 && typeof(Tool).IsAssignableFrom(valueProperty.PropertyType);
+    }
+
+    private bool TryTakeLostFoundTool(WalletToolKind kind, out Tool tool)
+    {
+        return TryTakeLostFoundTool(Game1.player, kind, out tool);
+    }
+
+    private bool TryTakeLostFoundTool(Farmer player, WalletToolKind kind, out Tool tool)
     {
         tool = null!;
-        object? team = Game1.player?.team;
+        object? team = player.team;
         if (team is null)
             return false;
+
+        bool requireOwner = Context.IsMultiplayer;
 
         BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
         foreach (MemberInfo member in team.GetType().GetMembers(flags))
@@ -2092,14 +2381,11 @@ public sealed class ModEntry : Mod
             if (member.MemberType != MemberTypes.Field && member.MemberType != MemberTypes.Property)
                 continue;
 
-            string name = member.Name;
-            if (!name.Contains("lost", StringComparison.OrdinalIgnoreCase)
-                && !name.Contains("found", StringComparison.OrdinalIgnoreCase)
-                && !name.Contains("return", StringComparison.OrdinalIgnoreCase))
+            object? value = GetMemberValue(member, team);
+            if (!IsLikelyLostFoundToolContainer(member, value))
                 continue;
 
-            object? value = GetMemberValue(member, team);
-            if (TryTakeToolFromValue(value, kind, out tool))
+            if (TryTakeToolFromValue(value, kind, out tool, player, requireOwner))
                 return true;
         }
 
@@ -2148,18 +2434,23 @@ public sealed class ModEntry : Mod
 
     private static bool TryTakeToolFromValue(object? value, WalletToolKind kind, out Tool tool)
     {
+        return TryTakeToolFromValue(value, kind, out tool, null, requireOwner: false);
+    }
+
+    private static bool TryTakeToolFromValue(object? value, WalletToolKind kind, out Tool tool, Farmer? player, bool requireOwner)
+    {
         tool = null!;
         if (value is null || value is string)
             return false;
 
-        if (TryTakeToolFromWrappedValue(value, kind, out tool))
+        if (TryTakeToolFromWrappedValue(value, kind, out tool, player, requireOwner))
             return true;
 
         object? unwrapped = TryGetNetValue(value);
-        if (!ReferenceEquals(unwrapped, value) && unwrapped is not Tool && TryTakeToolFromValue(unwrapped, kind, out tool))
+        if (!ReferenceEquals(unwrapped, value) && unwrapped is not Tool && TryTakeToolFromValue(unwrapped, kind, out tool, player, requireOwner))
             return true;
 
-        if (value is Tool directTool && ToolMatchesWalletKind(directTool, kind))
+        if (value is Tool directTool && ToolMatchesWalletKind(directTool, kind) && ToolIsEligibleForOwner(directTool, player, requireOwner))
         {
             ClearWalletMarkers(directTool);
             tool = directTool;
@@ -2170,7 +2461,7 @@ public sealed class ModEntry : Mod
         {
             for (int i = 0; i < list.Count; i++)
             {
-                if (list[i] is Tool candidate && ToolMatchesWalletKind(candidate, kind))
+                if (list[i] is Tool candidate && ToolMatchesWalletKind(candidate, kind) && ToolIsEligibleForOwner(candidate, player, requireOwner))
                 {
                     ClearWalletMarkers(candidate);
                     list.RemoveAt(i);
@@ -2188,7 +2479,7 @@ public sealed class ModEntry : Mod
                     continue;
 
                 object? dictionaryValue = dictionary[key];
-                if (dictionaryValue is Tool candidate && ToolMatchesWalletKind(candidate, kind))
+                if (dictionaryValue is Tool candidate && ToolMatchesWalletKind(candidate, kind) && ToolIsEligibleForOwner(candidate, player, requireOwner))
                 {
                     ClearWalletMarkers(candidate);
                     dictionary.Remove(key);
@@ -2196,7 +2487,7 @@ public sealed class ModEntry : Mod
                     return true;
                 }
 
-                if (TryTakeToolFromValue(dictionaryValue, kind, out tool))
+                if (TryTakeToolFromValue(dictionaryValue, kind, out tool, player, requireOwner))
                     return true;
             }
         }
@@ -2204,8 +2495,20 @@ public sealed class ModEntry : Mod
         return false;
     }
 
+    private static bool ToolIsEligibleForOwner(Tool tool, Farmer? player, bool requireOwner)
+    {
+        if (!requireOwner)
+            return true;
+
+        return player is not null && HasOwnerMarker(tool) && IsOwnedByPlayer(tool, player);
+    }
 
     private static bool TryTakeToolFromWrappedValue(object value, WalletToolKind kind, out Tool tool)
+    {
+        return TryTakeToolFromWrappedValue(value, kind, out tool, null, requireOwner: false);
+    }
+
+    private static bool TryTakeToolFromWrappedValue(object value, WalletToolKind kind, out Tool tool, Farmer? player, bool requireOwner)
     {
         tool = null!;
         try
@@ -2216,6 +2519,9 @@ public sealed class ModEntry : Mod
 
             object? inner = property.GetValue(value);
             if (inner is not Tool candidate || !ToolMatchesWalletKind(candidate, kind))
+                return false;
+
+            if (!ToolIsEligibleForOwner(candidate, player, requireOwner))
                 return false;
 
             if (!property.CanWrite)
@@ -2277,7 +2583,7 @@ public sealed class ModEntry : Mod
 
             if (ToolMatchesWalletKind(tool, kind))
             {
-                TryReplaceStoredToolIfBetter(kind, tool);
+                TryReplaceStoredToolIfBetter(player, kind, tool);
                 player.Items[i] = null;
                 removed = true;
             }
@@ -2313,7 +2619,7 @@ public sealed class ModEntry : Mod
                 if (player.Items[i] is not Tool tool || IsRuntimeTool(tool) || IsOvernightExposure(tool, out _) || IsCurrentlySelectedTool(player, i, tool) || !TryGetWalletKindForStorage(tool, out WalletToolKind kind))
                     continue;
 
-                if (TryReplaceStoredToolIfBetter(kind, tool))
+                if (TryReplaceStoredToolIfBetter(player, kind, tool))
                     changed = true;
 
                 player.Items[i] = null;
@@ -2328,20 +2634,26 @@ public sealed class ModEntry : Mod
         if (changed)
         {
             NormalizePlayerItemsAfterWalletCleanup(player);
-            RefreshWalletStateAfterStoredToolChange();
+            RefreshWalletStateAfterStoredToolChange(player);
             Game1.addHUDMessage(new HUDMessage("Tool moved to wallet.", HUDMessage.newQuest_type));
         }
     }
 
     private bool RemoveInvalidStoredTools(string reason)
     {
+        return RemoveInvalidStoredTools(Game1.player, reason);
+    }
+
+    private bool RemoveInvalidStoredTools(Farmer player, string reason)
+    {
+        Dictionary<WalletToolKind, WalletToolState> storedTools = GetStoredTools(player);
         bool changed = false;
-        foreach (KeyValuePair<WalletToolKind, WalletToolState> pair in StoredTools.ToArray())
+        foreach (KeyValuePair<WalletToolKind, WalletToolState> pair in storedTools.ToArray())
         {
             if (!pair.Value.IsInvalidStoredTool())
                 continue;
 
-            StoredTools.Remove(pair.Key);
+            storedTools.Remove(pair.Key);
             changed = true;
         }
 
@@ -2350,19 +2662,25 @@ public sealed class ModEntry : Mod
 
     private bool TryReplaceStoredToolIfBetter(WalletToolKind kind, Tool candidate)
     {
+        return TryReplaceStoredToolIfBetter(Game1.player, kind, candidate);
+    }
+
+    private bool TryReplaceStoredToolIfBetter(Farmer player, WalletToolKind kind, Tool candidate)
+    {
         if (!IsWalletEnabled(kind) || WalletToolState.IsErrorTool(candidate))
             return false;
 
+        Dictionary<WalletToolKind, WalletToolState> storedTools = GetStoredTools(player);
         ClearWalletMarkers(candidate);
         WalletToolState candidateState = WalletToolState.FromTool(kind, candidate);
         if (candidateState.IsInvalidStoredTool())
             return false;
 
-        if (!StoredTools.TryGetValue(kind, out WalletToolState? existingState)
+        if (!storedTools.TryGetValue(kind, out WalletToolState? existingState)
             || existingState.IsInvalidStoredTool()
             || candidateState.GetPowerScore() > existingState.GetPowerScore())
         {
-            StoredTools[kind] = candidateState;
+            storedTools[kind] = candidateState;
             return true;
         }
 
@@ -2451,19 +2769,20 @@ public sealed class ModEntry : Mod
 
     private void AddWalletToolsToToolSmartSwitch(Farmer player, Dictionary<int, Tool> tools)
     {
-        if (!Config.ModEnabled || IsToolUpgradeLocation(player.currentLocation) || StoredTools.Count == 0)
+        Dictionary<WalletToolKind, WalletToolState> storedTools = GetStoredTools(player);
+        if (!Config.ModEnabled || IsToolUpgradeLocation(player.currentLocation) || storedTools.Count == 0)
             return;
 
         foreach (WalletToolKind kind in Enum.GetValues<WalletToolKind>())
         {
-            if (!IsAutoUseEnabled(kind) || !StoredTools.ContainsKey(kind))
+            if (!IsAutoUseEnabled(kind) || !storedTools.ContainsKey(kind))
                 continue;
 
             int index = GetToolSmartSwitchIndex(kind);
             if (tools.ContainsKey(index))
                 continue;
 
-            Tool? tool = GetCachedToolSmartSwitchTool(kind);
+            Tool? tool = GetCachedToolSmartSwitchTool(player, kind);
             if (tool is not null)
                 tools[index] = tool;
         }
@@ -2472,15 +2791,22 @@ public sealed class ModEntry : Mod
 
     private Tool? GetCachedToolSmartSwitchTool(WalletToolKind kind)
     {
-        if (ToolSmartSwitchToolCache.TryGetValue(kind, out Tool? cachedTool))
+        return GetCachedToolSmartSwitchTool(Game1.player, kind);
+    }
+
+    private Tool? GetCachedToolSmartSwitchTool(Farmer player, WalletToolKind kind)
+    {
+        Dictionary<WalletToolKind, Tool> cache = GetToolSmartSwitchToolCache(player);
+        if (cache.TryGetValue(kind, out Tool? cachedTool))
             return cachedTool;
 
-        if (!StoredTools.TryGetValue(kind, out WalletToolState? state))
+        Dictionary<WalletToolKind, WalletToolState> storedTools = GetStoredTools(player);
+        if (!storedTools.TryGetValue(kind, out WalletToolState? state))
             return null;
 
         Tool? tool = state.CreateTool(Monitor);
         if (tool is not null)
-            ToolSmartSwitchToolCache[kind] = tool;
+            cache[kind] = tool;
 
         return tool;
     }
@@ -2594,17 +2920,26 @@ public sealed class ModEntry : Mod
 
     private bool HasStoredEnabledTool(WalletToolKind kind)
     {
-        return IsWalletEnabled(kind) && StoredTools.ContainsKey(kind);
+        return HasStoredEnabledTool(Game1.player, kind);
+    }
+
+    private bool HasStoredEnabledTool(Farmer player, WalletToolKind kind)
+    {
+        return IsWalletEnabled(kind) && GetStoredTools(player).ContainsKey(kind);
     }
 
     private bool TryFindStoredEnabledToolForRequest(WalletToolKind requestedKind, out WalletToolKind storedKind)
     {
-        if (HasStoredEnabledTool(requestedKind))
+        return TryFindStoredEnabledToolForRequest(Game1.player, requestedKind, out storedKind);
+    }
+
+    private bool TryFindStoredEnabledToolForRequest(Farmer player, WalletToolKind requestedKind, out WalletToolKind storedKind)
+    {
+        if (HasStoredEnabledTool(player, requestedKind))
         {
             storedKind = requestedKind;
             return true;
         }
-
 
         storedKind = requestedKind;
         return false;
@@ -2612,7 +2947,12 @@ public sealed class ModEntry : Mod
 
     private bool HasStoredAutoUseTool(WalletToolKind kind)
     {
-        return IsAutoUseEnabled(kind) && StoredTools.ContainsKey(kind);
+        return HasStoredAutoUseTool(Game1.player, kind);
+    }
+
+    private bool HasStoredAutoUseTool(Farmer player, WalletToolKind kind)
+    {
+        return IsAutoUseEnabled(kind) && GetStoredTools(player).ContainsKey(kind);
     }
 
     private bool TryFindStoredAutoUseToolForRequest(WalletToolKind requestedKind, out WalletToolKind storedKind)
@@ -2905,7 +3245,8 @@ public sealed class ModEntry : Mod
 
     private bool TrySetTemporaryWalletTool(Farmer player, WalletToolKind kind)
     {
-        if (PendingToolUse is not null || !Config.ModEnabled || IsToolUpgradeLocation(player.currentLocation) || !StoredTools.TryGetValue(kind, out WalletToolState? state))
+        Dictionary<WalletToolKind, WalletToolState> storedTools = GetStoredTools(player);
+        if (PendingToolUse is not null || !Config.ModEnabled || IsToolUpgradeLocation(player.currentLocation) || !storedTools.TryGetValue(kind, out WalletToolState? state))
         {
             return false;
         }
@@ -2922,6 +3263,7 @@ public sealed class ModEntry : Mod
         }
 
         SuppressInventoryConversion = true;
+        bool leasedFromWallet = false;
         try
         {
             while (player.Items.Count <= previousToolIndex && player.Items.Count < maxItems)
@@ -2934,10 +3276,24 @@ public sealed class ModEntry : Mod
 
             Item? previousItem = player.Items[previousToolIndex];
             UpdateToolEnchantmentsForSelectedSlot(player, previousItem as Tool, walletTool, "temporary wallet tool activation");
-            MarkRuntimeTool(walletTool, kind);
+            MarkRuntimeTool(walletTool, kind, player);
+            storedTools.Remove(kind);
+            leasedFromWallet = true;
+            RefreshWalletStateAfterStoredToolChange(player, false);
             player.Items[previousToolIndex] = walletTool;
             player.CurrentToolIndex = previousToolIndex;
             PendingToolUse = new TemporaryToolUse(previousToolIndex, previousToolIndex, kind, walletTool, previousItem);
+        }
+        catch
+        {
+            if (leasedFromWallet)
+            {
+                ClearWalletMarkers(walletTool);
+                storedTools[kind] = WalletToolState.FromTool(kind, walletTool);
+                RefreshWalletStateAfterStoredToolChange(player, false);
+            }
+
+            throw;
         }
         finally
         {
@@ -2976,10 +3332,11 @@ public sealed class ModEntry : Mod
         }
     }
 
-    private static void MarkRuntimeTool(Tool tool, WalletToolKind kind)
+    private static void MarkRuntimeTool(Tool tool, WalletToolKind kind, Farmer player)
     {
         tool.modData[RuntimeToolMarker] = "true";
         tool.modData[RuntimeToolKindMarker] = kind.ToString();
+        MarkWalletOwner(tool, player);
     }
 
     private static bool IsRuntimeTool(Item? item)
@@ -2987,12 +3344,66 @@ public sealed class ModEntry : Mod
         return item is Tool tool && tool.modData.ContainsKey(RuntimeToolMarker);
     }
 
+    private static bool IsRuntimeToolForPlayer(Item? item, Farmer player)
+    {
+        return item is Tool tool && tool.modData.ContainsKey(RuntimeToolMarker) && IsOwnedByPlayer(tool, player);
+    }
+
+    private void RestorePendingToolUseBeforeDestructiveCleanup(Farmer player)
+    {
+        if (PendingToolUse is not null)
+            RestoreTemporaryTool(player);
+    }
+
+    private void RestorePendingToolUseToInventoryBeforeVolatileClear(Farmer player)
+    {
+        if (PendingToolUse is null)
+            return;
+
+        Dictionary<WalletToolKind, WalletToolState> storedTools = GetStoredTools(player);
+        TemporaryToolUse pending = PendingToolUse;
+        PendingToolUse = null;
+        PendingManualUseHotkey = null;
+
+        SuppressInventoryConversion = true;
+        try
+        {
+            int temporarySlot = FindTemporaryToolSlot(player, pending);
+            Tool? toolToPreserve = temporarySlot >= 0 && temporarySlot < player.Items.Count
+                ? player.Items[temporarySlot] as Tool
+                : null;
+
+            if (toolToPreserve is not null && temporarySlot >= 0 && temporarySlot < player.Items.Count)
+                player.Items[temporarySlot] = null;
+            else if (storedTools.TryGetValue(pending.Kind, out WalletToolState? storedState))
+            {
+                toolToPreserve = storedState.CreateTool(Monitor);
+                storedTools.Remove(pending.Kind);
+            }
+
+            if (toolToPreserve is not null)
+                ClearWalletMarkers(toolToPreserve);
+
+            RestoreTemporaryToolSlot(player, pending);
+
+            if (toolToPreserve is not null)
+                AddToolToInventoryOrAppend(player, toolToPreserve);
+
+            player.CurrentToolIndex = Math.Max(0, Math.Min(pending.PreviousToolIndex, Math.Max(0, player.Items.Count - 1)));
+            NormalizePlayerItemsAfterWalletCleanup(player);
+        }
+        finally
+        {
+            SuppressInventoryConversion = false;
+        }
+    }
+
     private static void RemoveRuntimeToolCopies(Farmer player)
     {
         bool removed = false;
         for (int i = 0; i < player.Items.Count; i++)
         {
-            if (IsRuntimeTool(player.Items[i]))
+            if (IsRuntimeToolForPlayer(player.Items[i], player))
             {
                 player.Items[i] = null;
                 removed = true;
@@ -3008,22 +3419,32 @@ public sealed class ModEntry : Mod
         if (PendingToolUse is null)
             return;
 
+        Dictionary<WalletToolKind, WalletToolState> storedTools = GetStoredTools(player);
         TemporaryToolUse pending = PendingToolUse;
         PendingToolUse = null;
         PendingManualUseHotkey = null;
         SuppressInventoryConversion = true;
         try
         {
-            Tool? usedTool = FindTemporaryTool(player, pending);
+            int temporarySlot = FindTemporaryToolSlot(player, pending);
+            Tool? usedTool = temporarySlot >= 0 && temporarySlot < player.Items.Count
+                ? player.Items[temporarySlot] as Tool
+                : null;
 
             if (usedTool is not null)
             {
-                StoredTools[pending.Kind] = WalletToolState.FromTool(pending.Kind, usedTool);
-                RefreshWalletStateAfterStoredToolChange(false);
+                if (temporarySlot >= 0 && temporarySlot < player.Items.Count)
+                    player.Items[temporarySlot] = null;
+
+                ClearWalletMarkers(usedTool);
+                storedTools[pending.Kind] = WalletToolState.FromTool(pending.Kind, usedTool);
+                RefreshWalletStateAfterStoredToolChange(player, false);
             }
             else
             {
                 RemoveRuntimeToolCopies(player);
+                storedTools.Remove(pending.Kind);
+                RefreshWalletStateAfterStoredToolChange(player, false);
             }
 
             UpdateToolEnchantmentsForSelectedSlot(player, usedTool, pending.PreviousItem as Tool, "temporary wallet tool restore");
@@ -3037,46 +3458,71 @@ public sealed class ModEntry : Mod
         }
     }
 
-    private static Tool? FindTemporaryTool(Farmer player, TemporaryToolUse pending)
+    private static int FindTemporaryToolSlot(Farmer player, TemporaryToolUse pending)
     {
-        if (pending.Slot >= 0 && pending.Slot < player.Items.Count && ReferenceEquals(player.Items[pending.Slot], pending.TemporaryTool))
-            return pending.TemporaryTool;
-
-        foreach (Item? item in player.Items)
+        if (pending.Slot >= 0 && pending.Slot < player.Items.Count)
         {
-            if (ReferenceEquals(item, pending.TemporaryTool))
-                return pending.TemporaryTool;
+            Item? slotItem = player.Items[pending.Slot];
+            if (ReferenceEquals(slotItem, pending.TemporaryTool))
+                return pending.Slot;
+
+            if (IsPendingRuntimeToolForPlayer(slotItem, player, pending.Kind))
+                return pending.Slot;
         }
 
-        return null;
+        for (int i = 0; i < player.Items.Count; i++)
+        {
+            Item? item = player.Items[i];
+            if (ReferenceEquals(item, pending.TemporaryTool))
+                return i;
+
+            if (IsPendingRuntimeToolForPlayer(item, player, pending.Kind))
+                return i;
+        }
+
+        return -1;
+    }
+
+    private static bool IsPendingRuntimeToolForPlayer(Item? item, Farmer player, WalletToolKind kind)
+    {
+        if (item is not Tool tool || !tool.modData.ContainsKey(RuntimeToolMarker) || !IsOwnedByPlayer(tool, player))
+            return false;
+
+        if (!tool.modData.TryGetValue(RuntimeToolKindMarker, out string? rawKind) || !Enum.TryParse(rawKind, out WalletToolKind runtimeKind))
+            return false;
+
+        return runtimeKind == kind;
     }
 
     private static void RestoreTemporaryToolSlot(Farmer player, TemporaryToolUse pending)
     {
         if (pending.Slot < 0 || pending.Slot >= player.Items.Count)
+        {
+            if (pending.PreviousItem is not null && !InventoryContainsReference(player, pending.PreviousItem))
+                player.addItemByMenuIfNecessary(pending.PreviousItem);
             return;
+        }
 
-        if (ReferenceEquals(player.Items[pending.Slot], pending.TemporaryTool) || player.Items[pending.Slot] is null)
+        Item? currentItem = player.Items[pending.Slot];
+        if (currentItem is null || ReferenceEquals(currentItem, pending.TemporaryTool) || IsPendingRuntimeToolForPlayer(currentItem, player, pending.Kind))
         {
             player.Items[pending.Slot] = pending.PreviousItem;
             return;
         }
 
-        if (pending.PreviousItem is not null)
+        if (pending.PreviousItem is not null && !ReferenceEquals(currentItem, pending.PreviousItem) && !InventoryContainsReference(player, pending.PreviousItem))
             player.addItemByMenuIfNecessary(pending.PreviousItem);
     }
 
-    private static void RemoveTemporaryTool(Farmer player, Tool tool)
+    private static bool InventoryContainsReference(Farmer player, Item item)
     {
-        for (int i = 0; i < player.Items.Count; i++)
+        foreach (Item? existingItem in player.Items)
         {
-            if (ReferenceEquals(player.Items[i], tool))
-            {
-                player.Items[i] = null;
-                NormalizePlayerItemsAfterWalletCleanup(player);
-                return;
-            }
+            if (ReferenceEquals(existingItem, item))
+                return true;
         }
+
+        return false;
     }
 
     private static bool IsCurrentlySelectedTool(Farmer player, int slot, Tool tool)
@@ -3147,8 +3593,6 @@ public sealed class ModEntry : Mod
         kind = WalletToolKind.Axe;
         return false;
     }
-
-    [HarmonyPatch]
     private static class IsOneOfTheseKeysDownPatch
     {
         public static IEnumerable<MethodBase> TargetMethods()
@@ -3162,8 +3606,6 @@ public sealed class ModEntry : Mod
                 __result = true;
         }
     }
-
-    [HarmonyPatch]
     private static class AreAllOfTheseKeysUpPatch
     {
         public static IEnumerable<MethodBase> TargetMethods()
@@ -3192,13 +3634,14 @@ public sealed class ModEntry : Mod
         keys = Array.Empty<InputButton>();
         return false;
     }
-
-    [HarmonyPatch(typeof(Game1), "checkIsMissingTool")]
     private static class CheckIsMissingToolPatch
     {
         public static void Postfix(Dictionary<Type, int> missingTools, ref int missingScythes, Item item)
         {
             if (Instance is null || item is not Tool tool || !IsOvernightExposure(tool, out WalletToolKind kind))
+                return;
+
+            if (Context.IsMultiplayer && !HasOwnerMarker(tool))
                 return;
 
             Instance.ApplyWalletToolOwnershipToMissingToolScan(missingTools, ref missingScythes, kind, tool);
@@ -3228,8 +3671,6 @@ public sealed class ModEntry : Mod
             _ => null
         };
     }
-
-    [HarmonyPatch(typeof(Game1), nameof(Game1.pressUseToolButton))]
     private static class PressUseToolButtonPatch
     {
         public static void Prefix()

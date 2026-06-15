@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework.Graphics;
 using TileLocation = xTile.Dimensions.Location;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
+using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.GameData.Powers;
 using StardewValley.Tools;
@@ -21,6 +22,7 @@ public sealed class ModEntry : Mod
     private const string LegacyWalletFlagKey = "ThaleTheGreat.ReturnScepterWallet/HasReturnScepter";
     private const string WalletPowerId = "ThaleTheGreat.WalletScepter_ReturnScepter";
     private const string SaveMaterializedMarker = "ThaleTheGreat.WalletScepter/SaveMaterialized";
+    private const string SaveMaterializedOwnerMarker = "ThaleTheGreat.WalletScepter/OwnerPlayerId";
     private const string PowerCategoryId = "ThaleTheGreat.WalletScepter";
     private const string DefaultToolTexturePath = "TileSheets/tools";
     private const string DefaultHomeLocationName = "FarmHouse";
@@ -32,10 +34,33 @@ public sealed class ModEntry : Mod
     private const string NightChoiceGoToBed = "GoToBed";
 
     private ModConfig Config = new();
-    private bool AutoReturnHandledToday;
-    private bool PendingSleepAfterHomeWarp;
-    private string PendingSleepHomeLocationName = DefaultHomeLocationName;
-    private int PendingSleepAttempts;
+    private readonly PerScreen<bool> AutoReturnHandledTodayScreen = new();
+    private bool AutoReturnHandledToday
+    {
+        get => AutoReturnHandledTodayScreen.Value;
+        set => AutoReturnHandledTodayScreen.Value = value;
+    }
+
+    private readonly PerScreen<bool> PendingSleepAfterHomeWarpScreen = new();
+    private bool PendingSleepAfterHomeWarp
+    {
+        get => PendingSleepAfterHomeWarpScreen.Value;
+        set => PendingSleepAfterHomeWarpScreen.Value = value;
+    }
+
+    private readonly PerScreen<string> PendingSleepHomeLocationNameScreen = new(() => DefaultHomeLocationName);
+    private string PendingSleepHomeLocationName
+    {
+        get => PendingSleepHomeLocationNameScreen.Value;
+        set => PendingSleepHomeLocationNameScreen.Value = value;
+    }
+
+    private readonly PerScreen<int> PendingSleepAttemptsScreen = new();
+    private int PendingSleepAttempts
+    {
+        get => PendingSleepAttemptsScreen.Value;
+        set => PendingSleepAttemptsScreen.Value = value;
+    }
     private bool GmcmRegistered;
     private bool SuppressInventoryConversion;
     private IGenericModConfigMenuApi? GmcmApi;
@@ -60,6 +85,25 @@ public sealed class ModEntry : Mod
     }
 
 
+    private static void MarkSaveMaterializedScepter(Item item, Farmer player)
+    {
+        item.modData[SaveMaterializedMarker] = "true";
+        item.modData[SaveMaterializedOwnerMarker] = player.UniqueMultiplayerID.ToString();
+    }
+
+    private static bool IsOwnedSaveMaterializedScepter(Item item, Farmer player)
+    {
+        if (!item.modData.TryGetValue(SaveMaterializedOwnerMarker, out string? rawOwnerId))
+            return !Context.IsMultiplayer;
+
+        return long.TryParse(rawOwnerId, out long ownerId) && ownerId == player.UniqueMultiplayerID;
+    }
+
+    private static void ClearSaveMaterializedScepterMarkers(Item item)
+    {
+        item.modData.Remove(SaveMaterializedMarker);
+        item.modData.Remove(SaveMaterializedOwnerMarker);
+    }
 
     private void OnAssetRequested(object? sender, AssetRequestedEventArgs e)
     {
@@ -792,10 +836,11 @@ public sealed class ModEntry : Mod
             for (int index = player.Items.Count - 1; index >= 0; index--)
             {
                 Item? item = player.Items[index];
-                if (!IsSaveMaterializedScepter(item))
+                if (!IsSaveMaterializedScepter(item) || item is null || !IsOwnedSaveMaterializedScepter(item, player))
                     continue;
 
                 player.Items[index] = null;
+                ClearSaveMaterializedScepterMarkers(item);
                 player.modData[WalletFlagKey] = "true";
                 collected = true;
             }
@@ -813,7 +858,7 @@ public sealed class ModEntry : Mod
     {
         foreach (Item? item in player.Items)
         {
-            if (IsSaveMaterializedScepter(item))
+            if (item is not null && IsSaveMaterializedScepter(item) && IsOwnedSaveMaterializedScepter(item, player))
                 return true;
         }
 
@@ -897,31 +942,29 @@ public sealed class ModEntry : Mod
     private void CleanupLostAndFoundScepterDuplicates(Farmer player, string reason)
     {
         if (!HasWalletScepter(player))
-        {
             return;
-        }
 
         if (!TryGetLostAndFoundItems(player, out IList? lostAndFoundItems) || lostAndFoundItems is null)
-        {
             return;
-        }
 
         for (int index = lostAndFoundItems.Count - 1; index >= 0; index--)
         {
             if (lostAndFoundItems[index] is not Item item || !IsReturnScepter(item))
                 continue;
 
+            if (Context.IsMultiplayer && !IsOwnedSaveMaterializedScepter(item, player))
+                continue;
+
             lostAndFoundItems.RemoveAt(index);
             player.modData[WalletFlagKey] = "true";
         }
-
     }
 
     private static bool TryGetLostAndFoundItems(Farmer player, out IList? lostAndFoundItems)
     {
         lostAndFoundItems = null;
 
-        object? team = GetMemberValue(player, "team", "Team") ?? GetMemberValue(Game1.player, "team", "Team");
+        object? team = GetMemberValue(player, "team", "Team");
         if (team is null)
             return false;
 
