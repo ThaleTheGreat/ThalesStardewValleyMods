@@ -36,10 +36,26 @@ internal sealed class GmcmOptionRecord
         }
     }
 
-    public bool Matches(string[] terms)
+    public bool Matches(string[] terms, string author, string modName, string uniqueId)
     {
-        string haystack = string.Join("\n", OptionName, Tooltip, FieldId);
+        string haystack = StripOwnerMetadata(string.Join("\n", OptionName, Tooltip, FieldId), author, modName, uniqueId);
         return terms.All(term => haystack.IndexOf(term, StringComparison.OrdinalIgnoreCase) >= 0);
+    }
+
+    private static string StripOwnerMetadata(string text, params string[] values)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            return "";
+
+        foreach (string value in values)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                continue;
+
+            text = text.Replace(value, "", StringComparison.OrdinalIgnoreCase);
+        }
+
+        return text;
     }
 }
 

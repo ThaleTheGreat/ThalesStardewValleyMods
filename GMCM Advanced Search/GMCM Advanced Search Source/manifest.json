@@ -1,8 +1,8 @@
 {
   "Name": "GMCM Advanced Search",
   "Author": "ThaleTheGreat",
-  "Version": "1.3.0",
-  "Description": "Search GMCM config options by option label, tooltip, field ID, and config key.",
+  "Version": "1.4.0",
+  "Description": "Search GMCM config options by author, mod name, UniqueID, Nexus ID, option label, tooltip, field ID, and config key.",
   "UniqueID": "ThaleTheGreat.GMCMAdvancedSearch",
   "EntryDll": "GMCMAdvancedSearch.dll",
   "MinimumApiVersion": "4.0.0",

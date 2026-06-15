@@ -6,8 +6,10 @@ using StardewValley;
 using StardewValley.BellsAndWhistles;
 using StardewValley.Menus;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace GMCMAdvancedSearch;
 
@@ -16,26 +18,32 @@ internal sealed class SearchMenu : IClickableMenu
     private static readonly Rectangle MenuBoxSource = new(0, 256, 60, 60);
 
     private readonly string title;
-    private readonly bool showUniqueId;
     private readonly bool showResultDetails;
     private readonly bool showModTooltips;
-    private readonly List<GmcmOptionRecord> all;
-    private readonly List<GmcmOptionRecord> filtered = new();
+    private readonly List<SearchResult> authorResults;
+    private readonly List<SearchResult> modResults;
+    private readonly List<SearchResult> optionResults;
+    private readonly Dictionary<string, List<SearchResult>> optionResultsByMod;
+    private readonly List<SearchResult> filtered = new();
     private readonly Func<IManifest, bool> openMod;
-    private readonly SpriteFont optionFont = Game1.dialogueFont;
+    private readonly SpriteFont mainFont = Game1.dialogueFont;
     private readonly SpriteFont detailFont = Game1.smallFont;
     private readonly GmcmVerticalScrollbar scrollbar = new();
+    private readonly Stack<MenuState> history = new();
 
     private TextBox searchBox = null!;
     private Rectangle searchRowRect;
     private Rectangle searchBoxRect;
     private Rectangle resultsRect;
     private string lastSearch = "";
+    private string? activeAuthor;
     private int selectedIndex;
     private int scrollOffset;
     private int hoveredIndex = -1;
     private readonly bool wasMouseVisibleOnOpen;
     private bool isClosing;
+    private long nextBackInputAllowedMs;
+    private long childBackInputHandledUntilMs;
 
     private bool titleInPosition = true;
 
@@ -43,31 +51,58 @@ internal sealed class SearchMenu : IClickableMenu
     private const int SearchRowHeight = 72;
     private const int StatusHeight = 44;
     private const int ScrollbarWidth = GmcmVerticalScrollbar.WidthValue;
-    private const int ScrollbarGap = 12;
     private const int ScrollbarOutsideOffset = 6;
 
-    private int RowHeight => 78 + (showResultDetails ? 20 : 0) + (showUniqueId ? 20 : 0);
-    private int ItemsPerPage => Math.Max(1, resultsRect.Height / RowHeight);
+    private int RowHeight => 108 + (showResultDetails ? 22 : 0);
+    private int MinimumVisibleRowHeight => 6 + mainFont.LineSpacing;
+    private int ItemsPerPage => Math.Max(1, (resultsRect.Height + RowHeight - MinimumVisibleRowHeight) / RowHeight);
     private int MaxScroll => Math.Max(0, filtered.Count - ItemsPerPage);
 
-    public SearchMenu(string title, bool showUniqueId, bool showResultDetails, bool showModTooltips, List<GmcmOptionRecord> records, Func<IManifest, bool> openMod)
+    public SearchMenu(string title, bool showResultDetails, bool showModTooltips, List<GmcmOptionRecord> records, Func<IManifest, bool> openMod)
         : base(0, 0, 0, 0, false)
     {
         this.title = title;
-        this.showUniqueId = showUniqueId;
         this.showResultDetails = showResultDetails;
         this.showModTooltips = showModTooltips;
         this.openMod = openMod;
         wasMouseVisibleOnOpen = Game1.game1.IsMouseVisible;
         Game1.game1.IsMouseVisible = false;
 
-        all = records
+        List<ModSearchGroup> mods = records
+            .Where(r => r != null)
+            .GroupBy(r => r.UniqueId, StringComparer.OrdinalIgnoreCase)
+            .Select(g => ModSearchGroup.Create(g.ToList()))
+            .Where(g => g.Manifest != null)
+            .OrderBy(g => g.ModName, StringComparer.CurrentCultureIgnoreCase)
+            .ThenBy(g => g.UniqueId, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        authorResults = mods
+            .GroupBy(g => NormalizeAuthor(g.Author), StringComparer.CurrentCultureIgnoreCase)
+            .Select(g => SearchResult.ForAuthor(g.Key, g.Count()))
+            .OrderBy(r => r.Author, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
+
+        modResults = mods
+            .Select(SearchResult.ForMod)
+            .OrderBy(r => r.ModName, StringComparer.CurrentCultureIgnoreCase)
+            .ThenBy(r => r.UniqueId, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        optionResults = records
             .Where(r => r != null)
             .OrderBy(r => r.ModName, StringComparer.CurrentCultureIgnoreCase)
             .ThenBy(r => r.Section, StringComparer.CurrentCultureIgnoreCase)
             .ThenBy(r => r.PrimaryText, StringComparer.CurrentCultureIgnoreCase)
+            .Select(SearchResult.ForOption)
             .ToList();
-        filtered.AddRange(all);
+
+        optionResultsByMod = optionResults
+            .GroupBy(r => r.UniqueId, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(
+                g => g.Key,
+                g => g.OrderBy(r => r.Option?.PrimaryText ?? "", StringComparer.CurrentCultureIgnoreCase).ToList(),
+                StringComparer.OrdinalIgnoreCase);
 
         InitializeLayout();
         searchBox = new TextBox(Game1.content.Load<Texture2D>("LooseSprites/textBox"), null, Game1.smallFont, Game1.textColor)
@@ -78,7 +113,31 @@ internal sealed class SearchMenu : IClickableMenu
             Text = ""
         };
         searchBox.SelectMe();
-        SyncScrollbar();
+        ApplyFilter();
+    }
+
+    public bool LetChildMenuHandleBackInput()
+    {
+        if (!HasOpenChildMenu())
+            return false;
+
+        childBackInputHandledUntilMs = Environment.TickCount64 + 250;
+        return true;
+    }
+
+    public void BackOrCloseFromInput()
+    {
+        long now = Environment.TickCount64;
+        if (now < childBackInputHandledUntilMs || now < nextBackInputAllowedMs)
+            return;
+
+        nextBackInputAllowedMs = now + 100;
+
+        if (GoBack())
+            return;
+
+        Game1.playSound("bigDeSelect");
+        CloseFromInput();
     }
 
     public void CloseFromInput()
@@ -91,6 +150,50 @@ internal sealed class SearchMenu : IClickableMenu
             Game1.keyboardDispatcher.Subscriber = null;
         searchBox.Selected = false;
         exitThisMenu();
+    }
+
+    private bool HasOpenChildMenu()
+    {
+        try
+        {
+            for (Type? type = GetType(); type != null; type = type.BaseType)
+            {
+                foreach (FieldInfo field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+                {
+                    if (field.IsStatic)
+                        continue;
+
+                    if (ValueContainsChildMenu(field.GetValue(this)))
+                        return true;
+                }
+            }
+        }
+        catch
+        {
+            return false;
+        }
+
+        return false;
+    }
+
+    private bool ValueContainsChildMenu(object? value)
+    {
+        if (value == null || ReferenceEquals(value, this))
+            return false;
+
+        if (value is IClickableMenu)
+            return true;
+
+        if (value is string || value is not IEnumerable enumerable)
+            return false;
+
+        foreach (object? item in enumerable)
+        {
+            if (item is IClickableMenu menu && !ReferenceEquals(menu, this))
+                return true;
+        }
+
+        return false;
     }
 
     protected override void cleanupBeforeExit()
@@ -117,7 +220,7 @@ internal sealed class SearchMenu : IClickableMenu
     {
         int viewportWidth = Game1.uiViewport.Width;
         int viewportHeight = Game1.uiViewport.Height;
-        width = Math.Min(1160, Math.Max(680, viewportWidth - 80));
+        width = Math.Min(1392, Math.Max(680, viewportWidth - 80));
         height = Math.Min(880, Math.Max(540, viewportHeight - 80));
         xPositionOnScreen = (viewportWidth - width) / 2;
         yPositionOnScreen = (viewportHeight - height) / 2;
@@ -134,7 +237,8 @@ internal sealed class SearchMenu : IClickableMenu
 
         int statusY = searchRowRect.Bottom + 4;
         int resultsY = statusY + StatusHeight + 4;
-        int resultsHeight = innerY + innerHeight - resultsY;
+        int contentBottom = yPositionOnScreen + height - 12;
+        int resultsHeight = Math.Max(1, contentBottom - resultsY);
         int resultsRight = xPositionOnScreen + width - OuterPad;
         resultsRect = new Rectangle(innerX, resultsY, Math.Max(1, resultsRight - innerX), resultsHeight);
 
@@ -165,16 +269,37 @@ internal sealed class SearchMenu : IClickableMenu
     private void ApplyFilter()
     {
         string query = (searchBox.Text ?? "").Trim();
+        string[] terms = query.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         filtered.Clear();
 
-        if (string.IsNullOrWhiteSpace(query))
+        if (terms.Length == 0)
         {
-            filtered.AddRange(all);
+            if (!string.IsNullOrWhiteSpace(activeAuthor))
+            {
+                filtered.AddRange(modResults
+                    .Where(r => string.Equals(r.Author, activeAuthor, StringComparison.OrdinalIgnoreCase)));
+            }
+            else
+            {
+                filtered.AddRange(authorResults);
+            }
         }
         else
         {
-            string[] terms = query.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-            filtered.AddRange(all.Where(r => r.Matches(terms)));
+            filtered.AddRange(authorResults.Where(r => r.MatchesAuthor(terms)));
+
+            foreach (SearchResult modResult in modResults)
+            {
+                bool modNameMatches = modResult.MatchesMod(terms);
+                List<SearchResult> matchingOptions = optionResultsByMod.TryGetValue(modResult.UniqueId, out List<SearchResult>? options)
+                    ? options.Where(r => r.MatchesOption(terms)).ToList()
+                    : new List<SearchResult>();
+
+                if (!modNameMatches && matchingOptions.Count == 0)
+                    continue;
+
+                filtered.Add(modResult.WithRelevantOptions(matchingOptions));
+            }
         }
 
         selectedIndex = 0;
@@ -187,7 +312,10 @@ internal sealed class SearchMenu : IClickableMenu
     {
         if (key == Keys.Escape)
         {
-            CloseFromInput();
+            if (LetChildMenuHandleBackInput())
+                return;
+
+            BackOrCloseFromInput();
             return;
         }
 
@@ -304,13 +432,69 @@ internal sealed class SearchMenu : IClickableMenu
             return;
 
         selectedIndex = Math.Clamp(selectedIndex, 0, filtered.Count - 1);
-        GmcmOptionRecord target = filtered[selectedIndex];
+        SearchResult target = filtered[selectedIndex];
+
+        if (target.Kind == SearchResultKind.Author)
+        {
+            PushState();
+            activeAuthor = target.Author;
+            searchBox.Text = "";
+            lastSearch = "";
+            ApplyFilter();
+            Game1.playSound("shiny4");
+            return;
+        }
+
+        if (target.Mod == null)
+            return;
+
         if (openMod(target.Mod))
             return;
 
         Game1.showRedMessage("That entry couldn't be opened in GMCM.");
-        all.RemoveAll(r => r.UniqueId == target.UniqueId);
-        filtered.RemoveAll(r => r.UniqueId == target.UniqueId);
+        string failedUniqueId = target.UniqueId;
+        modResults.RemoveAll(r => string.Equals(r.UniqueId, failedUniqueId, StringComparison.OrdinalIgnoreCase));
+        optionResults.RemoveAll(r => string.Equals(r.UniqueId, failedUniqueId, StringComparison.OrdinalIgnoreCase));
+        filtered.RemoveAll(r => string.Equals(r.UniqueId, failedUniqueId, StringComparison.OrdinalIgnoreCase));
+        ClampScroll();
+        SyncScrollbar();
+    }
+
+
+    private bool GoBack()
+    {
+        if (!string.IsNullOrWhiteSpace(searchBox.Text))
+        {
+            searchBox.Text = "";
+            lastSearch = "";
+            ApplyFilter();
+            Game1.playSound("smallSelect");
+            return true;
+        }
+
+        if (history.Count > 0)
+        {
+            RestoreState(history.Pop());
+            Game1.playSound("smallSelect");
+            return true;
+        }
+
+        return false;
+    }
+
+    private void PushState()
+    {
+        history.Push(new MenuState(activeAuthor, searchBox.Text ?? "", selectedIndex, scrollOffset));
+    }
+
+    private void RestoreState(MenuState state)
+    {
+        activeAuthor = state.ActiveAuthor;
+        searchBox.Text = state.SearchText;
+        lastSearch = state.SearchText;
+        ApplyFilter();
+        selectedIndex = state.SelectedIndex;
+        scrollOffset = state.ScrollOffset;
         ClampScroll();
         SyncScrollbar();
     }
@@ -348,7 +532,7 @@ internal sealed class SearchMenu : IClickableMenu
         DrawStatusLine(b);
         DrawRows(b);
         scrollbar.Draw(b);
-        DrawHoveredModTooltip(b);
+        DrawHoveredTooltip(b);
         drawMouse(b);
     }
 
@@ -358,15 +542,20 @@ internal sealed class SearchMenu : IClickableMenu
         searchBox.Draw(b);
         if (string.IsNullOrEmpty(searchBox.Text) && !searchBox.Selected)
         {
-            Utility.drawTextWithShadow(b, "Search options, tooltips, field IDs, and config keys…", Game1.smallFont,
+            Utility.drawTextWithShadow(b, "Results order: Alphabetical", Game1.smallFont,
                 new Vector2(searchBoxRect.X + 10, searchBoxRect.Y + 14), new Color(120, 120, 120));
         }
     }
 
     private void DrawStatusLine(SpriteBatch b)
     {
-        DrawBoldTextWithShadow(b, $"{filtered.Count} result(s). Click a result to open its mod config in GMCM.", optionFont,
-            new Vector2(resultsRect.X, searchRowRect.Bottom + 5), Game1.textColor);
+        string status = !string.IsNullOrWhiteSpace(searchBox.Text)
+            ? $"{filtered.Count} result(s). Results order: Authors → Mods → Options."
+            : string.IsNullOrWhiteSpace(activeAuthor)
+                ? $"{filtered.Count} author(s). Results order: Alphabetical."
+                : $"{filtered.Count} mod(s) by {activeAuthor}. Results order: Alphabetical.";
+
+        DrawBoldTextWithShadow(b, status, mainFont, new Vector2(resultsRect.X, searchRowRect.Bottom + 5), Game1.textColor);
     }
 
     private static void DrawBoldTextWithShadow(SpriteBatch b, string text, SpriteFont font, Vector2 position, Color color)
@@ -384,59 +573,96 @@ internal sealed class SearchMenu : IClickableMenu
         {
             int y = resultsRect.Y + (index - scrollOffset) * RowHeight;
             Rectangle row = new(resultsRect.X, y, resultsRect.Width, RowHeight);
-            GmcmOptionRecord record = filtered[index];
-
-            Vector2 modPos = new(row.X, row.Y + 8);
-            Utility.drawTextWithShadow(b, record.ModName, detailFont, modPos, new Color(95, 66, 38));
-
-            string primary = record.PrimaryText;
-            Vector2 optionPos = new(row.X, row.Y + 28);
-            DrawClippedText(b, primary, optionFont, optionPos, Game1.textColor, row.Width - 12);
-
-            int nextDetailY = row.Y + 62;
-            if (showResultDetails)
-            {
-                string secondary = record.SecondaryText;
-                if (!string.IsNullOrWhiteSpace(secondary))
-                    DrawClippedText(b, secondary, detailFont, new Vector2(row.X, nextDetailY), new Color(95, 95, 95), row.Width - 12);
-                nextDetailY += 20;
-            }
-
-            if (showUniqueId)
-                DrawClippedText(b, record.UniqueId, detailFont, new Vector2(row.X, nextDetailY), new Color(110, 110, 110), row.Width - 12);
+            DrawResultRow(b, filtered[index], row, resultsRect.Bottom);
         }
     }
 
-    private void DrawHoveredModTooltip(SpriteBatch b)
+    private void DrawResultRow(SpriteBatch b, SearchResult record, Rectangle row, int visibleBottom)
+    {
+        Vector2 mainPos = new(row.X, row.Y + 6);
+        Vector2 detailPos = new(row.X, row.Y + 48);
+        Vector2 optionPos = new(row.X, row.Y + 70);
+        int textWidth = row.Width - 12;
+
+        DrawClippedTextIfVisible(b, record.MainText, mainFont, mainPos, Game1.textColor, textWidth, visibleBottom);
+
+        string detailText = GetVisibleDetailText(record);
+        if (!string.IsNullOrWhiteSpace(detailText))
+            DrawClippedTextIfVisible(b, detailText, detailFont, detailPos, new Color(95, 66, 38), textWidth, visibleBottom);
+
+        string optionSummary = record.OptionSummaryText;
+        if (!string.IsNullOrWhiteSpace(optionSummary))
+            DrawClippedTextIfVisible(b, optionSummary, detailFont, optionPos, new Color(110, 86, 55), textWidth, visibleBottom);
+
+        int nextDetailY = row.Y + 92;
+        if (showResultDetails)
+        {
+            string advanced = record.AdvancedText;
+            if (!string.IsNullOrWhiteSpace(advanced))
+                DrawClippedTextIfVisible(b, advanced, detailFont, new Vector2(row.X, nextDetailY), new Color(95, 95, 95), textWidth, visibleBottom);
+        }
+    }
+
+    private string GetVisibleDetailText(SearchResult record)
+    {
+        if (record.Kind != SearchResultKind.Mod)
+            return record.DetailText;
+
+        List<string> pieces = new();
+        if (string.IsNullOrWhiteSpace(searchBox.Text)
+            && !string.IsNullOrWhiteSpace(activeAuthor)
+            && string.Equals(record.Author, activeAuthor, StringComparison.OrdinalIgnoreCase))
+        {
+            AddIfNotBlank(pieces, record.UniqueId);
+        }
+        else
+        {
+            AddIfNotBlank(pieces, record.Author);
+            AddIfNotBlank(pieces, record.UniqueId);
+        }
+
+        if (!string.IsNullOrWhiteSpace(record.NexusId))
+            pieces.Add($"Nexus:{record.NexusId}");
+
+        return string.Join(" • ", pieces);
+    }
+
+    private static void AddIfNotBlank(List<string> pieces, string value)
+    {
+        if (!string.IsNullOrWhiteSpace(value))
+            pieces.Add(value);
+    }
+
+    private void DrawHoveredTooltip(SpriteBatch b)
     {
         if (!showModTooltips || hoveredIndex < 0 || hoveredIndex >= filtered.Count)
             return;
 
-        GmcmOptionRecord record = filtered[hoveredIndex];
-        string titleText = record.ModName;
-        string description = record.Mod.Description ?? "";
+        SearchResult record = filtered[hoveredIndex];
+        string titleText = record.TooltipTitle;
+        string description = record.TooltipDescription;
         if (string.IsNullOrWhiteSpace(titleText) && string.IsNullOrWhiteSpace(description))
             return;
 
-        DrawModTooltip(b, titleText, description);
+        DrawTooltip(b, titleText, description);
     }
 
-    private void DrawModTooltip(SpriteBatch b, string titleText, string description)
+    private void DrawTooltip(SpriteBatch b, string titleText, string description)
     {
         const int maxWidth = 520;
         const int padding = 16;
         const int gap = 8;
         const int lineGap = 2;
 
-        string wrappedTitle = WrapText(titleText, optionFont, maxWidth - padding * 2);
+        string wrappedTitle = WrapText(titleText, mainFont, maxWidth - padding * 2);
         string wrappedDescription = WrapText(description, detailFont, maxWidth - padding * 2);
         string[] titleLines = SplitLines(wrappedTitle);
         string[] descriptionLines = SplitLines(wrappedDescription);
 
-        int titleWidth = MeasureMaxWidth(optionFont, titleLines);
+        int titleWidth = MeasureMaxWidth(mainFont, titleLines);
         int descriptionWidth = MeasureMaxWidth(detailFont, descriptionLines);
         int boxWidth = Math.Min(maxWidth, Math.Max(260, Math.Max(titleWidth, descriptionWidth) + padding * 2));
-        int titleHeight = MeasureTextHeight(optionFont, titleLines, lineGap);
+        int titleHeight = MeasureTextHeight(mainFont, titleLines, lineGap);
         int descriptionHeight = MeasureTextHeight(detailFont, descriptionLines, lineGap);
         int boxHeight = padding * 2 + titleHeight + (descriptionLines.Length > 0 ? gap + descriptionHeight : 0);
 
@@ -455,8 +681,8 @@ internal sealed class SearchMenu : IClickableMenu
         Vector2 pos = new(x + padding, y + padding);
         foreach (string line in titleLines)
         {
-            Utility.drawTextWithShadow(b, line, optionFont, pos, Game1.textColor);
-            pos.Y += optionFont.LineSpacing + lineGap;
+            Utility.drawTextWithShadow(b, line, mainFont, pos, Game1.textColor);
+            pos.Y += mainFont.LineSpacing + lineGap;
         }
 
         if (descriptionLines.Length == 0)
@@ -520,8 +746,19 @@ internal sealed class SearchMenu : IClickableMenu
         return lines.Length == 0 ? 0 : lines.Length * font.LineSpacing + Math.Max(0, lines.Length - 1) * lineGap;
     }
 
+    private static void DrawClippedTextIfVisible(SpriteBatch b, string text, SpriteFont font, Vector2 position, Color color, int maxWidth, int visibleBottom)
+    {
+        if (position.Y + font.LineSpacing > visibleBottom)
+            return;
+
+        DrawClippedText(b, text, font, position, color, maxWidth);
+    }
+
     private static void DrawClippedText(SpriteBatch b, string text, SpriteFont font, Vector2 position, Color color, int maxWidth)
     {
+        if (string.IsNullOrWhiteSpace(text))
+            return;
+
         if (font.MeasureString(text).X <= maxWidth)
         {
             Utility.drawTextWithShadow(b, text, font, position, color);
@@ -532,6 +769,261 @@ internal sealed class SearchMenu : IClickableMenu
         while (text.Length > 0 && font.MeasureString(text + ellipsis).X > maxWidth)
             text = text[..^1];
         Utility.drawTextWithShadow(b, text + ellipsis, font, position, color);
+    }
+
+    private sealed record MenuState(string? ActiveAuthor, string SearchText, int SelectedIndex, int ScrollOffset);
+
+    private enum SearchResultKind
+    {
+        Author,
+        Mod,
+        Option
+    }
+
+    private sealed class SearchResult
+    {
+        public SearchResultKind Kind { get; init; }
+        public IManifest? Mod { get; init; }
+        public GmcmOptionRecord? Option { get; init; }
+        public string Author { get; init; } = "";
+        public string ModName { get; init; } = "";
+        public string UniqueId { get; init; } = "";
+        public string NexusId { get; init; } = "";
+        public int ModCount { get; init; }
+        public int OptionCount { get; init; }
+        public IReadOnlyList<GmcmOptionRecord> RelevantOptions { get; init; } = Array.Empty<GmcmOptionRecord>();
+
+        public string MainText => Kind switch
+        {
+            SearchResultKind.Author => Author,
+            SearchResultKind.Mod => ModName,
+            _ => ModName
+        };
+
+        public string DetailText => Kind switch
+        {
+            SearchResultKind.Author => $"Author • {ModCount} installed mod{(ModCount == 1 ? "" : "s")}",
+            SearchResultKind.Mod => UniqueId,
+            _ => Option?.PrimaryText ?? ""
+        };
+
+        public string OptionSummaryText => Kind == SearchResultKind.Mod && RelevantOptions.Count > 0
+            ? string.Join("  •  ", RelevantOptions.Select(o => o.PrimaryText).Where(s => !string.IsNullOrWhiteSpace(s)).Distinct(StringComparer.OrdinalIgnoreCase))
+            : "";
+
+        public string AdvancedText => Kind switch
+        {
+            SearchResultKind.Author => "Click to show this author's installed mods.",
+            SearchResultKind.Mod => Mod?.Description ?? "",
+            _ => Option?.SecondaryText ?? ""
+        };
+
+        public string TooltipTitle => Kind switch
+        {
+            SearchResultKind.Author => Author,
+            _ => ModName
+        };
+
+        public string TooltipDescription => Kind switch
+        {
+            SearchResultKind.Author => $"{ModCount} installed mod{(ModCount == 1 ? "" : "s")}. Click to list this author's mods.",
+            SearchResultKind.Mod => Mod?.Description ?? "",
+            _ => Mod?.Description ?? ""
+        };
+
+        public SearchResult WithRelevantOptions(IEnumerable<SearchResult> options)
+        {
+            return new SearchResult
+            {
+                Kind = Kind,
+                Mod = Mod,
+                Option = Option,
+                Author = Author,
+                ModName = ModName,
+                UniqueId = UniqueId,
+                NexusId = NexusId,
+                ModCount = ModCount,
+                OptionCount = OptionCount,
+                RelevantOptions = options.Select(o => o.Option).Where(o => o != null).Cast<GmcmOptionRecord>().ToList()
+            };
+        }
+
+        public bool MatchesAuthor(string[] terms)
+        {
+            return TermsMatch(Author, terms);
+        }
+
+        public bool MatchesMod(string[] terms)
+        {
+            return TermsMatch(ModName, terms)
+                || TermsMatchSearchableUniqueId(UniqueId, Author, terms)
+                || TermsMatchNexusId(NexusId, terms);
+        }
+
+        public bool MatchesOption(string[] terms)
+        {
+            return Option?.Matches(terms, Author, ModName, UniqueId) == true;
+        }
+
+        public static SearchResult ForAuthor(string author, int modCount)
+        {
+            return new SearchResult
+            {
+                Kind = SearchResultKind.Author,
+                Author = NormalizeAuthor(author),
+                ModCount = modCount
+            };
+        }
+
+        public static SearchResult ForMod(ModSearchGroup group)
+        {
+            return new SearchResult
+            {
+                Kind = SearchResultKind.Mod,
+                Mod = group.Manifest,
+                Author = group.Author,
+                ModName = group.ModName,
+                UniqueId = group.UniqueId,
+                NexusId = group.NexusId,
+                OptionCount = group.OptionCount
+            };
+        }
+
+        public static SearchResult ForOption(GmcmOptionRecord option)
+        {
+            return new SearchResult
+            {
+                Kind = SearchResultKind.Option,
+                Mod = option.Mod,
+                Option = option,
+                Author = NormalizeAuthor(option.Mod.Author),
+                ModName = option.ModName,
+                UniqueId = option.UniqueId,
+                NexusId = ExtractNexusId(option.Mod),
+                OptionCount = 1
+            };
+        }
+
+        private static bool TermsMatch(string haystack, string[] terms)
+        {
+            return terms.All(term => haystack.IndexOf(term, StringComparison.OrdinalIgnoreCase) >= 0);
+        }
+
+        private static bool TermsMatchNexusId(string nexusId, string[] terms)
+        {
+            if (string.IsNullOrWhiteSpace(nexusId))
+                return false;
+
+            string[] searchableTerms = terms
+                .Where(term => !term.Equals("Nexus", StringComparison.OrdinalIgnoreCase)
+                    && !term.Equals("Nexus:", StringComparison.OrdinalIgnoreCase))
+                .ToArray();
+
+            if (searchableTerms.Length == 0)
+                return false;
+
+            string canonical = $"Nexus:{nexusId}";
+            return searchableTerms.All(term =>
+            {
+                if (string.IsNullOrWhiteSpace(term))
+                    return true;
+
+                if (term.StartsWith("Nexus:", StringComparison.OrdinalIgnoreCase))
+                    return canonical.IndexOf(term, StringComparison.OrdinalIgnoreCase) >= 0;
+
+                return nexusId.IndexOf(term, StringComparison.OrdinalIgnoreCase) >= 0;
+            });
+        }
+
+        private static bool TermsMatchSearchableUniqueId(string uniqueId, string author, string[] terms)
+        {
+            if (string.IsNullOrWhiteSpace(uniqueId))
+                return false;
+
+            string searchableUniqueId = GetSearchableUniqueId(uniqueId, author);
+            return terms.All(term => MatchesUniqueIdTerm(uniqueId, searchableUniqueId, term));
+        }
+
+        private static bool MatchesUniqueIdTerm(string fullUniqueId, string searchableUniqueId, string term)
+        {
+            if (string.IsNullOrWhiteSpace(term))
+                return true;
+
+            if (term.Contains('.', StringComparison.Ordinal))
+                return fullUniqueId.IndexOf(term, StringComparison.OrdinalIgnoreCase) >= 0;
+
+            return searchableUniqueId.IndexOf(term, StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        private static string GetSearchableUniqueId(string uniqueId, string author)
+        {
+            string searchable = uniqueId.Trim();
+            string authorPrefix = string.IsNullOrWhiteSpace(author) ? "" : author.Trim() + ".";
+            if (!string.IsNullOrWhiteSpace(authorPrefix) && searchable.StartsWith(authorPrefix, StringComparison.OrdinalIgnoreCase))
+                return searchable[authorPrefix.Length..];
+
+            int dotIndex = searchable.IndexOf('.');
+            return dotIndex >= 0 && dotIndex + 1 < searchable.Length ? searchable[(dotIndex + 1)..] : searchable;
+        }
+    }
+
+    private sealed class ModSearchGroup
+    {
+        public IManifest Manifest { get; init; } = null!;
+        public string Author { get; init; } = "";
+        public string ModName { get; init; } = "";
+        public string UniqueId { get; init; } = "";
+        public string NexusId { get; init; } = "";
+        public int OptionCount { get; init; }
+
+        public static ModSearchGroup Create(List<GmcmOptionRecord> records)
+        {
+            GmcmOptionRecord first = records[0];
+            return new ModSearchGroup
+            {
+                Manifest = first.Mod,
+                Author = NormalizeAuthor(first.Mod.Author),
+                ModName = first.ModName,
+                UniqueId = first.UniqueId,
+                NexusId = ExtractNexusId(first.Mod),
+                OptionCount = records.Count
+            };
+        }
+    }
+
+    private static string ExtractNexusId(IManifest? manifest)
+    {
+        if (manifest?.UpdateKeys == null)
+            return "";
+
+        foreach (string updateKey in manifest.UpdateKeys)
+        {
+            string id = ExtractNexusId(updateKey);
+            if (!string.IsNullOrWhiteSpace(id))
+                return id;
+        }
+
+        return "";
+    }
+
+    private static string ExtractNexusId(string? updateKey)
+    {
+        if (string.IsNullOrWhiteSpace(updateKey))
+            return "";
+
+        string value = updateKey.Trim();
+        if (value.StartsWith("Nexus:", StringComparison.OrdinalIgnoreCase))
+            value = value["Nexus:".Length..].Trim();
+        else if (!value.All(char.IsDigit))
+            return "";
+
+        string id = new(value.TakeWhile(char.IsDigit).ToArray());
+        return id;
+    }
+
+    private static string NormalizeAuthor(string? author)
+    {
+        return string.IsNullOrWhiteSpace(author) ? "Unknown Author" : author.Trim();
     }
 
     private sealed class GmcmVerticalScrollbar

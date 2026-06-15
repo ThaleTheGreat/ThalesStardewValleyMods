@@ -6,13 +6,13 @@ using StardewValley.Menus;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace GMCMAdvancedSearch;
 
 internal sealed class ModConfig
 {
     public KeybindList OpenSearchMenuKey { get; set; } = new(SButton.F2);
-    public bool ShowUniqueId { get; set; } = false;
     public bool ShowResultDetails { get; set; } = false;
     public bool ShowModTooltips { get; set; } = true;
     public bool IncludeContentPacks { get; set; } = true;
@@ -44,9 +44,11 @@ public sealed class ModEntry : Mod
 
         if (e.Button is SButton.Escape or SButton.ControllerB)
         {
+            if (menu.LetChildMenuHandleBackInput())
+                return;
+
             Helper.Input.Suppress(e.Button);
-            Game1.playSound("bigDeSelect");
-            menu.CloseFromInput();
+            menu.BackOrCloseFromInput();
             return;
         }
 
@@ -70,16 +72,15 @@ public sealed class ModEntry : Mod
         }
 
         Gmcm.Register(ModManifest, ResetConfig, SaveConfig);
-        Gmcm.AddSectionTitle(ModManifest, () => "GMCM Advanced Search", () => "Search inside GMCM option labels, tooltips, field IDs, and config keys.");
+        Gmcm.AddSectionTitle(ModManifest, () => "GMCM Advanced Search", () => "Search inside GMCM authors, mod names, UniqueIDs, Nexus IDs, option labels, tooltips, field IDs, and config keys.");
         Gmcm.AddKeybindList(ModManifest, () => Config.OpenSearchMenuKey, v => Config.OpenSearchMenuKey = v, () => "Open search menu", () => "Hotkey to open the GMCM Advanced Search menu.");
-        Gmcm.AddBoolOption(ModManifest, () => Config.ShowUniqueId, v => Config.ShowUniqueId = v, () => "Show UniqueID", () => "Show each result's mod UniqueID.");
         Gmcm.AddBoolOption(ModManifest, () => Config.ShowResultDetails, v => Config.ShowResultDetails = v, () => "Show Advanced Details", () => "Show extra metadata under each search result, including section/page, tooltip text, field ID, config key path, and option type.");
         Gmcm.AddBoolOption(ModManifest, () => Config.ShowModTooltips, v => Config.ShowModTooltips = v, () => "Show Mod Tooltips", () => "Show GMCM-style hover tooltips with the result mod name and description.");
         Gmcm.AddBoolOption(ModManifest, () => Config.IncludeContentPacks, SetIncludeContentPacks, () => "Include content packs", () => "Include GMCM-registered content packs when searching.");
         Gmcm.AddBoolOption(ModManifest, () => Config.IncludeConfigFileFallback, SetIncludeConfigFileFallback, () => "Include config.json fallback", () => "Also search config.json keys when GMCM option metadata can't be fully read.");
         Gmcm.AddBoolOption(ModManifest, () => Config.IncludeConfigValues, SetIncludeConfigValues, () => "Search config values", () => "Also index simple config.json values. This can produce more noisy results.");
         Gmcm.AddBoolOption(ModManifest, () => Config.DebugLogging, v => Config.DebugLogging = v, () => "Debug logging", () => "Log index counts and reflection details for troubleshooting.");
-        Gmcm.AddParagraph(ModManifest, () => "Tip: search terms match actual option labels, tooltips, field IDs, and config keys only. Mod names and UniqueIDs are not used as search matches.");
+        Gmcm.AddParagraph(ModManifest, () => "Tip: search results show matching authors first, then matching mod names, UniqueIDs, or Nexus IDs with matching option labels, tooltips, field IDs, and config keys grouped underneath.");
 
         TryRegisterMobilePhoneApp();
     }
@@ -91,11 +92,29 @@ public sealed class ModEntry : Mod
         if (MobilePhone == null)
             return;
 
-        Texture2D icon = Helper.ModContent.Load<Texture2D>("assets/MobilePhone.png");
+        Texture2D? icon = LoadEmbeddedMobilePhoneIcon();
+        if (icon == null)
+            return;
+
         bool registered = MobilePhone.AddApp(ModManifest.UniqueID, "GMCM Search", OpenSearchMenuFromPhone, icon);
 
         if (Config.DebugLogging)
             Monitor.Log($"Mobile Phone app registration: {registered}.", LogLevel.Debug);
+    }
+
+    private Texture2D? LoadEmbeddedMobilePhoneIcon()
+    {
+        const string resourceName = "GMCMAdvancedSearch.MobilePhone.png";
+        Stream? stream = typeof(ModEntry).Assembly.GetManifestResourceStream(resourceName);
+        if (stream == null)
+        {
+            if (Config.DebugLogging)
+                Monitor.Log($"Embedded Mobile Phone icon resource '{resourceName}' was not found.", LogLevel.Debug);
+            return null;
+        }
+
+        using (stream)
+            return Texture2D.FromStream(Game1.graphics.GraphicsDevice, stream);
     }
 
     private void ResetConfig()
@@ -221,7 +240,7 @@ public sealed class ModEntry : Mod
 
     private void OpenMenu()
     {
-        Game1.activeClickableMenu = new SearchMenu("GMCM Advanced Search", Config.ShowUniqueId, Config.ShowResultDetails, Config.ShowModTooltips, IndexedOptions, TryOpenMod);
+        Game1.activeClickableMenu = new SearchMenu("GMCM Advanced Search", Config.ShowResultDetails, Config.ShowModTooltips, IndexedOptions, TryOpenMod);
     }
 
     private bool TryOpenMod(IManifest manifest)
