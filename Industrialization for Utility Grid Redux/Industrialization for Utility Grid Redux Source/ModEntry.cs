@@ -1,0 +1,438 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Text.Json;
+using System.Text.RegularExpressions;
+using Microsoft.Xna.Framework.Graphics;
+using StardewModdingAPI;
+using StardewModdingAPI.Events;
+
+namespace ThaleTheGreat.IndustrializationForUtilityGridRedux;
+
+public sealed class ModEntry : Mod
+{
+    private const string ObjectTextureAsset = "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/Objects";
+    private const string BigCraftableTextureAsset = "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/BigCraftables";
+
+    private Dictionary<string, object?> objectEntries = new(StringComparer.OrdinalIgnoreCase);
+    private Dictionary<string, object?> bigCraftableEntries = new(StringComparer.OrdinalIgnoreCase);
+    private Dictionary<string, object?> craftingRecipes = new(StringComparer.OrdinalIgnoreCase);
+    private Dictionary<string, object?> machineEntries = new(StringComparer.OrdinalIgnoreCase);
+    private const string BetterCraftingModId = "leclair.bettercrafting";
+    private const string BetterCraftingIndustrializationCategoryId = "industrialization-for-utility-grid-redux";
+
+    private Dictionary<string, object?> utilityGridEntries = new(StringComparer.OrdinalIgnoreCase);
+    private Dictionary<string, object?> shopEntries = new(StringComparer.OrdinalIgnoreCase);
+
+    public override void Entry(IModHelper helper)
+    {
+        this.objectEntries = this.ReadDictionary("assets/Data/objects.json");
+        this.bigCraftableEntries = this.ReadDictionary("assets/Data/big-craftables.json");
+        this.craftingRecipes = this.ReadDictionary("assets/Data/crafting-recipes.json");
+        this.machineEntries = this.ReadDictionary("assets/Data/machines.json");
+        this.shopEntries = this.ReadDictionary("assets/Data/shops.json");
+        this.utilityGridEntries = this.ReadDictionary("assets/UtilityGrid/utility-grid-object-entries.json");
+        this.ApplyUtilityGridTooltips();
+
+        MachineLogic.Initialize(helper.DirectoryPath, this.Monitor);
+
+        helper.Events.Content.AssetRequested += this.OnAssetRequested;
+        helper.Events.GameLoop.GameLaunched += this.OnGameLaunched;
+    }
+
+    private void OnAssetRequested(object? sender, AssetRequestedEventArgs e)
+    {
+        if (e.NameWithoutLocale.IsEquivalentTo(ObjectTextureAsset))
+        {
+            e.LoadFromModFile<Texture2D>("assets/Generated/Objects.png", AssetLoadPriority.Exclusive);
+            return;
+        }
+
+        if (e.NameWithoutLocale.IsEquivalentTo(BigCraftableTextureAsset))
+        {
+            e.LoadFromModFile<Texture2D>("assets/Generated/BigCraftables.png", AssetLoadPriority.Exclusive);
+            return;
+        }
+
+        if (e.NameWithoutLocale.IsEquivalentTo("Data/Objects"))
+            e.Edit(asset => ApplyEntries(asset.Data, this.objectEntries));
+        else if (e.NameWithoutLocale.IsEquivalentTo("Data/BigCraftables"))
+            e.Edit(asset => ApplyEntries(asset.Data, this.bigCraftableEntries));
+        else if (e.NameWithoutLocale.IsEquivalentTo("Data/CraftingRecipes"))
+            e.Edit(asset => ApplyEntries(asset.Data, this.craftingRecipes));
+        else if (e.NameWithoutLocale.IsEquivalentTo("Data/Machines"))
+            e.Edit(asset => ApplyEntries(asset.Data, this.machineEntries));
+        else if (e.NameWithoutLocale.IsEquivalentTo("Data/Shops"))
+            e.Edit(asset => this.ApplyShopEntries(asset.Data));
+    }
+
+    private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
+    {
+        this.RegisterUtilityGridRules();
+        this.RegisterBetterCraftingCategory();
+    }
+
+    private void RegisterBetterCraftingCategory()
+    {
+        Leclair.Stardew.BetterCrafting.IBetterCrafting? betterCrafting = this.Helper.ModRegistry.GetApi<Leclair.Stardew.BetterCrafting.IBetterCrafting>(BetterCraftingModId);
+        if (betterCrafting is null)
+            return;
+
+        string[] recipeNames = this.craftingRecipes.Keys
+            .Where(name => !string.IsNullOrWhiteSpace(name))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        if (recipeNames.Length == 0)
+            return;
+
+        string iconRecipe = recipeNames.Contains("ThaleTheGreat.IndustrializationForUtilityGridRedux_ElectricFurnace", StringComparer.OrdinalIgnoreCase)
+            ? "ThaleTheGreat.IndustrializationForUtilityGridRedux_ElectricFurnace"
+            : recipeNames[0];
+
+        betterCrafting.CreateDefaultCategory(false, BetterCraftingIndustrializationCategoryId, () => "Industrialization", recipeNames, iconRecipe, false, null);
+        betterCrafting.AddRecipesToDefaultCategory(false, BetterCraftingIndustrializationCategoryId, recipeNames);
+        betterCrafting.RemoveRecipesFromDefaultCategory(false, "machines", recipeNames);
+    }
+
+    private void ApplyUtilityGridTooltips()
+    {
+        foreach ((string displayName, object? rawRule) in this.utilityGridEntries)
+        {
+            if (rawRule is not Dictionary<string, object?> rule)
+                continue;
+
+            string tooltipText = FormatUtilityGridTooltip(rule);
+            if (string.IsNullOrWhiteSpace(tooltipText))
+                continue;
+
+            Dictionary<string, object?>? bigCraftable = this.GetBigCraftableByDisplayName(displayName);
+            if (bigCraftable is null)
+                continue;
+
+            string description = Convert.ToString(bigCraftable.GetValueOrDefault("Description"), CultureInfo.InvariantCulture) ?? string.Empty;
+            description = RemoveUtilityGridTooltip(description);
+
+            bigCraftable["Description"] = string.IsNullOrWhiteSpace(description)
+                ? tooltipText
+                : EnsureSentenceTerminator(description.TrimEnd()) + " " + tooltipText;
+        }
+    }
+
+    private void RegisterUtilityGridRules()
+    {
+        Assembly? utilityGridAssembly = AppDomain.CurrentDomain.GetAssemblies()
+            .FirstOrDefault(assembly => string.Equals(assembly.GetName().Name, "UtilityGridRedux", StringComparison.OrdinalIgnoreCase));
+        if (utilityGridAssembly is null)
+        {
+            this.Monitor.Log("Utility Grid Redux assembly was not found, so Industrialization machines could not be registered with the utility grid.", LogLevel.Warn);
+            return;
+        }
+
+        Type? modEntryType = utilityGridAssembly.GetType("ThaleTheGreat.UtilityGridRedux.ModEntry");
+        Type? ruleType = utilityGridAssembly.GetType("ThaleTheGreat.UtilityGridRedux.UtilityObjectRule");
+        FieldInfo? rulesField = modEntryType?.GetField("ObjectRules", BindingFlags.Static | BindingFlags.NonPublic);
+        if (modEntryType is null || ruleType is null || rulesField?.GetValue(null) is not IDictionary objectRules)
+        {
+            this.Monitor.Log("Utility Grid Redux rule table was not available, so Industrialization machines could not be registered with the utility grid.", LogLevel.Warn);
+            return;
+        }
+
+        int added = 0;
+        foreach ((string displayName, object? rawRule) in this.utilityGridEntries)
+        {
+            if (rawRule is not Dictionary<string, object?> ruleData)
+                continue;
+
+            object? rule = Activator.CreateInstance(ruleType, nonPublic: true);
+            if (rule is null)
+                continue;
+
+            foreach ((string propertyName, object? value) in ruleData)
+                TrySetMember(rule, propertyName, value);
+
+            foreach (string key in this.GetUtilityGridRuleKeys(displayName))
+            {
+                objectRules[key] = rule;
+                added++;
+            }
+        }
+
+        if (added == 0)
+            this.Monitor.Log("No Industrialization Utility Grid rules were registered.", LogLevel.Warn);
+    }
+
+    private IEnumerable<string> GetUtilityGridRuleKeys(string displayName)
+    {
+        if (!string.IsNullOrWhiteSpace(displayName))
+            yield return displayName;
+
+        Dictionary<string, object?>? bigCraftable = this.GetBigCraftableByDisplayName(displayName);
+        if (bigCraftable is null)
+            yield break;
+
+        string? itemId = Convert.ToString(bigCraftable.GetValueOrDefault("Name"), CultureInfo.InvariantCulture);
+        if (string.IsNullOrWhiteSpace(itemId))
+            yield break;
+
+        yield return itemId;
+        yield return "(BC)" + itemId;
+    }
+
+    private Dictionary<string, object?>? GetBigCraftableByDisplayName(string displayName)
+    {
+        foreach (object? rawEntry in this.bigCraftableEntries.Values)
+        {
+            if (rawEntry is not Dictionary<string, object?> entry)
+                continue;
+
+            string? entryDisplayName = Convert.ToString(entry.GetValueOrDefault("DisplayName"), CultureInfo.InvariantCulture);
+            if (string.Equals(entryDisplayName, displayName, StringComparison.OrdinalIgnoreCase))
+                return entry;
+        }
+
+        return null;
+    }
+
+    private static string FormatUtilityGridTooltip(Dictionary<string, object?> rule)
+    {
+        List<string> parts = new();
+        AddStorageAmount(parts, "water", GetRuleFloat(rule, "waterChargeCapacity"), GetRuleFloat(rule, "waterDischargeRate"));
+        AddStorageAmount(parts, "power", GetRuleFloat(rule, "powerChargeCapacity"), GetRuleFloat(rule, "powerDischargeRate"));
+        AddUtilityAmount(parts, "water", GetRuleFloat(rule, "water"));
+        AddUtilityAmount(parts, "power", GetRuleFloat(rule, "power"));
+        return string.Join(" ", parts);
+    }
+
+    private static string RemoveUtilityGridTooltip(string description)
+    {
+        if (string.IsNullOrWhiteSpace(description))
+            return string.Empty;
+
+        string oldPrefixPattern = @"\s*Utility" + " Grid:" + @"\s*";
+        description = Regex.Replace(
+            description,
+            oldPrefixPattern + @"(?:consumes|produces)\s+[0-9.]+\s+(?:energy|water|power)(?:;\s*(?:consumes|produces)\s+[0-9.]+\s+(?:energy|water|power))*\.?$",
+            string.Empty,
+            RegexOptions.IgnoreCase);
+
+        description = Regex.Replace(
+            description,
+            @"(?:\s*(?:Consumes|Produces)\s+[0-9.]+\s+(?:water|power)\.)+$",
+            string.Empty,
+            RegexOptions.IgnoreCase);
+
+        description = Regex.Replace(
+            description,
+            @"(?:\s*Stores\s+[0-9.]+\s+(?:water|power)\.\s*Outputs\s+[0-9.]+\s+(?:water|power)\.)+$",
+            string.Empty,
+            RegexOptions.IgnoreCase);
+
+        return description.TrimEnd();
+    }
+
+
+    private static string EnsureSentenceTerminator(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            return string.Empty;
+
+        char last = text[^1];
+        return last is '.' or '!' or '?' ? text : text + ".";
+    }
+
+    private static void AddStorageAmount(List<string> parts, string label, float capacity, float output)
+    {
+        if (capacity > 0 && output > 0)
+            parts.Add($"Stores {FormatRuleFloat(capacity)} {label}. Outputs {FormatRuleFloat(output)} {label}.");
+    }
+
+    private static void AddUtilityAmount(List<string> parts, string label, float amount)
+    {
+        if (amount > 0)
+            parts.Add($"Produces {FormatRuleFloat(amount)} {label}.");
+        else if (amount < 0)
+            parts.Add($"Consumes {FormatRuleFloat(-amount)} {label}.");
+    }
+
+    private static float GetRuleFloat(Dictionary<string, object?> rule, string key)
+    {
+        if (!rule.TryGetValue(key, out object? value) || value is null)
+            return 0f;
+
+        return Convert.ToSingle(value, CultureInfo.InvariantCulture);
+    }
+
+    private static string FormatRuleFloat(float value)
+    {
+        return value.ToString("0.##", CultureInfo.InvariantCulture);
+    }
+
+    private Dictionary<string, object?> ReadDictionary(string relativePath)
+    {
+        string path = Path.Combine(this.Helper.DirectoryPath, relativePath);
+        if (!File.Exists(path))
+            return new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+
+        using FileStream stream = File.OpenRead(path);
+        using JsonDocument document = JsonDocument.Parse(stream);
+        object? converted = ConvertJson(document.RootElement);
+        return converted as Dictionary<string, object?> ?? new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+    }
+
+    private static void ApplyEntries(object? assetData, IReadOnlyDictionary<string, object?> entries)
+    {
+        if (assetData is not IDictionary dictionary)
+            return;
+
+        Type valueType = GetDictionaryValueType(dictionary.GetType()) ?? typeof(object);
+        foreach ((string key, object? value) in entries)
+            dictionary[key] = ConvertToTargetType(value, valueType);
+    }
+
+    private void ApplyShopEntries(object? assetData)
+    {
+        if (assetData is not IDictionary shops)
+            return;
+
+        foreach ((string shopId, object? rawItems) in this.shopEntries)
+        {
+            if (!shops.Contains(shopId) || shops[shopId] is null || rawItems is not List<object?> itemsToAdd)
+                continue;
+
+            object shop = shops[shopId]!;
+            object? items = GetMemberValue(shop, "Items");
+            if (items is not IList list)
+                continue;
+
+            Type itemType = GetListElementType(list.GetType()) ?? typeof(object);
+            foreach (object? item in itemsToAdd)
+                list.Add(ConvertToTargetType(item, itemType));
+        }
+    }
+
+    internal static object? ConvertToTargetType(object? value, Type targetType)
+    {
+        if (value is null)
+            return null;
+
+        Type actualType = Nullable.GetUnderlyingType(targetType) ?? targetType;
+        if (actualType == typeof(object))
+            return value;
+        if (actualType.IsInstanceOfType(value))
+            return value;
+        if (actualType == typeof(string))
+            return Convert.ToString(value, CultureInfo.InvariantCulture);
+        if (actualType.IsEnum && value is string enumText)
+            return Enum.Parse(actualType, enumText, ignoreCase: true);
+        if (actualType == typeof(bool) || actualType == typeof(int) || actualType == typeof(float) || actualType == typeof(double) || actualType == typeof(decimal))
+            return Convert.ChangeType(value, actualType, CultureInfo.InvariantCulture);
+
+        if (value is List<object?> listValue)
+        {
+            if (actualType.IsArray)
+            {
+                Type arrayElementType = actualType.GetElementType() ?? typeof(object);
+                Array array = Array.CreateInstance(arrayElementType, listValue.Count);
+                for (int i = 0; i < listValue.Count; i++)
+                    array.SetValue(ConvertToTargetType(listValue[i], arrayElementType), i);
+                return array;
+            }
+
+            Type elementType = GetListElementType(actualType) ?? typeof(object);
+            IList list = (IList)(Activator.CreateInstance(typeof(List<>).MakeGenericType(elementType)) ?? new ArrayList());
+            foreach (object? entry in listValue)
+                list.Add(ConvertToTargetType(entry, elementType));
+            return list;
+        }
+
+        if (value is Dictionary<string, object?> dictionaryValue)
+        {
+            Type? dictionaryValueType = GetDictionaryValueType(actualType);
+            if (dictionaryValueType is not null)
+            {
+                Type dictionaryType = typeof(Dictionary<,>).MakeGenericType(typeof(string), dictionaryValueType);
+                IDictionary dictionary = (IDictionary)(Activator.CreateInstance(dictionaryType) ?? new Hashtable());
+                foreach ((string key, object? entry) in dictionaryValue)
+                    dictionary[key] = ConvertToTargetType(entry, dictionaryValueType);
+                return dictionary;
+            }
+
+            object? instance = Activator.CreateInstance(actualType);
+            if (instance is null)
+                return value;
+
+            foreach ((string name, object? entry) in dictionaryValue)
+                TrySetMember(instance, name, entry);
+            return instance;
+        }
+
+        return Convert.ChangeType(value, actualType, CultureInfo.InvariantCulture);
+    }
+
+    private static object? ConvertJson(JsonElement element)
+    {
+        return element.ValueKind switch
+        {
+            JsonValueKind.Object => element.EnumerateObject().ToDictionary(p => p.Name, p => ConvertJson(p.Value), StringComparer.OrdinalIgnoreCase),
+            JsonValueKind.Array => element.EnumerateArray().Select(ConvertJson).ToList(),
+            JsonValueKind.String => element.GetString(),
+            JsonValueKind.Number => element.TryGetInt32(out int i) ? i : element.GetDouble(),
+            JsonValueKind.True => true,
+            JsonValueKind.False => false,
+            _ => null
+        };
+    }
+
+    private static void TrySetMember(object instance, string name, object? value)
+    {
+        const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase;
+        Type type = instance.GetType();
+
+        PropertyInfo? property = type.GetProperty(name, flags);
+        if (property is not null && property.CanWrite)
+        {
+            property.SetValue(instance, ConvertToTargetType(value, property.PropertyType));
+            return;
+        }
+
+        FieldInfo? field = type.GetField(name, flags);
+        if (field is not null)
+            field.SetValue(instance, ConvertToTargetType(value, field.FieldType));
+    }
+
+    private static object? GetMemberValue(object instance, string name)
+    {
+        const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase;
+        Type type = instance.GetType();
+        return type.GetProperty(name, flags)?.GetValue(instance) ?? type.GetField(name, flags)?.GetValue(instance);
+    }
+
+    private static Type? GetDictionaryValueType(Type type)
+    {
+        IEnumerable<Type> candidates = type.IsInterface ? new[] { type }.Concat(type.GetInterfaces()) : type.GetInterfaces().Prepend(type);
+        foreach (Type candidate in candidates)
+        {
+            if (candidate.IsGenericType && candidate.GetGenericTypeDefinition() == typeof(IDictionary<,>) && candidate.GetGenericArguments()[0] == typeof(string))
+                return candidate.GetGenericArguments()[1];
+        }
+        return null;
+    }
+
+    private static Type? GetListElementType(Type type)
+    {
+        if (type.IsArray)
+            return type.GetElementType();
+        IEnumerable<Type> candidates = type.IsInterface ? new[] { type }.Concat(type.GetInterfaces()) : type.GetInterfaces().Prepend(type);
+        foreach (Type candidate in candidates)
+        {
+            if (candidate.IsGenericType && candidate.GetGenericTypeDefinition() == typeof(IList<>))
+                return candidate.GetGenericArguments()[0];
+        }
+        return null;
+    }
+}

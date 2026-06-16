@@ -1,0 +1,286 @@
+{
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_Brick": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_Brick",
+    "DisplayName": "Brick",
+    "Description": "Highly durable brick, used in crafting various machines.",
+    "Type": "Basic",
+    "Category": -15,
+    "Price": 6,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/Objects",
+    "SpriteIndex": 0,
+    "Edibility": -300,
+    "ContextTags": [
+      "item_brick"
+    ]
+  },
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_ChromiumBar": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_ChromiumBar",
+    "DisplayName": "Chromium Bar",
+    "Description": "A very powerful and strong alloy.",
+    "Type": "Basic",
+    "Category": -15,
+    "Price": 1500,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/Objects",
+    "SpriteIndex": 1,
+    "Edibility": -300,
+    "ContextTags": [
+      "item_chromiumbar"
+    ]
+  },
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_ChromiumCompound": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_ChromiumCompound",
+    "DisplayName": "Chromium Compound",
+    "Description": "Mixture of Iridium, Quartz and Prismatic powders, ready to be smelted.",
+    "Type": "Basic",
+    "Category": -15,
+    "Price": 750,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/Objects",
+    "SpriteIndex": 2,
+    "Edibility": -300,
+    "ContextTags": [
+      "item_chromiumcompound"
+    ]
+  },
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_PulverizedCopper": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_PulverizedCopper",
+    "DisplayName": "Pulverized Copper",
+    "Description": "Large pile of pure copper, must be smelted in an Electric Furnace.",
+    "Type": "Basic",
+    "Category": -15,
+    "Price": 20,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/Objects",
+    "SpriteIndex": 3,
+    "Edibility": -300,
+    "ContextTags": [
+      "item_pulverizedcopper"
+    ]
+  },
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_PulverizedGold": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_PulverizedGold",
+    "DisplayName": "Pulverized Gold",
+    "Description": "Large pile of pure gold, must be smelted in an Electric Furnace.",
+    "Type": "Basic",
+    "Category": -15,
+    "Price": 100,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/Objects",
+    "SpriteIndex": 4,
+    "Edibility": -300,
+    "ContextTags": [
+      "item_pulverizedgold"
+    ]
+  },
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_PulverizedIridium": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_PulverizedIridium",
+    "DisplayName": "Pulverized Iridium",
+    "Description": "Large pile of pure iridium, must be smelted in an Electric Furnace, can be fused with a Prismatic Shard.",
+    "Type": "Basic",
+    "Category": -15,
+    "Price": 450,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/Objects",
+    "SpriteIndex": 5,
+    "Edibility": -300,
+    "ContextTags": [
+      "item_pulverizediridium"
+    ]
+  },
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_PulverizedIron": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_PulverizedIron",
+    "DisplayName": "Pulverized Iron",
+    "Description": "Large pile of pure iron, must be smelted in an Electric Furnace.",
+    "Type": "Basic",
+    "Category": -15,
+    "Price": 45,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/Objects",
+    "SpriteIndex": 6,
+    "Edibility": -300,
+    "ContextTags": [
+      "item_pulverizediron"
+    ]
+  },
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_PulverizedPrismaticShard": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_PulverizedPrismaticShard",
+    "DisplayName": "Pulverized Prismatic Shard",
+    "Description": "Large pile of pure Prismatic stone, must be combined with Pulverised Iridium & Quartz.",
+    "Type": "Basic",
+    "Category": -8,
+    "Price": 90,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/Objects",
+    "SpriteIndex": 7,
+    "Edibility": -300,
+    "ContextTags": [
+      "item_pulverizedprismaticshard"
+    ]
+  },
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_PulverizedQuartz": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_PulverizedQuartz",
+    "DisplayName": "Pulverized Quartz",
+    "Description": "Large pile of pure quartz, must be smelted in an Electric Furnace.",
+    "Type": "Basic",
+    "Category": -8,
+    "Price": 20,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/Objects",
+    "SpriteIndex": 8,
+    "Edibility": -300,
+    "ContextTags": [
+      "item_pulverizedquartz"
+    ]
+  },
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_PulverizedRadioactiveMetal": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_PulverizedRadioactiveMetal",
+    "DisplayName": "Pulverized Radioactive Metal",
+    "Description": "Large pile of pure radioactive material, must be smelted in an Electric Furnace.",
+    "Type": "Basic",
+    "Category": -15,
+    "Price": 600,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/Objects",
+    "SpriteIndex": 9,
+    "Edibility": -300,
+    "ContextTags": [
+      "item_pulverizedradioactivemetal"
+    ]
+  },
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_SmeltedFairyStone": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_SmeltedFairyStone",
+    "DisplayName": "Smelted Fairy Stone",
+    "Description": "Fairy Stone that has been melted down and refined",
+    "Type": "Basic",
+    "Category": -15,
+    "Price": 500,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/Objects",
+    "SpriteIndex": 10,
+    "Edibility": -300,
+    "ContextTags": [
+      "item_smeltedfairystone"
+    ]
+  },
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_Ash": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_Ash",
+    "DisplayName": "Ash",
+    "Description": "Remains of burned fuel.",
+    "Type": "Basic",
+    "Category": -20,
+    "Price": 1,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/Objects",
+    "SpriteIndex": 11,
+    "Edibility": -300,
+    "ContextTags": [
+      "item_ash"
+    ]
+  },
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_DepletedUranium": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_DepletedUranium",
+    "DisplayName": "Depleted Uranium",
+    "Description": "Uranium that cannot be used for a nuclear reaction anymore.",
+    "Type": "Basic",
+    "Category": -20,
+    "Price": 1,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/Objects",
+    "SpriteIndex": 12,
+    "Edibility": -300,
+    "ContextTags": [
+      "item_depleteduranium"
+    ]
+  },
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_HeavyOil": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_HeavyOil",
+    "DisplayName": "Heavy Oil",
+    "Description": "Oil that is high in Sulfur. Takes longer to process.",
+    "Type": "Basic",
+    "Category": -8,
+    "Price": 1000,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/Objects",
+    "SpriteIndex": 13,
+    "Edibility": -300,
+    "ContextTags": [
+      "item_heavyoil"
+    ]
+  },
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_LightOil": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_LightOil",
+    "DisplayName": "Light Oil",
+    "Description": "Oil that is low in Sulfur. Takes less time to process.",
+    "Type": "Basic",
+    "Category": -15,
+    "Price": 1500,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/Objects",
+    "SpriteIndex": 14,
+    "Edibility": -300,
+    "ContextTags": [
+      "item_lightoil"
+    ],
+    "CategoryTextOverride": "Fuel"
+  },
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_RefinedHeavyOil": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_RefinedHeavyOil",
+    "DisplayName": "Refined Heavy Oil",
+    "Description": "Heavy Oil that has been processed for use.",
+    "Type": "Basic",
+    "Category": -15,
+    "Price": 2000,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/Objects",
+    "SpriteIndex": 15,
+    "Edibility": -300,
+    "ContextTags": [
+      "item_refinedheavyoil"
+    ],
+    "CategoryTextOverride": "Fuel"
+  },
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_RefinedLightOil": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_RefinedLightOil",
+    "DisplayName": "Refined Light Oil",
+    "Description": "Heavy Oil that has been processed for use.",
+    "Type": "Basic",
+    "Category": -15,
+    "Price": 3000,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/Objects",
+    "SpriteIndex": 16,
+    "Edibility": -300,
+    "ContextTags": [
+      "item_refinedlightoil"
+    ],
+    "CategoryTextOverride": "Fuel"
+  },
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_RefinedUranium": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_RefinedUranium",
+    "DisplayName": "Refined Uranium",
+    "Description": "Uranium that has a higher concentration of the correct isotopes for fission.",
+    "Type": "Basic",
+    "Category": -15,
+    "Price": 6000,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/Objects",
+    "SpriteIndex": 17,
+    "Edibility": -300,
+    "ContextTags": [
+      "item_refineduranium"
+    ]
+  },
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_SolidFuel": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_SolidFuel",
+    "DisplayName": "Solid Fuel",
+    "Description": "Energy dense fuel made by compressing fossil fuels.",
+    "Type": "Basic",
+    "Category": -15,
+    "Price": 200,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/Objects",
+    "SpriteIndex": 18,
+    "Edibility": -300,
+    "ContextTags": [
+      "item_solidfuel"
+    ],
+    "CategoryTextOverride": "Fuel"
+  },
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_PrismaticBar": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_PrismaticBar",
+    "DisplayName": "Prismatic Bar",
+    "Description": "A bar of purified prismatic metal.",
+    "Type": "Basic",
+    "Category": -15,
+    "Price": 2000,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/Objects",
+    "SpriteIndex": 1,
+    "Edibility": -300,
+    "ContextTags": [
+      "item_prismatic_bar"
+    ]
+  }
+}

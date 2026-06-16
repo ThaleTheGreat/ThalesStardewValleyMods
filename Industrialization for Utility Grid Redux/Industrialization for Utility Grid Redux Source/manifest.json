@@ -1,0 +1,22 @@
+{
+  "Name": "Industrialization for Utility Grid Redux",
+  "Author": "ThaleTheGreat",
+  "Version": "1.0.0",
+  "Description": "Adds Industrialization Machines to Utility Grid Redux.",
+  "UniqueID": "ThaleTheGreat.IndustrializationForUtilityGridRedux",
+  "EntryDll": "IndustrializationForUtilityGridRedux.dll",
+  "MinimumApiVersion": "4.0.0",
+  "UpdateKeys": [
+    "Nexus:47690"
+  ],
+  "Dependencies": [
+    {
+      "UniqueID": "ThaleTheGreat.UtilityGridRedux",
+      "IsRequired": true
+    },
+    {
+      "UniqueID": "leclair.bettercrafting",
+      "IsRequired": false
+    }
+  ]
+}

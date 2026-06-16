@@ -1,0 +1,11 @@
+{
+  "SeedShop": [
+    {
+      "Id": "ThaleTheGreat.IndustrializationForUtilityGridRedux_JojaColaGeneratorRecipe",
+      "ItemId": "(BC)ThaleTheGreat.IndustrializationForUtilityGridRedux_JojaColaGenerator",
+      "IsRecipe": true,
+      "Price": 150000,
+      "AvailableStockLimit": "Player"
+    }
+  ]
+}

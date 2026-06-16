@@ -1,0 +1,377 @@
+{
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_AlternatorEFurnace": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_AlternatorEFurnace",
+    "DisplayName": "Alternator E. Furnace",
+    "Description": "This version of the furnace allows automate control, which smelts only crushed metals. Consumes 10 power.",
+    "Price": 0,
+    "Fragility": 0,
+    "CanBePlacedOutdoors": true,
+    "CanBePlacedIndoors": true,
+    "IsLamp": false,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/BigCraftables",
+    "SpriteIndex": 0,
+    "ContextTags": [
+      "item_alternatorefurnace"
+    ]
+  },
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_AutoMiner": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_AutoMiner",
+    "DisplayName": "Auto Miner",
+    "Description": "Very powerful miner which can collect metals, takes a full day to complete. Consumes 20 power.",
+    "Price": 0,
+    "Fragility": 0,
+    "CanBePlacedOutdoors": true,
+    "CanBePlacedIndoors": true,
+    "IsLamp": false,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/BigCraftables",
+    "SpriteIndex": 7,
+    "ContextTags": [
+      "item_autominer"
+    ]
+  },
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_CeramicKiln": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_CeramicKiln",
+    "DisplayName": "Ceramic Kiln",
+    "Description": "Cooks clay into Bricks, which is required by most machines. Consumes 5 power.",
+    "Price": 0,
+    "Fragility": 0,
+    "CanBePlacedOutdoors": true,
+    "CanBePlacedIndoors": true,
+    "IsLamp": false,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/BigCraftables",
+    "SpriteIndex": 11,
+    "ContextTags": [
+      "item_ceramickiln"
+    ]
+  },
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_ChromiumFurnace": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_ChromiumFurnace",
+    "DisplayName": "Chromium Furnace",
+    "Description": "State of the art industrial grade furnace, smelts at 4x speed AND 2x output. Consumes 20 power.",
+    "Price": 0,
+    "Fragility": 0,
+    "CanBePlacedOutdoors": true,
+    "CanBePlacedIndoors": true,
+    "IsLamp": false,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/BigCraftables",
+    "SpriteIndex": 18,
+    "ContextTags": [
+      "item_chromiumfurnace"
+    ]
+  },
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_CombustionGenerator": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_CombustionGenerator",
+    "DisplayName": "Combustion Generator",
+    "Description": "A Generator that converts 3 coal into 1 batt. pack or Solar & Void essence to produce 3 Batt. Packs. Produces 20 power.",
+    "Price": 0,
+    "Fragility": 0,
+    "CanBePlacedOutdoors": true,
+    "CanBePlacedIndoors": true,
+    "IsLamp": false,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/BigCraftables",
+    "SpriteIndex": 25,
+    "ContextTags": [
+      "item_combustiongenerator"
+    ]
+  },
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_CombustionMiner": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_CombustionMiner",
+    "DisplayName": "Combustion Miner",
+    "Description": "A weaker variant to the Auto Miner, takes coal as fuel. Consumes 5 power.",
+    "Price": 0,
+    "Fragility": 0,
+    "CanBePlacedOutdoors": true,
+    "CanBePlacedIndoors": true,
+    "IsLamp": false,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/BigCraftables",
+    "SpriteIndex": 32,
+    "ContextTags": [
+      "item_combustionminer"
+    ]
+  },
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_ElectricFurnace": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_ElectricFurnace",
+    "DisplayName": "Electric Furnace",
+    "Description": "Smelts regular and crushed ores at twice the speed, doesn't need coal to operate. Consumes 5 power.",
+    "Price": 0,
+    "Fragility": 0,
+    "CanBePlacedOutdoors": true,
+    "CanBePlacedIndoors": true,
+    "IsLamp": false,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/BigCraftables",
+    "SpriteIndex": 36,
+    "ContextTags": [
+      "item_powerfurnace"
+    ]
+  },
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_GardenCloche": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_GardenCloche",
+    "DisplayName": "Garden Cloche",
+    "Description": "An extremely powerful cloche, supply it with 24 of the same seed, and in return, get iridium quality crops (Time varies). Consumes 5 water. Consumes 10 power.",
+    "Price": 0,
+    "Fragility": 0,
+    "CanBePlacedOutdoors": true,
+    "CanBePlacedIndoors": true,
+    "IsLamp": false,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/BigCraftables",
+    "SpriteIndex": 43,
+    "ContextTags": [
+      "item_gardencloche"
+    ]
+  },
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_GemPolisher": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_GemPolisher",
+    "DisplayName": "Gem Polisher",
+    "Description": "An exotic gem polisher, allows upgrading gems to iridium quality. Consumes 20 power.",
+    "Price": 0,
+    "Fragility": 0,
+    "CanBePlacedOutdoors": true,
+    "CanBePlacedIndoors": true,
+    "IsLamp": false,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/BigCraftables",
+    "SpriteIndex": 46,
+    "ContextTags": [
+      "item_gempolisher"
+    ]
+  },
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_HayBin": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_HayBin",
+    "DisplayName": "Hay Bin",
+    "Description": "A bin that turns fiber into hay. Consumes 5 power.",
+    "Price": 0,
+    "Fragility": 0,
+    "CanBePlacedOutdoors": true,
+    "CanBePlacedIndoors": true,
+    "IsLamp": false,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/BigCraftables",
+    "SpriteIndex": 53,
+    "ContextTags": [
+      "item_haybin"
+    ]
+  },
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_HayRehydrator": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_HayRehydrator",
+    "DisplayName": "Hay Rehydrator",
+    "Description": "A bin that turns hay into fiber. Consumes 1 water. Consumes 5 power.",
+    "Price": 0,
+    "Fragility": 0,
+    "CanBePlacedOutdoors": true,
+    "CanBePlacedIndoors": true,
+    "IsLamp": false,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/BigCraftables",
+    "SpriteIndex": 56,
+    "ContextTags": [
+      "item_hayrehydrator"
+    ]
+  },
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_IndustrialDistillery": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_IndustrialDistillery",
+    "DisplayName": "Industrial Distillery",
+    "Description": "Larger more efficent Keg, takes 5 of the same item, and does it at twice the speed, keeps quality and sell value increased. Consumes 5 power.",
+    "Price": 0,
+    "Fragility": 0,
+    "CanBePlacedOutdoors": true,
+    "CanBePlacedIndoors": true,
+    "IsLamp": false,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/BigCraftables",
+    "SpriteIndex": 59,
+    "ContextTags": [
+      "item_industrialdistillery"
+    ]
+  },
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_JojaColaGenerator": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_JojaColaGenerator",
+    "DisplayName": "JojaCola Generator",
+    "Description": "Pierre is smart, so smart infact, he invented a machine which uses Joja Cola as a fuel source, by adding 10 cans, you too can make 1 battery, I bet Morris feels envious. Produces 5 power.",
+    "Price": 0,
+    "Fragility": 0,
+    "CanBePlacedOutdoors": true,
+    "CanBePlacedIndoors": true,
+    "IsLamp": false,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/BigCraftables",
+    "SpriteIndex": 66,
+    "ContextTags": [
+      "item_jojacolagenerator"
+    ]
+  },
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_MineralWasher": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_MineralWasher",
+    "DisplayName": "Mineral Washer",
+    "Description": "Cleans up minerals to improve quality. Consumes 5 water. Consumes 20 power.",
+    "Price": 0,
+    "Fragility": 0,
+    "CanBePlacedOutdoors": true,
+    "CanBePlacedIndoors": true,
+    "IsLamp": false,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/BigCraftables",
+    "SpriteIndex": 76,
+    "ContextTags": [
+      "item_mineralwasher"
+    ]
+  },
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_PreservativePress": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_PreservativePress",
+    "DisplayName": "Preservative Press",
+    "Description": "Larger more efficent perserves jar, takes 5 of the same item, and does it at twice the speed, keeps quality and sell value increased. Consumes 5 power.",
+    "Price": 0,
+    "Fragility": 0,
+    "CanBePlacedOutdoors": true,
+    "CanBePlacedIndoors": true,
+    "IsLamp": false,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/BigCraftables",
+    "SpriteIndex": 83,
+    "ContextTags": [
+      "item_preservativepress"
+    ]
+  },
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_Pulverizer": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_Pulverizer",
+    "DisplayName": "Pulverizer",
+    "Description": "Crushing 5 ores will net you two pulverized powder, can only be used in Electric Furnaces. Consumes 5 power.",
+    "Price": 0,
+    "Fragility": 0,
+    "CanBePlacedOutdoors": true,
+    "CanBePlacedIndoors": true,
+    "IsLamp": false,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/BigCraftables",
+    "SpriteIndex": 90,
+    "ContextTags": [
+      "item_pulverizer"
+    ]
+  },
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_RockCrusher": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_RockCrusher",
+    "DisplayName": "Rock Crusher",
+    "Description": "Can break down 5 stone for a chance of ore, break down metal bars into pulverized metal, or break higher quality ore into multiple lower quality ores. Consumes 5 power.",
+    "Price": 0,
+    "Fragility": 0,
+    "CanBePlacedOutdoors": true,
+    "CanBePlacedIndoors": true,
+    "IsLamp": false,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/BigCraftables",
+    "SpriteIndex": 96,
+    "ContextTags": [
+      "item_rockcrusher"
+    ]
+  },
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_SuperGardenCloche": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_SuperGardenCloche",
+    "DisplayName": "Super Garden Cloche",
+    "Description": "A powered up version of the garden cloche, supply it with 480 of the same seed, and in return, get iridium quality crops (Time varies). Consumes 100 water. Consumes 100 power.",
+    "Price": 0,
+    "Fragility": 0,
+    "CanBePlacedOutdoors": true,
+    "CanBePlacedIndoors": true,
+    "IsLamp": false,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/BigCraftables",
+    "SpriteIndex": 103,
+    "ContextTags": [
+      "item_supergardencloche"
+    ]
+  },
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_TreeCloche": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_TreeCloche",
+    "DisplayName": "Tree Cloche",
+    "Description": "Tree nursery which grows trees faster and produces wood. Consumes 5 power.",
+    "Price": 0,
+    "Fragility": 0,
+    "CanBePlacedOutdoors": true,
+    "CanBePlacedIndoors": true,
+    "IsLamp": false,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/BigCraftables",
+    "SpriteIndex": 106,
+    "ContextTags": [
+      "item_treecloche"
+    ]
+  },
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_BatteryCharger": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_BatteryCharger",
+    "DisplayName": "Battery Charger",
+    "Description": "Takes power from the grid to make batteries. Consumes 10 power.",
+    "Price": 0,
+    "Fragility": 0,
+    "CanBePlacedOutdoors": true,
+    "CanBePlacedIndoors": true,
+    "IsLamp": false,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/BigCraftables",
+    "SpriteIndex": 109,
+    "ContextTags": [
+      "item_batterycharger"
+    ]
+  },
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_ChemicalProcessingMachine": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_ChemicalProcessingMachine",
+    "DisplayName": "Chemical Processing Machine",
+    "Description": "Refines Coal Into Fuel, Oil into Refined Oil, and Heavy Oil into Solid Fuel. Consumes 10 water. Consumes 10 power.",
+    "Price": 0,
+    "Fragility": 0,
+    "CanBePlacedOutdoors": true,
+    "CanBePlacedIndoors": true,
+    "IsLamp": false,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/BigCraftables",
+    "SpriteIndex": 112,
+    "ContextTags": [
+      "item_chemicalprocessingmachine"
+    ]
+  },
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_ElectricGenerator": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_ElectricGenerator",
+    "DisplayName": "Electric Generator",
+    "Description": "Converts Coal, Fuel, or Batteries. Produces 30 power.",
+    "Price": 0,
+    "Fragility": 0,
+    "CanBePlacedOutdoors": true,
+    "CanBePlacedIndoors": true,
+    "IsLamp": false,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/BigCraftables",
+    "SpriteIndex": 115,
+    "ContextTags": [
+      "item_powergenerator"
+    ]
+  },
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_NuclearGenerator": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_NuclearGenerator",
+    "DisplayName": "Nuclear Generator",
+    "Description": "Uses Nuclear Fission with Radioactive Bars or Refined Uranium. Produces 200 power.",
+    "Price": 0,
+    "Fragility": 0,
+    "CanBePlacedOutdoors": true,
+    "CanBePlacedIndoors": true,
+    "IsLamp": false,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/BigCraftables",
+    "SpriteIndex": 119,
+    "ContextTags": [
+      "item_nucleargenerator"
+    ]
+  },
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_OilDrill": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_OilDrill",
+    "DisplayName": "Oil Drill",
+    "Description": "Very powerful miner which can collect metals, takes a full day to complete. Consumes 5 water. Consumes 5 power.",
+    "Price": 0,
+    "Fragility": 0,
+    "CanBePlacedOutdoors": true,
+    "CanBePlacedIndoors": true,
+    "IsLamp": false,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/BigCraftables",
+    "SpriteIndex": 123,
+    "ContextTags": [
+      "item_oildrill"
+    ]
+  },
+  "ThaleTheGreat.IndustrializationForUtilityGridRedux_SolarGenerator": {
+    "Name": "ThaleTheGreat.IndustrializationForUtilityGridRedux_SolarGenerator",
+    "DisplayName": "Solar Generator",
+    "Description": "A unique generator which requires sunlight to operate, doesn't work whiles indoors or at night. Produces 10 power.",
+    "Price": 0,
+    "Fragility": 0,
+    "CanBePlacedOutdoors": true,
+    "CanBePlacedIndoors": true,
+    "IsLamp": false,
+    "Texture": "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/BigCraftables",
+    "SpriteIndex": 127,
+    "ContextTags": [
+      "item_solargenerator"
+    ]
+  }
+}

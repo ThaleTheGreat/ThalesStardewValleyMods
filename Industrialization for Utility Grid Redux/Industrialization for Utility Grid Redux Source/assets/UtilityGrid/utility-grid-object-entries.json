@@ -1,0 +1,119 @@
+{
+  "Furnace": {
+    "power": 10,
+    "mustBeWorking": true,
+    "mustBeFull": true
+  },
+  "Electric Generator": {
+    "power": 30,
+    "mustBeWorking": true,
+    "mustBeFull": true
+  },
+  "Battery Charger": {
+    "power": -10,
+    "mustBeWorking": true
+  },
+  "Nuclear Generator": {
+    "power": 200,
+    "mustBeWorking": true,
+    "mustBeFull": true
+  },
+  "Chemical Processing Machine": {
+    "power": -10,
+    "water": -10,
+    "mustBeWorking": true,
+    "mustBeFull": true
+  },
+  "Oil Drill": {
+    "power": -5,
+    "water": -5,
+    "mustBeWorking": true,
+    "mustBeFull": true
+  },
+  "Alternator E. Furnace": {
+    "power": -10,
+    "mustBeWorking": true
+  },
+  "Auto Miner": {
+    "power": -20,
+    "mustBeWorking": true
+  },
+  "Ceramic Kiln": {
+    "power": -5,
+    "mustBeWorking": true
+  },
+  "Chromium Furnace": {
+    "power": -20,
+    "mustBeWorking": true
+  },
+  "Electric Furnace": {
+    "power": -5,
+    "mustBeWorking": true
+  },
+  "Garden Cloche": {
+    "power": -10,
+    "water": -5,
+    "mustBeWorking": true
+  },
+  "Gem Polisher": {
+    "power": -20,
+    "mustBeWorking": true
+  },
+  "Hay Bin": {
+    "power": -5,
+    "mustBeWorking": true
+  },
+  "Hay Rehydrator": {
+    "power": -5,
+    "water": -1,
+    "mustBeWorking": true
+  },
+  "Industrial Distillery": {
+    "power": -5,
+    "mustBeWorking": true
+  },
+  "JojaCola Generator": {
+    "power": 5,
+    "mustBeWorking": true
+  },
+  "Solar Generator": {
+    "power": 10,
+    "mustHaveSun": true,
+    "onlyDay": true
+  },
+  "Mineral Washer": {
+    "power": -20,
+    "water": -5,
+    "mustBeWorking": true
+  },
+  "Preservative Press": {
+    "power": -5,
+    "mustBeWorking": true
+  },
+  "Pulverizer": {
+    "power": -5,
+    "mustBeWorking": true
+  },
+  "Rock Crusher": {
+    "power": -5,
+    "mustBeWorking": true
+  },
+  "Super Garden Cloche": {
+    "power": -100,
+    "water": -100,
+    "mustBeFull": true,
+    "mustBeWorking": true
+  },
+  "Tree Cloche": {
+    "power": -5,
+    "mustBeWorking": true
+  },
+  "Combustion Generator": {
+    "power": 20,
+    "mustBeWorking": true
+  },
+  "Combustion Miner": {
+    "power": -5,
+    "mustBeWorking": true
+  }
+}
