@@ -3,7 +3,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <AssemblyName>GMCMAdvancedSearch</AssemblyName>
     <RootNamespace>GMCMAdvancedSearch</RootNamespace>
-    <Version>1.4.0</Version>
+    <Version>1.5</Version>
     <Nullable>enable</Nullable>
     <LangVersion>10.0</LangVersion>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>

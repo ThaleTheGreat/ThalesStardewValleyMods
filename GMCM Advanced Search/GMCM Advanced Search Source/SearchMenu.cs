@@ -411,6 +411,22 @@ internal sealed class SearchMenu : IClickableMenu
         scrollbar.ReleaseLeftClick();
     }
 
+    public override void receiveRightClick(int x, int y, bool playSound = true)
+    {
+        base.receiveRightClick(x, y, playSound);
+
+        if (!searchBoxRect.Contains(x, y))
+            return;
+
+        searchBox.SelectMe();
+        if (string.IsNullOrEmpty(searchBox.Text))
+            return;
+
+        searchBox.Text = "";
+        lastSearch = "";
+        ApplyFilter();
+    }
+
     public override void performHoverAction(int x, int y)
     {
         base.performHoverAction(x, y);
