@@ -1,0 +1,34 @@
+{
+  "Name": "Road Kill",
+  "Author": "ThaleTheGreat",
+  "Version": "1.0.0",
+  "Description": "Adds Animal Husbandry to Tractor Mod, with optional Wallet Tools support.",
+  "UniqueID": "ThaleTheGreat.RoadKill",
+  "EntryDll": "RoadKill.dll",
+  "MinimumApiVersion": "4.0.0",
+  "UpdateKeys": [
+    "Nexus:47825"
+  ],
+  "Dependencies": [
+    {
+      "UniqueID": "DIGUS.ANIMALHUSBANDRYMOD",
+      "IsRequired": true
+    },
+    {
+      "UniqueID": "Pathoschild.TractorMod",
+      "IsRequired": true
+    },
+    {
+      "UniqueID": "ThaleTheGreat.WalletTools",
+      "IsRequired": false
+    },
+    {
+      "UniqueID": "ThaleTheGreat.WalletToolsForAnimalHusbandry",
+      "IsRequired": false
+    },
+    {
+      "UniqueID": "ThaleTheGreat.WalletToolsForTractorMod",
+      "IsRequired": false
+    }
+  ]
+}
