@@ -1,12 +1,22 @@
 {
   "Name": "Tool and Sprinkler Upgrades",
   "Author": "ThaleTheGreat",
-  "Version": "1.1.0",
+  "Version": "1.2.0",
   "Description": "Adds Cobalt, Prismatic, and Radioactive Upgrades.",
   "UniqueID": "ThaleTheGreat.ToolAndSprinklerUpgrades",
   "EntryDll": "ToolAndSprinklerUpgrades.dll",
   "MinimumApiVersion": "4.0.0",
   "UpdateKeys": [
     "Nexus:47246"
+  ],
+  "Dependencies": [
+    {
+      "UniqueID": "spacechase0.GenericModConfigMenu",
+      "IsRequired": false
+    },
+    {
+      "UniqueID": "ThaleTheGreat.WalletTools",
+      "IsRequired": false
+    }
   ]
 }

@@ -4,6 +4,11 @@
     <AssemblyName>ToolAndSprinklerUpgrades</AssemblyName>
     <RootNamespace>ThaleTheGreat.ToolAndSprinklerUpgrades</RootNamespace>
     <Nullable>enable</Nullable>
+    <Version>1.2.0</Version>
+    <AssemblyVersion>1.2.0.0</AssemblyVersion>
+    <FileVersion>1.2.0.0</FileVersion>
+    <InformationalVersion>1.2.0</InformationalVersion>
+    <PackageVersion>1.2.0</PackageVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <ModFolderName>Tool and Sprinkler Upgrades</ModFolderName>

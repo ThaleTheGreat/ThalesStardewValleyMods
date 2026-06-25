@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Reflection;
 using HarmonyLib;
 using Microsoft.Xna.Framework;
@@ -8,7 +9,7 @@ using StardewValley;
 using StardewValley.GameData.Objects;
 using StardewValley.GameData.Shops;
 using StardewValley.GameData.Tools;
-using StardewValley.TerrainFeatures;
+using StardewValley.Objects;
 using StardewValley.Tools;
 using SObject = StardewValley.Object;
 
@@ -19,6 +20,8 @@ public sealed class ModEntry : Mod
     internal static ModEntry Instance { get; private set; } = null!;
     internal static ModConfig Config { get; private set; } = null!;
 
+    private bool suppressExistingSaveSpriteRefresh;
+
     public override void Entry(IModHelper helper)
     {
         Instance = this;
@@ -26,6 +29,7 @@ public sealed class ModEntry : Mod
         NormalizeConfig(helper);
 
         helper.Events.Content.AssetRequested += OnAssetRequested;
+        helper.Events.GameLoop.GameLaunched += OnGameLaunched;
         helper.Events.GameLoop.SaveLoaded += OnSaveLoaded;
         helper.Events.GameLoop.DayStarted += OnDayStarted;
 
@@ -39,6 +43,32 @@ public sealed class ModEntry : Mod
         harmony.PatchAll(Assembly.GetExecutingAssembly());
         PatchToolStaminaUse(harmony);
         PatchCustomSprinklerRecognition(harmony);
+    }
+
+
+    private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
+    {
+        IGenericModConfigMenuApi? gmcm = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
+        if (gmcm == null)
+            return;
+
+        gmcm.Register(
+            ModManifest,
+            () => Config = new ModConfig(),
+            () =>
+            {
+                NormalizeConfig(Helper);
+                Helper.WriteConfig(Config);
+            }
+        );
+
+        gmcm.AddBoolOption(
+            ModManifest,
+            () => Config.RadioactiveSprinklerActsAsScarecrow,
+            value => Config.RadioactiveSprinklerActsAsScarecrow = value,
+            () => "Radioactive Sprinkler Scarecrow",
+            () => "Treat placed Radioactive Sprinklers like a Scarecrow."
+        );
     }
 
 
@@ -140,7 +170,7 @@ public sealed class ModEntry : Mod
                 data[Constants.CobaltSprinklerId] = CreateObjectData("Cobalt Sprinkler", "Waters the 48 surrounding tiles every morning.", "Crafting", -9, 500, Constants.CobaltTextureAsset, Constants.CobaltSprinklerSpriteIndex, new List<string> { "sprinkler" });
                 data[Constants.PrismaticBarId] = CreateObjectData("Prismatic Bar", "A bar pulsing with prismatic energy.", "Basic", -15, 1000, Constants.PrismaticTextureAsset, Constants.PrismaticBarSpriteIndex);
                 data[Constants.PrismaticSprinklerId] = CreateObjectData("Prismatic Sprinkler", "Waters the 120 surrounding tiles every morning.", "Crafting", -9, 1000, Constants.PrismaticTextureAsset, Constants.PrismaticSprinklerSpriteIndex, new List<string> { "sprinkler" });
-                data[Constants.RadioactiveSprinklerId] = CreateObjectData("Radioactive Sprinkler", "Waters the 224 surrounding tiles every morning.", "Crafting", -9, 2500, Constants.RadioactiveTextureAsset, Constants.RadioactiveSprinklerSpriteIndex, new List<string> { "sprinkler" });
+                data[Constants.RadioactiveSprinklerId] = CreateObjectData("Radioactive Sprinkler", "Waters the 224 surrounding tiles every morning. It can also protect crops like a  Scarecrow.", "Crafting", -9, 2500, Constants.RadioactiveTextureAsset, Constants.RadioactiveSprinklerSpriteIndex, new List<string> { "sprinkler" });
             });
             return;
         }
@@ -303,7 +333,7 @@ public sealed class ModEntry : Mod
             Description = description,
             Texture = textureAsset,
             SpriteIndex = template.SpriteIndex,
-            MenuSpriteIndex = template.MenuSpriteIndex,
+            MenuSpriteIndex = template.MenuSpriteIndex >= 0 ? template.MenuSpriteIndex : template.SpriteIndex,
             AttachmentSlots = template.AttachmentSlots,
             SalePrice = template.SalePrice,
             UpgradeLevel = level,
@@ -315,38 +345,6 @@ public sealed class ModEntry : Mod
                 [Constants.ModId + "/UpgradeLevel"] = level.ToString()
             }
         };
-    }
-
-    private static int GetWorldSpriteIndexForToolId(string id, ToolData template)
-    {
-        if (id.EndsWith("Axe", StringComparison.Ordinal))
-            return Constants.AxeSpriteIndex;
-        if (id.EndsWith("Pickaxe", StringComparison.Ordinal))
-            return Constants.PickaxeSpriteIndex;
-        if (id.EndsWith("Hoe", StringComparison.Ordinal))
-            return Constants.HoeSpriteIndex;
-        if (id.EndsWith("WateringCan", StringComparison.Ordinal))
-            return Constants.WateringCanSpriteIndex;
-        if (id.EndsWith("Pan", StringComparison.Ordinal))
-            return Constants.PanSpriteIndex;
-
-        return template.SpriteIndex;
-    }
-
-    private static int GetMenuSpriteIndexForToolId(string id, ToolData template)
-    {
-        if (id.EndsWith("Axe", StringComparison.Ordinal))
-            return Constants.AxeMenuSpriteIndex;
-        if (id.EndsWith("Pickaxe", StringComparison.Ordinal))
-            return Constants.PickaxeMenuSpriteIndex;
-        if (id.EndsWith("Hoe", StringComparison.Ordinal))
-            return Constants.HoeMenuSpriteIndex;
-        if (id.EndsWith("WateringCan", StringComparison.Ordinal))
-            return Constants.WateringCanMenuSpriteIndex;
-        if (id.EndsWith("Pan", StringComparison.Ordinal))
-            return Constants.PanMenuSpriteIndex;
-
-        return template.MenuSpriteIndex;
     }
 
     private static void AddTool(IDictionary<string, ToolData> data, string templateId, string id, string name, string description, int level, string requireToolId, string tradeItemId, string textureAsset, int price, int tradeAmount)
@@ -361,8 +359,8 @@ public sealed class ModEntry : Mod
             DisplayName = name,
             Description = description,
             Texture = textureAsset,
-            SpriteIndex = GetWorldSpriteIndexForToolId(id, template),
-            MenuSpriteIndex = GetMenuSpriteIndexForToolId(id, template),
+            SpriteIndex = template.SpriteIndex,
+            MenuSpriteIndex = template.MenuSpriteIndex >= 0 ? template.MenuSpriteIndex : template.SpriteIndex,
             AttachmentSlots = template.AttachmentSlots,
             SalePrice = template.SalePrice,
             UpgradeLevel = level,
@@ -388,6 +386,7 @@ public sealed class ModEntry : Mod
 
     private void OnSaveLoaded(object? sender, SaveLoadedEventArgs e)
     {
+        RefreshExistingCustomToolSprites();
         MarkKnownRodPurchases();
         UnlockKnownRecipes();
     }
@@ -396,18 +395,9 @@ public sealed class ModEntry : Mod
     {
         MarkKnownRodPurchases();
         UnlockKnownRecipes();
-        foreach (GameLocation location in Game1.locations)
-        {
-            foreach (SObject obj in location.Objects.Values.ToArray())
-            {
-                int range = GetSprinklerRange(obj);
-                if (range > 0)
-                    WaterSprinklerArea(location, obj, range);
-            }
-        }
     }
 
-    private static int GetSprinklerRange(SObject sprinkler)
+    internal static int GetSprinklerRange(SObject sprinkler)
     {
         int baseRange = GetBaseSprinklerRange(sprinkler.ItemId);
         if (baseRange <= 0)
@@ -429,7 +419,7 @@ public sealed class ModEntry : Mod
         return upgradedRange;
     }
 
-    private static int GetBaseSprinklerRange(string itemId)
+    internal static int GetBaseSprinklerRange(string itemId)
     {
         return itemId switch
         {
@@ -445,25 +435,9 @@ public sealed class ModEntry : Mod
         return GetBaseSprinklerRange(itemId) > 0;
     }
 
-    private static void WaterSprinklerArea(GameLocation location, SObject sprinkler, int range)
+    internal static bool IsRadioactiveSprinklerScarecrow(SObject obj)
     {
-        SObject? enricher = IsEnricher(sprinkler.heldObject.Value) ? sprinkler.heldObject.Value : null;
-
-        for (int x = (int)sprinkler.TileLocation.X - range; x <= sprinkler.TileLocation.X + range; x++)
-        {
-            for (int y = (int)sprinkler.TileLocation.Y - range; y <= sprinkler.TileLocation.Y + range; y++)
-            {
-                Vector2 tile = new(x, y);
-                if (tile == sprinkler.TileLocation)
-                    continue;
-
-                if (location.terrainFeatures.TryGetValue(tile, out TerrainFeature feature) && feature is HoeDirt dirt)
-                {
-                    TryApplyEnricherFertilizer(dirt, enricher);
-                    dirt.state.Value = HoeDirt.watered;
-                }
-            }
-        }
+        return Config.RadioactiveSprinklerActsAsScarecrow && IsObjectId(obj, Constants.RadioactiveSprinklerId);
     }
 
     private static bool IsPressureNozzle(SObject? obj)
@@ -471,48 +445,655 @@ public sealed class ModEntry : Mod
         return obj != null && IsObjectId(obj, Constants.PressureNozzleId);
     }
 
-    private static bool IsEnricher(SObject? obj)
-    {
-        return obj != null && IsObjectId(obj, Constants.EnricherId);
-    }
-
     private static bool IsObjectId(Item item, string id)
     {
         return item.ItemId == id || item.QualifiedItemId == "(O)" + id;
     }
 
-    private static bool IsFertilizer(SObject obj)
-    {
-        return obj.Category == -19 || string.Equals(obj.Type, "Fertilizer", StringComparison.OrdinalIgnoreCase);
-    }
+    private const string SpriteRefreshVersion = "1.2.0";
 
-    private static void TryApplyEnricherFertilizer(HoeDirt dirt, SObject? enricher)
+    private void RefreshExistingCustomToolSprites()
     {
-        if (enricher?.heldObject.Value is not SObject fertilizer || fertilizer.Stack <= 0 || !DirtHasNoFertilizer(dirt))
+        if (!Context.IsWorldReady || suppressExistingSaveSpriteRefresh)
             return;
 
-        if (!TrySetDirtFertilizer(dirt, fertilizer))
+        suppressExistingSaveSpriteRefresh = true;
+        int fixedCount = 0;
+        HashSet<Item> seen = new(ReferenceEqualityComparer.Instance);
+
+        try
+        {
+            try
+            {
+                Utility.ForEachItem(item =>
+                {
+                    if (item is Tool tool && seen.Add(item) && TryGetCustomToolDataForItem(tool, out string itemId, out CustomToolSpriteData spriteData) && !ToolInstanceMatchesCurrentData(tool, itemId, spriteData))
+                    {
+                        ApplyCurrentCustomToolData(tool, itemId, spriteData);
+                        fixedCount++;
+                    }
+
+                    return true;
+                });
+            }
+            catch (Exception ex)
+            {
+                DebugLog("Utility.ForEachItem custom tool refresh failed; falling back to direct farmer/chest scan: " + ex.Message);
+                RefreshFarmerCustomToolSprites(Game1.player, seen, ref fixedCount);
+                foreach (GameLocation location in Game1.locations.ToArray())
+                    RefreshLocationChestToolSprites(location, seen, ref fixedCount);
+            }
+
+            fixedCount += RefreshToolBeingUpgraded(Game1.player, seen);
+            fixedCount += RefreshWalletToolsStoredSprites();
+        }
+        finally
+        {
+            suppressExistingSaveSpriteRefresh = false;
+        }
+
+        if (fixedCount > 0)
+            Monitor.Log($"Refreshed {fixedCount} existing custom tool instance(s) to current Data/Tools sprite indexes.", LogLevel.Info);
+    }
+
+    private static int RefreshToolBeingUpgraded(Farmer? farmer, HashSet<Item> seen)
+    {
+        if (farmer?.toolBeingUpgraded.Value is null)
+            return 0;
+
+        if (!seen.Add(farmer.toolBeingUpgraded.Value))
+            return 0;
+
+        if (!TryCreateRefreshedCustomTool(farmer.toolBeingUpgraded.Value, out Tool? refreshedTool))
+            return 0;
+
+        farmer.toolBeingUpgraded.Value = refreshedTool;
+        return 1;
+    }
+
+    private static void RefreshFarmerCustomToolSprites(Farmer? farmer, HashSet<Item> seen, ref int fixedCount)
+    {
+        if (farmer == null)
             return;
 
-        fertilizer.Stack--;
-        if (fertilizer.Stack <= 0)
-            enricher.heldObject.Value = null;
+        for (int i = 0; i < farmer.Items.Count; i++)
+        {
+            Item? item = farmer.Items[i];
+            if (item != null && seen.Add(item) && TryCreateRefreshedCustomTool(item, out Tool? refreshedTool))
+            {
+                farmer.Items[i] = refreshedTool;
+                fixedCount++;
+            }
+        }
     }
 
-    private static bool DirtHasNoFertilizer(HoeDirt dirt)
+    private static void RefreshLocationChestToolSprites(GameLocation location, HashSet<Item> seen, ref int fixedCount)
     {
-        string fertilizerId = dirt.fertilizer.Value;
-        return string.IsNullOrWhiteSpace(fertilizerId) || fertilizerId == "0";
+        foreach (SObject obj in location.Objects.Values.ToArray())
+        {
+            if (obj is not Chest chest)
+                continue;
+
+            for (int i = 0; i < chest.Items.Count; i++)
+            {
+                Item? item = chest.Items[i];
+                if (item != null && seen.Add(item) && TryCreateRefreshedCustomTool(item, out Tool? refreshedTool))
+                {
+                    chest.Items[i] = refreshedTool;
+                    fixedCount++;
+                }
+            }
+        }
     }
 
-    private static bool TrySetDirtFertilizer(HoeDirt dirt, SObject fertilizer)
+    private static bool TryCreateRefreshedCustomTool(Item? item, out Tool? refreshedTool)
     {
-        if (string.IsNullOrWhiteSpace(fertilizer.ItemId))
+        refreshedTool = null;
+        if (item is not Tool oldTool || !TryGetCustomToolDataForItem(oldTool, out string itemId, out CustomToolSpriteData spriteData))
             return false;
 
-        dirt.fertilizer.Value = fertilizer.ItemId;
+        if (ToolInstanceMatchesCurrentData(oldTool, itemId, spriteData))
+            return false;
+
+        refreshedTool = CreateCurrentCustomTool(itemId, spriteData, oldTool);
+        return refreshedTool != null;
+    }
+
+    private static bool ToolInstanceMatchesCurrentData(Tool tool, string itemId, CustomToolSpriteData spriteData)
+    {
+        return string.Equals(NormalizeToolItemId(tool.ItemId), itemId, StringComparison.OrdinalIgnoreCase)
+            && string.Equals(NormalizeToolItemId(tool.QualifiedItemId), itemId, StringComparison.OrdinalIgnoreCase)
+            && tool.UpgradeLevel == spriteData.Level
+            && tool.CurrentParentTileIndex == spriteData.SpriteIndex
+            && tool.IndexOfMenuItemView == spriteData.MenuSpriteIndex
+            && tool.modData.TryGetValue(Constants.ModId + "/SpriteRefreshVersion", out string? refreshVersion)
+            && string.Equals(refreshVersion, SpriteRefreshVersion, StringComparison.Ordinal);
+    }
+
+    private static Tool? CreateCurrentCustomTool(string itemId, CustomToolSpriteData spriteData, Tool? oldTool)
+    {
+        try
+        {
+            Tool newTool = ItemRegistry.Create<Tool>("(T)" + itemId);
+            CopyPersistentToolState(oldTool, newTool);
+            ApplyCurrentCustomToolData(newTool, itemId, spriteData);
+            return newTool;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static void CopyPersistentToolState(Tool? oldTool, Tool newTool)
+    {
+        if (oldTool == null)
+            return;
+
+        foreach (KeyValuePair<string, string> pair in oldTool.modData.Pairs)
+            newTool.modData[pair.Key] = pair.Value;
+
+        int attachmentCount = Math.Min(oldTool.attachments.Length, newTool.attachments.Length);
+        for (int i = 0; i < attachmentCount; i++)
+        {
+            SObject? attachment = oldTool.attachments[i];
+            newTool.attachments[i] = attachment?.getOne() as SObject ?? attachment;
+        }
+
+        newTool.enchantments.Clear();
+        foreach (var enchantment in oldTool.enchantments)
+            newTool.enchantments.Add(enchantment);
+
+        CopyMatchingMemberValue(oldTool, newTool, "waterLeft");
+        CopyMatchingMemberValue(oldTool, newTool, "WaterLeft");
+        CopyMatchingMemberValue(oldTool, newTool, "lastUser");
+        CopyMatchingMemberValue(oldTool, newTool, "LastUser");
+    }
+
+    private static void ApplyCurrentCustomToolData(Tool tool, string itemId, CustomToolSpriteData spriteData)
+    {
+        tool.UpgradeLevel = spriteData.Level;
+        tool.CurrentParentTileIndex = spriteData.SpriteIndex;
+        tool.IndexOfMenuItemView = spriteData.MenuSpriteIndex;
+        tool.modData[Constants.ModId + "/Tier"] = ToolTierUtility.GetTierName(spriteData.Level);
+        tool.modData[Constants.ModId + "/UpgradeLevel"] = spriteData.Level.ToString();
+        tool.modData[Constants.ModId + "/SpriteRefreshVersion"] = SpriteRefreshVersion;
+
+        SetStringMember(tool, "itemId", itemId);
+        SetStringMember(tool, "qualifiedItemId", "(T)" + itemId);
+        SetStringMember(tool, "Name", spriteData.Name);
+        SetStringMember(tool, "name", spriteData.Name);
+        SetStringMember(tool, "DisplayName", spriteData.DisplayName);
+        SetStringMember(tool, "displayName", spriteData.DisplayName);
+        SetStringMember(tool, "Texture", spriteData.Texture);
+        SetStringMember(tool, "TexturePath", spriteData.Texture);
+        SetStringMember(tool, "texturePath", spriteData.Texture);
+        SetStringMember(tool, "textureName", spriteData.Texture);
+        SetIntMember(tool, "SpriteIndex", spriteData.SpriteIndex);
+        SetIntMember(tool, "spriteIndex", spriteData.SpriteIndex);
+        SetIntMember(tool, "CurrentParentTileIndex", spriteData.SpriteIndex);
+        SetIntMember(tool, "currentParentTileIndex", spriteData.SpriteIndex);
+        SetIntMember(tool, "InitialParentTileIndex", spriteData.SpriteIndex);
+        SetIntMember(tool, "initialParentTileIndex", spriteData.SpriteIndex);
+        SetIntMember(tool, "MenuSpriteIndex", spriteData.MenuSpriteIndex);
+        SetIntMember(tool, "menuSpriteIndex", spriteData.MenuSpriteIndex);
+        SetIntMember(tool, "IndexOfMenuItemView", spriteData.MenuSpriteIndex);
+        SetIntMember(tool, "indexOfMenuItemView", spriteData.MenuSpriteIndex);
+    }
+
+    private int RefreshWalletToolsStoredSprites()
+    {
+        int fixedCount = 0;
+
+        IWalletToolsApi? api = null;
+        try
+        {
+            api = Helper.ModRegistry.GetApi<IWalletToolsApi>("ThaleTheGreat.WalletTools");
+        }
+        catch (Exception ex)
+        {
+            DebugLog("Wallet Tools public API check was skipped: " + ex.Message);
+        }
+
+        if (api != null)
+            fixedCount += RefreshWalletToolsViaPublicApi(api);
+
+        object? walletMod = GetWalletToolsModInstance(api);
+        if (walletMod != null)
+            fixedCount += RefreshWalletToolsStoredStateBySourceShape(walletMod);
+
+        return fixedCount;
+    }
+
+    private object? GetWalletToolsModInstance(IWalletToolsApi? api)
+    {
+        object? modInfo = Helper.ModRegistry.Get("ThaleTheGreat.WalletTools");
+        object? mod = modInfo != null ? GetMemberValue(modInfo, "Mod") : null;
+        if (mod != null)
+            return mod;
+
+        return api != null ? GetMemberValue(api, "Mod") : null;
+    }
+
+    private int RefreshWalletToolsViaPublicApi(IWalletToolsApi api)
+    {
+        string[] kinds;
+        try
+        {
+            kinds = api.GetStoredToolKinds() ?? Array.Empty<string>();
+        }
+        catch (Exception ex)
+        {
+            DebugLog("Wallet Tools stored tool list check was skipped: " + ex.Message);
+            return 0;
+        }
+
+        int recognized = 0;
+        foreach (string kind in kinds)
+        {
+            try
+            {
+                if (!api.TryGetStoredTool(kind, out string qualifiedItemId, out _, out string displayName))
+                    continue;
+
+                if (TryGetCustomToolData(qualifiedItemId, out _) || TryGetCustomToolData(displayName, out _))
+                    recognized++;
+            }
+            catch (Exception ex)
+            {
+                DebugLog("Wallet Tools stored tool check skipped one entry: " + ex.Message);
+            }
+        }
+
+        if (recognized > 0)
+            Helper.GameContent.InvalidateCache("Data/Powers");
+
+        return 0;
+    }
+
+    private int RefreshWalletToolsStoredStateBySourceShape(object walletMod)
+    {
+        object? storedToolsByPlayer = GetMemberValue(walletMod, "StoredToolsByPlayer");
+        if (storedToolsByPlayer is not IDictionary byPlayer)
+            return 0;
+
+        int fixedCount = 0;
+        foreach (DictionaryEntry playerEntry in byPlayer)
+        {
+            if (playerEntry.Value is not IDictionary storedTools)
+                continue;
+
+            foreach (DictionaryEntry toolEntry in storedTools)
+            {
+                object? state = toolEntry.Value;
+                if (state == null || !TryGetWalletStateCustomToolData(state, out string itemId, out CustomToolSpriteData spriteData))
+                    continue;
+
+                if (ApplyWalletToolStateData(state, itemId, spriteData))
+                    fixedCount++;
+            }
+        }
+
+        if (fixedCount > 0)
+        {
+            InvokeWalletToolsRefresh(walletMod);
+            Helper.GameContent.InvalidateCache("Data/Powers");
+        }
+
+        return fixedCount;
+    }
+
+    private static bool TryGetWalletStateCustomToolData(object state, out string itemId, out CustomToolSpriteData spriteData)
+    {
+        foreach (string candidate in GetWalletStateIdentityCandidates(state))
+        {
+            if (TryGetCustomToolData(candidate, out spriteData))
+            {
+                itemId = NormalizeToolItemId(candidate);
+                return true;
+            }
+        }
+
+        itemId = string.Empty;
+        spriteData = default;
+        return false;
+    }
+
+    private static IEnumerable<string> GetWalletStateIdentityCandidates(object state)
+    {
+        yield return GetStringMember(state, "QualifiedItemId");
+        yield return GetStringMember(state, "Name");
+        yield return GetStringMember(state, "DisplayName");
+
+        if (GetMemberValue(state, "LiveTool") is Tool liveTool)
+        {
+            foreach (string candidate in GetToolIdentityCandidates(liveTool))
+                yield return candidate;
+        }
+
+        if (GetMemberValue(state, "ModData") is IDictionary modData)
+        {
+            foreach (object? value in modData.Values)
+            {
+                if (value is string text)
+                    yield return text;
+            }
+        }
+    }
+
+    private static bool ApplyWalletToolStateData(object state, string itemId, CustomToolSpriteData spriteData)
+    {
+        bool changed = false;
+        string qualifiedItemId = "(T)" + itemId;
+        Tool? liveTool = CreateCurrentCustomTool(itemId, spriteData, GetMemberValue(state, "LiveTool") as Tool);
+
+        changed |= SetStringMember(state, "QualifiedItemId", qualifiedItemId);
+        changed |= SetStringMember(state, "Name", spriteData.Name);
+        changed |= SetStringMember(state, "DisplayName", spriteData.DisplayName);
+        if (liveTool != null)
+            changed |= SetStringMember(state, "Description", liveTool.getDescription());
+        changed |= SetIntMember(state, "UpgradeLevel", spriteData.Level);
+        changed |= SetIntMember(state, "MenuSpriteIndex", spriteData.MenuSpriteIndex);
+        changed |= SetStringMember(state, "TexturePath", spriteData.Texture);
+
+        if (GetMemberValue(state, "ModData") is IDictionary modData)
+        {
+            SetDictionaryStringValue(modData, Constants.ModId + "/Tier", ToolTierUtility.GetTierName(spriteData.Level), ref changed);
+            SetDictionaryStringValue(modData, Constants.ModId + "/UpgradeLevel", spriteData.Level.ToString(), ref changed);
+            SetDictionaryStringValue(modData, Constants.ModId + "/SpriteRefreshVersion", SpriteRefreshVersion, ref changed);
+        }
+
+        if (liveTool != null)
+            changed |= SetObjectMember(state, "LiveTool", liveTool);
+
+        return changed;
+    }
+
+    private static void InvokeWalletToolsRefresh(object walletMod)
+    {
+        try
+        {
+            MethodInfo? method = walletMod.GetType().GetMethod(
+                "RefreshWalletStateAfterStoredToolChange",
+                BindingFlags.Instance | BindingFlags.NonPublic,
+                null,
+                new[] { typeof(Farmer), typeof(bool) },
+                null
+            );
+            method?.Invoke(walletMod, new object[] { Game1.player, true });
+        }
+        catch
+        {
+        }
+    }
+
+    private static bool TryGetCustomToolDataForItem(Tool tool, out string itemId, out CustomToolSpriteData spriteData)
+    {
+        foreach (string candidate in GetToolIdentityCandidates(tool))
+        {
+            if (TryGetCustomToolData(candidate, out spriteData))
+            {
+                itemId = NormalizeToolItemId(candidate);
+                return true;
+            }
+        }
+
+        itemId = string.Empty;
+        spriteData = default;
+        return false;
+    }
+
+    private static IEnumerable<string> GetToolIdentityCandidates(Tool tool)
+    {
+        yield return tool.ItemId;
+        yield return tool.QualifiedItemId;
+        yield return tool.Name;
+        yield return tool.DisplayName;
+        yield return GetStringMember(tool, "BaseName");
+        yield return GetStringMember(tool, "baseName");
+        yield return GetStringMember(tool, "itemId");
+        yield return GetStringMember(tool, "qualifiedItemId");
+        yield return GetStringMember(tool, "Name");
+        yield return GetStringMember(tool, "name");
+        yield return GetStringMember(tool, "displayName");
+    }
+
+    private static string NormalizeToolItemId(string rawId)
+    {
+        if (string.IsNullOrWhiteSpace(rawId))
+            return string.Empty;
+
+        string itemId = rawId.Trim();
+        if (itemId.StartsWith("(T)", StringComparison.OrdinalIgnoreCase))
+            itemId = itemId[3..];
+
+        return itemId switch
+        {
+            "Cobalt Axe" => Constants.CobaltAxeId,
+            "Cobalt Pickaxe" => Constants.CobaltPickaxeId,
+            "Cobalt Hoe" => Constants.CobaltHoeId,
+            "Cobalt Watering Can" => Constants.CobaltWateringCanId,
+            "Cobalt Pan" => Constants.CobaltPanId,
+            "Cobalt Rod" => Constants.CobaltFishingRodId,
+            "Prismatic Axe" => Constants.PrismaticAxeId,
+            "Prismatic Pickaxe" => Constants.PrismaticPickaxeId,
+            "Prismatic Hoe" => Constants.PrismaticHoeId,
+            "Prismatic Watering Can" => Constants.PrismaticWateringCanId,
+            "Prismatic Pan" => Constants.PrismaticPanId,
+            "Prismatic Rod" => Constants.PrismaticFishingRodId,
+            "Radioactive Axe" => Constants.RadioactiveAxeId,
+            "Radioactive Pickaxe" => Constants.RadioactivePickaxeId,
+            "Radioactive Hoe" => Constants.RadioactiveHoeId,
+            "Radioactive Watering Can" => Constants.RadioactiveWateringCanId,
+            "Radioactive Pan" => Constants.RadioactivePanId,
+            "Radioactive Rod" => Constants.RadioactiveFishingRodId,
+            _ => itemId
+        };
+    }
+
+    private static bool TryGetCustomToolData(string rawItemId, out CustomToolSpriteData spriteData)
+    {
+        spriteData = default;
+        string itemId = NormalizeToolItemId(rawItemId);
+        if (string.IsNullOrWhiteSpace(itemId) || !TryGetVanillaTemplateForCustomToolId(itemId, out string templateId, out int level))
+            return false;
+
+        IDictionary<string, ToolData> data = Game1.content.Load<Dictionary<string, ToolData>>("Data/Tools");
+        if (!data.TryGetValue(itemId, out ToolData? customTool) || !data.TryGetValue(templateId, out ToolData? template))
+            return false;
+
+        int menuSpriteIndex = template.MenuSpriteIndex >= 0 ? template.MenuSpriteIndex : template.SpriteIndex;
+        spriteData = new CustomToolSpriteData(
+            level,
+            customTool.Name,
+            customTool.DisplayName,
+            customTool.Texture,
+            template.SpriteIndex,
+            menuSpriteIndex
+        );
         return true;
     }
+
+    private static bool TryGetVanillaTemplateForCustomToolId(string itemId, out string templateId, out int level)
+    {
+        templateId = string.Empty;
+        level = 0;
+
+        if (itemId is Constants.CobaltAxeId or Constants.CobaltPickaxeId or Constants.CobaltHoeId or Constants.CobaltWateringCanId or Constants.CobaltPanId or Constants.CobaltFishingRodId)
+            level = Constants.CobaltLevel;
+        else if (itemId is Constants.PrismaticAxeId or Constants.PrismaticPickaxeId or Constants.PrismaticHoeId or Constants.PrismaticWateringCanId or Constants.PrismaticPanId or Constants.PrismaticFishingRodId)
+            level = Constants.PrismaticLevel;
+        else if (itemId is Constants.RadioactiveAxeId or Constants.RadioactivePickaxeId or Constants.RadioactiveHoeId or Constants.RadioactiveWateringCanId or Constants.RadioactivePanId or Constants.RadioactiveFishingRodId)
+            level = Constants.RadioactiveLevel;
+        else
+            return false;
+
+        if (itemId.EndsWith("Axe", StringComparison.Ordinal))
+            templateId = "IridiumAxe";
+        else if (itemId.EndsWith("Pickaxe", StringComparison.Ordinal))
+            templateId = "IridiumPickaxe";
+        else if (itemId.EndsWith("Hoe", StringComparison.Ordinal))
+            templateId = "IridiumHoe";
+        else if (itemId.EndsWith("WateringCan", StringComparison.Ordinal))
+            templateId = "IridiumWateringCan";
+        else if (itemId.EndsWith("Pan", StringComparison.Ordinal))
+            templateId = "IridiumPan";
+        else if (itemId.EndsWith("FishingRod", StringComparison.Ordinal))
+            templateId = Constants.AdvancedIridiumRodId;
+        else
+            return false;
+
+        return true;
+    }
+
+    private static object? GetMemberValue(object target, string memberName)
+    {
+        const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+
+        for (Type? type = target.GetType(); type != null; type = type.BaseType)
+        {
+            FieldInfo? field = type.GetField(memberName, flags);
+            if (field != null)
+                return field.GetValue(target);
+
+            PropertyInfo? property = type.GetProperty(memberName, flags);
+            if (property != null && property.CanRead)
+                return property.GetValue(target);
+        }
+
+        return null;
+    }
+
+    private static string GetStringMember(object target, string memberName)
+    {
+        object? value = GetMemberValue(target, memberName);
+        if (value is string text)
+            return text;
+
+        PropertyInfo? valueProperty = value?.GetType().GetProperty("Value", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        if (valueProperty != null && valueProperty.CanRead && valueProperty.GetValue(value) is string netText)
+            return netText;
+
+        return string.Empty;
+    }
+
+    private static bool SetIntMember(object target, string memberName, int value)
+    {
+        return SetTypedMemberValue(target, memberName, value);
+    }
+
+    private static bool SetStringMember(object target, string memberName, string value)
+    {
+        return SetTypedMemberValue(target, memberName, value);
+    }
+
+    private static bool SetObjectMember(object target, string memberName, object value)
+    {
+        return SetTypedMemberValue(target, memberName, value);
+    }
+
+    private static bool SetTypedMemberValue<TValue>(object target, string memberName, TValue value)
+    {
+        const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+
+        for (Type? type = target.GetType(); type != null; type = type.BaseType)
+        {
+            FieldInfo? field = type.GetField(memberName, flags);
+            if (field != null)
+            {
+                object? current = field.GetValue(target);
+                if (current == null && value != null && !field.IsInitOnly && field.FieldType.IsAssignableFrom(value.GetType()))
+                {
+                    field.SetValue(target, value);
+                    return true;
+                }
+
+                return SetReflectedValue(current, value, newValue =>
+                {
+                    if (!field.IsInitOnly)
+                        field.SetValue(target, newValue);
+                });
+            }
+
+            PropertyInfo? property = type.GetProperty(memberName, flags);
+            if (property != null && property.CanRead)
+            {
+                object? current = property.GetValue(target);
+                if (current == null && value != null && property.CanWrite && property.PropertyType.IsAssignableFrom(value.GetType()))
+                {
+                    property.SetValue(target, value);
+                    return true;
+                }
+
+                return SetReflectedValue(current, value, newValue =>
+                {
+                    if (property.CanWrite)
+                        property.SetValue(target, newValue);
+                });
+            }
+        }
+
+        return false;
+    }
+
+    private static bool SetReflectedValue<TValue>(object? current, TValue value, Action<TValue> assignDirect)
+    {
+        if (current is TValue currentValue)
+        {
+            if (EqualityComparer<TValue>.Default.Equals(currentValue, value))
+                return false;
+
+            assignDirect(value);
+            return true;
+        }
+
+        if (current != null)
+        {
+            PropertyInfo? valueProperty = current.GetType().GetProperty("Value", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            if (valueProperty != null && valueProperty.CanRead && valueProperty.CanWrite)
+            {
+                object? oldValue = valueProperty.GetValue(current);
+                if (oldValue is TValue typedOldValue && EqualityComparer<TValue>.Default.Equals(typedOldValue, value))
+                    return false;
+
+                valueProperty.SetValue(current, value);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static void CopyMatchingMemberValue(object source, object target, string memberName)
+    {
+        object? sourceValue = GetMemberValue(source, memberName);
+        object? targetValue = GetMemberValue(target, memberName);
+        if (sourceValue == null || targetValue == null)
+            return;
+
+        PropertyInfo? sourceValueProperty = sourceValue.GetType().GetProperty("Value", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        PropertyInfo? targetValueProperty = targetValue.GetType().GetProperty("Value", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        if (sourceValueProperty != null && targetValueProperty != null && sourceValueProperty.CanRead && targetValueProperty.CanWrite)
+        {
+            object? copiedValue = sourceValueProperty.GetValue(sourceValue);
+            if (copiedValue != null && targetValueProperty.PropertyType.IsAssignableFrom(copiedValue.GetType()))
+                targetValueProperty.SetValue(targetValue, copiedValue);
+            return;
+        }
+
+        SetObjectMember(target, memberName, sourceValue);
+    }
+
+    private static void SetDictionaryStringValue(IDictionary dictionary, string key, string value, ref bool changed)
+    {
+        if (dictionary.Contains(key) && dictionary[key] is string oldValue && oldValue == value)
+            return;
+
+        dictionary[key] = value;
+        changed = true;
+    }
+
+    private readonly record struct CustomToolSpriteData(int Level, string Name, string DisplayName, string Texture, int SpriteIndex, int MenuSpriteIndex);
 
 
     private static void MarkKnownRodPurchases()

@@ -211,6 +211,49 @@ internal static class FishingRodLevelBonusPatch
 }
 
 
+[HarmonyPatch(typeof(SObject), nameof(SObject.IsScarecrow))]
+internal static class RadioactiveSprinklerScarecrowRecognitionPatch
+{
+    public static void Postfix(SObject __instance, ref bool __result)
+    {
+        if (!__result && ModEntry.IsRadioactiveSprinklerScarecrow(__instance))
+            __result = true;
+    }
+}
+
+[HarmonyPatch(typeof(SObject), nameof(SObject.GetRadiusForScarecrow))]
+internal static class RadioactiveSprinklerScarecrowRadiusPatch
+{
+    public static void Postfix(SObject __instance, ref int __result)
+    {
+        if (ModEntry.IsRadioactiveSprinklerScarecrow(__instance))
+            __result = ModEntry.GetSprinklerRange(__instance);
+    }
+}
+
+
+[HarmonyPatch(typeof(SObject), nameof(SObject.GetBaseRadiusForSprinkler))]
+internal static class CustomSprinklerBaseRadiusPatch
+{
+    public static void Postfix(SObject __instance, ref int __result)
+    {
+        int range = ModEntry.GetBaseSprinklerRange(__instance.ItemId);
+        if (range > 0)
+            __result = range;
+    }
+}
+
+[HarmonyPatch(typeof(SObject), nameof(SObject.GetModifiedRadiusForSprinkler))]
+internal static class CustomSprinklerModifiedRadiusPatch
+{
+    public static void Postfix(SObject __instance, ref int __result)
+    {
+        int range = ModEntry.GetSprinklerRange(__instance);
+        if (range > 0)
+            __result = range;
+    }
+}
+
 internal static class CustomSprinklerRecognitionPatch
 {
     public static void AfterIsSprinkler(SObject __instance, ref bool __result)

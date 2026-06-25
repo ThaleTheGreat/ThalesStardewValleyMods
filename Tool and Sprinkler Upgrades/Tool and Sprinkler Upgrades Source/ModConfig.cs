@@ -17,6 +17,7 @@ internal sealed class ModConfig
     public int CobaltSprinklerRange { get; set; } = 3;
     public int PrismaticSprinklerRange { get; set; } = 5;
     public int RadioactiveSprinklerRange { get; set; } = 7;
+    public bool RadioactiveSprinklerActsAsScarecrow { get; set; } = true;
     public bool PreventPressureNozzleFromMatchingNextBaseTier { get; set; } = true;
     public bool EnableDebugLogging { get; set; } = false;
 }

@@ -5,29 +5,19 @@ internal static class Constants
     public const int CobaltLevel = 5;
     public const int PrismaticLevel = 6;
     public const int RadioactiveLevel = 7;
+    public const int DeluxeScarecrowRadius = 17;
 
     public const string ModId = "ThaleTheGreat.ToolAndSprinklerUpgrades";
     public const string CobaltTextureAsset = "Mods/ThaleTheGreat.ToolAndSprinklerUpgrades/Cobalt";
     public const string PrismaticTextureAsset = "Mods/ThaleTheGreat.ToolAndSprinklerUpgrades/Prismatic";
     public const string RadioactiveTextureAsset = "Mods/ThaleTheGreat.ToolAndSprinklerUpgrades/Radioactive";
 
-    public const int CobaltBarSpriteIndex = 504;
-    public const int CobaltSprinklerSpriteIndex = 505;
-    public const int PrismaticBarSpriteIndex = 504;
-    public const int PrismaticSprinklerSpriteIndex = 505;
-    public const int RadioactiveSprinklerSpriteIndex = 504;
+    public const int CobaltBarSpriteIndex = 18;
+    public const int CobaltSprinklerSpriteIndex = 19;
+    public const int PrismaticBarSpriteIndex = 18;
+    public const int PrismaticSprinklerSpriteIndex = 19;
+    public const int RadioactiveSprinklerSpriteIndex = 19;
 
-    public const int AxeSpriteIndex = 245;
-    public const int PickaxeSpriteIndex = 161;
-    public const int HoeSpriteIndex = 77;
-    public const int WateringCanSpriteIndex = 352;
-    public const int PanSpriteIndex = 20;
-
-    public const int AxeMenuSpriteIndex = 271;
-    public const int PickaxeMenuSpriteIndex = 187;
-    public const int HoeMenuSpriteIndex = 103;
-    public const int WateringCanMenuSpriteIndex = 352;
-    public const int PanMenuSpriteIndex = 20;
 
     public const string CobaltBarId = "ThaleTheGreat.ToolAndSprinklerUpgrades_CobaltBar";
     public const string CobaltSprinklerId = "ThaleTheGreat.ToolAndSprinklerUpgrades_CobaltSprinkler";
