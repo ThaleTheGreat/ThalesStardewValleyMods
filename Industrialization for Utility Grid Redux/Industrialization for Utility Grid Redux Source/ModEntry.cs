@@ -75,7 +75,7 @@ public sealed class ModEntry : Mod
         else if (e.NameWithoutLocale.IsEquivalentTo("Data/CraftingRecipes"))
             e.Edit(asset => ApplyEntries(asset.Data, this.craftingRecipes));
         else if (e.NameWithoutLocale.IsEquivalentTo("Data/Machines"))
-            e.Edit(asset => ApplyEntries(asset.Data, this.machineEntries));
+            e.Edit(asset => this.ApplyMachineEntries(asset.Data), (AssetEditPriority)((int)AssetEditPriority.Late + 1000));
         else if (e.NameWithoutLocale.IsEquivalentTo("Data/Shops"))
             e.Edit(asset => this.ApplyShopEntries(asset.Data));
     }
@@ -105,9 +105,30 @@ public sealed class ModEntry : Mod
             ? "ThaleTheGreat.IndustrializationForUtilityGridRedux_ElectricFurnace"
             : recipeNames[0];
 
+        this.ExcludeBetterCraftingMachineRuleRecipes(recipeNames);
+
         betterCrafting.CreateDefaultCategory(false, BetterCraftingIndustrializationCategoryId, () => "Industrialization", recipeNames, iconRecipe, false, null);
         betterCrafting.AddRecipesToDefaultCategory(false, BetterCraftingIndustrializationCategoryId, recipeNames);
         betterCrafting.RemoveRecipesFromDefaultCategory(false, "machines", recipeNames);
+    }
+
+    private void ExcludeBetterCraftingMachineRuleRecipes(IEnumerable<string> recipeNames)
+    {
+        Assembly? utilityGridAssembly = AppDomain.CurrentDomain.GetAssemblies()
+            .FirstOrDefault(assembly => string.Equals(assembly.GetName().Name, "UtilityGridRedux", StringComparison.OrdinalIgnoreCase));
+        Type? modEntryType = utilityGridAssembly?.GetType("ThaleTheGreat.UtilityGridRedux.ModEntry");
+        MethodInfo? method = modEntryType?.GetMethod("ExcludeBetterCraftingMachineRecipes", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+        if (method is null)
+            return;
+
+        try
+        {
+            method.Invoke(null, new object?[] { recipeNames.ToArray() });
+        }
+        catch (Exception ex)
+        {
+            this.Monitor.Log($"Could not exclude Industrialization recipes from Better Crafting's machine rule: {ex.Message}", LogLevel.Trace);
+        }
     }
 
     private void ApplyUtilityGridTooltips()
@@ -115,6 +136,10 @@ public sealed class ModEntry : Mod
         foreach ((string displayName, object? rawRule) in this.utilityGridEntries)
         {
             if (rawRule is not Dictionary<string, object?> rule)
+                continue;
+
+            string[] keys = this.GetUtilityGridRuleKeys(displayName).ToArray();
+            if (this.IsUtilityGridMachineDisabled(keys))
                 continue;
 
             Dictionary<string, object?>? configuredRule = this.GetConfiguredRuleData(displayName, rule);
@@ -162,6 +187,10 @@ public sealed class ModEntry : Mod
             if (rawRule is not Dictionary<string, object?> ruleData)
                 continue;
 
+            string[] keys = this.GetUtilityGridRuleKeys(displayName).ToArray();
+            if (this.IsUtilityGridMachineDisabled(keys))
+                continue;
+
             Dictionary<string, object?>? configuredRuleData = this.GetConfiguredRuleData(displayName, ruleData);
             if (configuredRuleData is null)
                 continue;
@@ -173,7 +202,7 @@ public sealed class ModEntry : Mod
             foreach ((string propertyName, object? value) in configuredRuleData)
                 TrySetMember(rule, propertyName, value);
 
-            foreach (string key in this.GetUtilityGridRuleKeys(displayName))
+            foreach (string key in keys)
             {
                 this.TrackOriginalUtilityGridRule(objectRules, key);
                 objectRules[key] = rule;
@@ -589,6 +618,26 @@ public sealed class ModEntry : Mod
         return converted as Dictionary<string, object?> ?? new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
     }
 
+    private void ApplyMachineEntries(object? assetData)
+    {
+        if (assetData is not IDictionary dictionary)
+            return;
+
+        Type valueType = GetDictionaryValueType(dictionary.GetType()) ?? typeof(object);
+        foreach ((string key, object? value) in this.machineEntries)
+        {
+            string[] keys = ExpandMachineKeys(key).ToArray();
+            if (this.IsUtilityGridMachineDisabled(keys))
+                continue;
+
+            object? converted = ConvertToTargetType(value, valueType);
+            if (dictionary.Contains(key) && dictionary[key] is not null && converted is not null)
+                MergeMachineEntry(dictionary[key]!, converted);
+            else
+                dictionary[key] = converted;
+        }
+    }
+
     private static void ApplyEntries(object? assetData, IReadOnlyDictionary<string, object?> entries)
     {
         if (assetData is not IDictionary dictionary)
@@ -597,6 +646,78 @@ public sealed class ModEntry : Mod
         Type valueType = GetDictionaryValueType(dictionary.GetType()) ?? typeof(object);
         foreach ((string key, object? value) in entries)
             dictionary[key] = ConvertToTargetType(value, valueType);
+    }
+
+    private static void MergeMachineEntry(object existingEntry, object incomingEntry)
+    {
+        AppendListMemberById(existingEntry, incomingEntry, "OutputRules");
+        AppendListMemberById(existingEntry, incomingEntry, "LoadEffects");
+        AppendListMemberById(existingEntry, incomingEntry, "WorkingEffects");
+    }
+
+    private static void AppendListMemberById(object existingEntry, object incomingEntry, string memberName)
+    {
+        if (GetMemberValue(existingEntry, memberName) is not IList existingList || GetMemberValue(incomingEntry, memberName) is not IEnumerable incomingList)
+            return;
+
+        HashSet<string> existingIds = new(StringComparer.OrdinalIgnoreCase);
+        foreach (object? entry in existingList)
+        {
+            string? id = Convert.ToString(entry is null ? null : GetMemberValue(entry, "Id"), CultureInfo.InvariantCulture);
+            if (!string.IsNullOrWhiteSpace(id))
+                existingIds.Add(id);
+        }
+
+        foreach (object? entry in incomingList)
+        {
+            if (entry is null)
+                continue;
+
+            string? id = Convert.ToString(GetMemberValue(entry, "Id"), CultureInfo.InvariantCulture);
+            if (!string.IsNullOrWhiteSpace(id) && !existingIds.Add(id))
+                continue;
+
+            existingList.Add(entry);
+        }
+    }
+
+    private bool IsUtilityGridMachineDisabled(IEnumerable<string> keys)
+    {
+        MethodInfo? method = GetUtilityGridDisabledMethod();
+        if (method is null)
+            return false;
+
+        foreach (string key in keys)
+        {
+            foreach (string expanded in ExpandMachineKeys(key))
+            {
+                if (method.Invoke(null, new object?[] { expanded }) is bool disabled && disabled)
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static MethodInfo? GetUtilityGridDisabledMethod()
+    {
+        Assembly? utilityGridAssembly = AppDomain.CurrentDomain.GetAssemblies()
+            .FirstOrDefault(assembly => string.Equals(assembly.GetName().Name, "UtilityGridRedux", StringComparison.OrdinalIgnoreCase));
+        Type? modEntryType = utilityGridAssembly?.GetType("ThaleTheGreat.UtilityGridRedux.ModEntry");
+        return modEntryType?.GetMethod("IsObjectRuleKeyDisabled", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+    }
+
+    private static IEnumerable<string> ExpandMachineKeys(string key)
+    {
+        if (string.IsNullOrWhiteSpace(key))
+            yield break;
+
+        string trimmed = key.Trim();
+        yield return trimmed;
+
+        int qualifierEnd = trimmed.IndexOf(')');
+        if (trimmed.StartsWith("(", StringComparison.Ordinal) && qualifierEnd >= 0 && qualifierEnd + 1 < trimmed.Length)
+            yield return trimmed[(qualifierEnd + 1)..];
     }
 
     private void ApplyShopEntries(object? assetData)
