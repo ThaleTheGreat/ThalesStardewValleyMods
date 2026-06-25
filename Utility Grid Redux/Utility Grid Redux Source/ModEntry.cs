@@ -79,7 +79,11 @@ public sealed class ModEntry : Mod
 
     private static readonly Dictionary<string, Dictionary<GridKind, UtilitySystem>> Systems = new();
     private static readonly Dictionary<string, UtilityObjectRule> ObjectRules = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly HashSet<string> DisabledObjectRuleKeys = new(StringComparer.OrdinalIgnoreCase);
     private static readonly List<LoadedContentPackRule> ContentPackRules = new();
+    private static readonly HashSet<string> BetterCraftingMachineRuleExcludedRecipes = new(StringComparer.OrdinalIgnoreCase);
+    private static bool BetterCraftingMachineRulePatched;
+    private static bool BetterCraftingMachineRulePatchAttempted;
     private static readonly Dictionary<string, List<Vector2>> WateringTiles = new();
     private static readonly Dictionary<string, List<Vector2>> WateringPipes = new();
     private static long PowerCacheVersion;
@@ -2246,8 +2250,95 @@ public sealed class ModEntry : Mod
         };
 
         const string categoryId = "utility-grid-redux-utilities";
-        betterCrafting.CreateDefaultCategory(false, categoryId, () => "Utilities", recipes, "Bronze Water Pump", false, null);
+        betterCrafting.CreateDefaultCategory(false, categoryId, () => "Utility Grid", recipes, "Bronze Water Pump", false, null);
         betterCrafting.AddRecipesToDefaultCategory(false, categoryId, recipes);
+    }
+
+    internal static void ExcludeBetterCraftingMachineRecipes(IEnumerable<string> recipeNames)
+    {
+        foreach (string recipeName in recipeNames)
+        {
+            if (!string.IsNullOrWhiteSpace(recipeName))
+                BetterCraftingMachineRuleExcludedRecipes.Add(recipeName.Trim());
+        }
+
+        Instance?.PatchBetterCraftingMachineRule();
+    }
+
+    private void PatchBetterCraftingMachineRule()
+    {
+        if (BetterCraftingMachineRulePatched || BetterCraftingMachineRulePatchAttempted || BetterCraftingMachineRuleExcludedRecipes.Count == 0)
+            return;
+
+        BetterCraftingMachineRulePatchAttempted = true;
+
+        try
+        {
+            MethodInfo? target = GetBetterCraftingMachineRuleTarget();
+            if (target is null || target.IsAbstract || target.ContainsGenericParameters)
+                return;
+
+            this.harmony.Patch(target, prefix: new HarmonyMethod(typeof(ModEntry), nameof(BetterCraftingMachineRulePrefix)));
+            BetterCraftingMachineRulePatched = true;
+        }
+        catch (Exception ex)
+        {
+            Monitor.Log($"Could not patch Better Crafting's dynamic Machinery rule exclusions: {ex.Message}", LogLevel.Trace);
+        }
+    }
+
+    private static MethodInfo? GetBetterCraftingMachineRuleTarget()
+    {
+        Type? machineInfoType = null;
+        Type? dynamicTypeHandlerDefinition = null;
+        Type? machineRuleHandlerType = null;
+
+        foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            machineInfoType ??= assembly.GetType("Leclair.Stardew.BetterCrafting.DynamicRules.MachineInfo", throwOnError: false);
+            dynamicTypeHandlerDefinition ??= assembly.GetType("Leclair.Stardew.BetterCrafting.DynamicRules.DynamicTypeHandler`1", throwOnError: false);
+            machineRuleHandlerType ??= assembly.GetType("Leclair.Stardew.BetterCrafting.DynamicRules.MachineRuleHandler", throwOnError: false);
+        }
+
+        if (machineInfoType is not null && dynamicTypeHandlerDefinition is not null)
+        {
+            Type closedHandlerType = dynamicTypeHandlerDefinition.MakeGenericType(machineInfoType);
+            MethodInfo? target = closedHandlerType.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                .FirstOrDefault(IsBetterCraftingMachineRuleBridgeMethod);
+            if (target is not null)
+                return target;
+        }
+
+        return machineRuleHandlerType?.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+            .FirstOrDefault(method => method.Name == "DoesRecipeMatch" && method.ReturnType == typeof(bool) && method.GetParameters().Length == 3 && !method.IsAbstract && !method.ContainsGenericParameters);
+    }
+
+    private static bool IsBetterCraftingMachineRuleBridgeMethod(MethodInfo method)
+    {
+        if (method.Name != "DoesRecipeMatch" || method.ReturnType != typeof(bool) || method.IsAbstract || method.ContainsGenericParameters)
+            return false;
+
+        ParameterInfo[] parameters = method.GetParameters();
+        return parameters.Length == 3 && parameters[2].ParameterType == typeof(object);
+    }
+
+    private static bool BetterCraftingMachineRulePrefix(object __0, ref bool __result)
+    {
+        string? recipeName = Convert.ToString(GetReflectionMemberValue(__0, "Name"), CultureInfo.InvariantCulture);
+        if (!string.IsNullOrWhiteSpace(recipeName) && BetterCraftingMachineRuleExcludedRecipes.Contains(recipeName))
+        {
+            __result = false;
+            return false;
+        }
+
+        return true;
+    }
+
+    private static object? GetReflectionMemberValue(object instance, string name)
+    {
+        const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.IgnoreCase;
+        Type type = instance.GetType();
+        return type.GetProperty(name, flags)?.GetValue(instance) ?? type.GetField(name, flags)?.GetValue(instance);
     }
 
     private static void InvokeBetterCraftingMethod(object api, string methodName, params object?[] arguments)
@@ -2848,6 +2939,7 @@ public sealed class ModEntry : Mod
         Helper.WriteConfig(Config);
         Helper.GameContent.InvalidateCache("Data/BigCraftables");
         Helper.GameContent.InvalidateCache("Data/Objects");
+        Helper.GameContent.InvalidateCache("Data/Machines");
     }
 
     private void AddContentPackRuleOptions(IGenericModConfigMenuApi gmcm)
@@ -3163,18 +3255,72 @@ public sealed class ModEntry : Mod
     private static void AddObjectRuleIfEnabled(bool enabled, UtilityObjectRule rule, params string[] keys)
     {
         if (enabled)
+        {
             AddObjectRule(rule, keys);
+            return;
+        }
+
+        foreach (string key in ExpandRuleKeys(keys))
+        {
+            DisabledObjectRuleKeys.Add(key);
+            ObjectRules.Remove(key);
+        }
     }
 
     private static void AddObjectRule(UtilityObjectRule rule, params string[] keys)
     {
-        foreach (string key in keys.Where(key => !string.IsNullOrWhiteSpace(key)))
-            ObjectRules[key] = rule;
+        foreach (string key in ExpandRuleKeys(keys))
+        {
+            if (!DisabledObjectRuleKeys.Contains(key))
+                ObjectRules[key] = rule;
+        }
+    }
+
+    private static IEnumerable<string> ExpandRuleKeys(IEnumerable<string> keys)
+    {
+        foreach (string key in keys)
+        {
+            if (string.IsNullOrWhiteSpace(key))
+                continue;
+
+            string trimmed = key.Trim();
+            yield return trimmed;
+
+            int qualifierEnd = trimmed.IndexOf(')');
+            if (trimmed.StartsWith("(", StringComparison.Ordinal) && qualifierEnd >= 0 && qualifierEnd + 1 < trimmed.Length)
+                yield return trimmed[(qualifierEnd + 1)..];
+        }
+    }
+
+    internal static bool IsObjectRuleKeyDisabled(string? key)
+    {
+        if (string.IsNullOrWhiteSpace(key))
+            return false;
+
+        foreach (string expanded in ExpandRuleKeys(new[] { key }))
+        {
+            if (DisabledObjectRuleKeys.Contains(expanded))
+                return true;
+        }
+
+        return false;
+    }
+
+    internal static bool AreAnyObjectRuleKeysDisabled(IEnumerable<string> keys)
+    {
+        foreach (string key in keys)
+        {
+            if (IsObjectRuleKeyDisabled(key))
+                return true;
+        }
+
+        return false;
     }
 
     private static void LoadBuiltInRules()
     {
         ObjectRules.Clear();
+        DisabledObjectRuleKeys.Clear();
         AddObjectRuleIfEnabled(Config.EnableBronzeWaterPumpRule, new UtilityObjectRule { Water = NormalizeProducedAmount(Config.BronzeWaterPumpWaterProduced), Power = -NormalizeConsumedAmount(Config.BronzeWaterPumpPowerConsumed), OnlyInWater = true }, ItemId("BronzeWaterPump"));
         AddObjectRuleIfEnabled(Config.EnableSteelWaterPumpRule, new UtilityObjectRule { Water = NormalizeProducedAmount(Config.SteelWaterPumpWaterProduced), Power = -NormalizeConsumedAmount(Config.SteelWaterPumpPowerConsumed), OnlyInWater = true }, ItemId("SteelWaterPump"));
         AddObjectRuleIfEnabled(Config.EnableGoldWaterPumpRule, new UtilityObjectRule { Water = NormalizeProducedAmount(Config.GoldWaterPumpWaterProduced), Power = -NormalizeConsumedAmount(Config.GoldWaterPumpPowerConsumed) }, ItemId("GoldWaterPump"));
@@ -3305,8 +3451,11 @@ public sealed class ModEntry : Mod
             if (!config.Enabled)
                 continue;
 
-            UtilityObjectRule rule = CreateContentPackObjectRule(loaded);
             string[] keys = GetContentPackRuleKeys(loaded).ToArray();
+            if (AreAnyObjectRuleKeysDisabled(keys))
+                continue;
+
+            UtilityObjectRule rule = CreateContentPackObjectRule(loaded);
             AddObjectRule(rule, keys);
         }
     }
@@ -3383,7 +3532,10 @@ public sealed class ModEntry : Mod
                 continue;
 
             foreach (string key in GetContentPackRuleKeys(loaded))
-                AddTooltipNote(notes, true, key, note);
+            {
+                if (!IsObjectRuleKeyDisabled(key))
+                    AddTooltipNote(notes, true, key, note);
+            }
         }
     }
 
