@@ -1107,13 +1107,13 @@
         "X": 0,
         "Y": 0,
         "Width": 6,
-        "Height": 5
+        "Height": 7
       },
       "ToArea": {
         "X": 71,
-        "Y": 50,
+        "Y": 48,
         "Width": 6,
-        "Height": 5
+        "Height": 7
       },
       "When": {
         "NorthBridgeSet": "Onsen"
@@ -1127,13 +1127,13 @@
         "X": 0,
         "Y": 0,
         "Width": 6,
-        "Height": 5
+        "Height": 7
       },
       "ToArea": {
         "X": 76,
-        "Y": 91,
+        "Y": 89,
         "Width": 6,
-        "Height": 5
+        "Height": 7
       },
       "When": {
         "SouthBridgeSet": "Onsen"

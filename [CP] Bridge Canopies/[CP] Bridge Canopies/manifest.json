@@ -1,7 +1,7 @@
 {
   "Name": "[CP] Bridge Canopies",
   "Author": "ThaleTheGreat",
-  "Version": "1.6.0",
+  "Version": "1.7.0",
   "Description": "Adds bridge canopies to the town bridges.",
   "UniqueID": "ThaleTheGreat.BridgeCanopies",
   "MinimumApiVersion": "4.0.0",
