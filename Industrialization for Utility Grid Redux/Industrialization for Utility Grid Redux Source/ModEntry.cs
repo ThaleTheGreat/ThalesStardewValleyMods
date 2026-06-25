@@ -17,7 +17,14 @@ public sealed class ModEntry : Mod
 {
     private const string ObjectTextureAsset = "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/Objects";
     private const string BigCraftableTextureAsset = "Mods/ThaleTheGreat.IndustrializationForUtilityGridRedux/BigCraftables";
+    private const int MinProducedAmount = 1;
+    private const int MaxProducedAmount = 2500;
+    private const int MinConsumedAmount = 1;
+    private const int MaxConsumedAmount = 250;
 
+    private ModConfig Config = new();
+    private readonly Dictionary<string, object?> originalUtilityGridRules = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> managedUtilityGridRuleKeys = new(StringComparer.OrdinalIgnoreCase);
     private Dictionary<string, object?> objectEntries = new(StringComparer.OrdinalIgnoreCase);
     private Dictionary<string, object?> bigCraftableEntries = new(StringComparer.OrdinalIgnoreCase);
     private Dictionary<string, object?> craftingRecipes = new(StringComparer.OrdinalIgnoreCase);
@@ -36,6 +43,9 @@ public sealed class ModEntry : Mod
         this.machineEntries = this.ReadDictionary("assets/Data/machines.json");
         this.shopEntries = this.ReadDictionary("assets/Data/shops.json");
         this.utilityGridEntries = this.ReadDictionary("assets/UtilityGrid/utility-grid-object-entries.json");
+        this.Config = helper.ReadConfig<ModConfig>();
+        this.EnsureConfigDefaults();
+        this.NormalizeConfig();
         this.ApplyUtilityGridTooltips();
 
         MachineLogic.Initialize(helper.DirectoryPath, this.Monitor);
@@ -74,6 +84,7 @@ public sealed class ModEntry : Mod
     {
         this.RegisterUtilityGridRules();
         this.RegisterBetterCraftingCategory();
+        this.RegisterGmcm();
     }
 
     private void RegisterBetterCraftingCategory()
@@ -106,9 +117,8 @@ public sealed class ModEntry : Mod
             if (rawRule is not Dictionary<string, object?> rule)
                 continue;
 
-            string tooltipText = FormatUtilityGridTooltip(rule);
-            if (string.IsNullOrWhiteSpace(tooltipText))
-                continue;
+            Dictionary<string, object?>? configuredRule = this.GetConfiguredRuleData(displayName, rule);
+            string tooltipText = configuredRule is null ? string.Empty : FormatUtilityGridTooltip(configuredRule);
 
             Dictionary<string, object?>? bigCraftable = this.GetBigCraftableByDisplayName(displayName);
             if (bigCraftable is null)
@@ -117,9 +127,11 @@ public sealed class ModEntry : Mod
             string description = Convert.ToString(bigCraftable.GetValueOrDefault("Description"), CultureInfo.InvariantCulture) ?? string.Empty;
             description = RemoveUtilityGridTooltip(description);
 
-            bigCraftable["Description"] = string.IsNullOrWhiteSpace(description)
-                ? tooltipText
-                : EnsureSentenceTerminator(description.TrimEnd()) + " " + tooltipText;
+            bigCraftable["Description"] = string.IsNullOrWhiteSpace(tooltipText)
+                ? description
+                : string.IsNullOrWhiteSpace(description)
+                    ? tooltipText
+                    : EnsureSentenceTerminator(description.TrimEnd()) + " " + tooltipText;
         }
     }
 
@@ -142,28 +154,54 @@ public sealed class ModEntry : Mod
             return;
         }
 
+        this.RestoreManagedUtilityGridRules(objectRules);
+
         int added = 0;
         foreach ((string displayName, object? rawRule) in this.utilityGridEntries)
         {
             if (rawRule is not Dictionary<string, object?> ruleData)
                 continue;
 
+            Dictionary<string, object?>? configuredRuleData = this.GetConfiguredRuleData(displayName, ruleData);
+            if (configuredRuleData is null)
+                continue;
+
             object? rule = Activator.CreateInstance(ruleType, nonPublic: true);
             if (rule is null)
                 continue;
 
-            foreach ((string propertyName, object? value) in ruleData)
+            foreach ((string propertyName, object? value) in configuredRuleData)
                 TrySetMember(rule, propertyName, value);
 
             foreach (string key in this.GetUtilityGridRuleKeys(displayName))
             {
+                this.TrackOriginalUtilityGridRule(objectRules, key);
                 objectRules[key] = rule;
                 added++;
             }
         }
 
-        if (added == 0)
+        if (added == 0 && this.utilityGridEntries.Count == 0)
             this.Monitor.Log("No Industrialization Utility Grid rules were registered.", LogLevel.Warn);
+    }
+
+    private void RestoreManagedUtilityGridRules(IDictionary objectRules)
+    {
+        foreach (string key in this.managedUtilityGridRuleKeys)
+        {
+            if (this.originalUtilityGridRules.TryGetValue(key, out object? original) && original is not null)
+                objectRules[key] = original;
+            else
+                objectRules.Remove(key);
+        }
+        this.managedUtilityGridRuleKeys.Clear();
+    }
+
+    private void TrackOriginalUtilityGridRule(IDictionary objectRules, string key)
+    {
+        if (!this.originalUtilityGridRules.ContainsKey(key))
+            this.originalUtilityGridRules[key] = objectRules.Contains(key) ? objectRules[key] : null;
+        this.managedUtilityGridRuleKeys.Add(key);
     }
 
     private IEnumerable<string> GetUtilityGridRuleKeys(string displayName)
@@ -270,6 +308,273 @@ public sealed class ModEntry : Mod
     private static string FormatRuleFloat(float value)
     {
         return value.ToString("0.##", CultureInfo.InvariantCulture);
+    }
+
+    private void RegisterGmcm()
+    {
+        IGenericModConfigMenuApi? gmcm = this.Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
+        if (gmcm is null)
+            return;
+
+        gmcm.Register(
+            this.ModManifest,
+            () =>
+            {
+                this.Config = new ModConfig();
+                this.ReloadConfigRules();
+            },
+            () =>
+            {
+                this.ReloadConfigRules();
+                this.Helper.WriteConfig(this.Config);
+            });
+
+        gmcm.AddSectionTitle(
+            this.ModManifest,
+            () => "Utility Grid Machine Rules",
+            () => "Produced amounts allow 1-2500. Consumed amounts allow 1-250. Only resources already used by each machine are shown.");
+
+        foreach ((string displayName, object? rawRule) in this.utilityGridEntries.OrderBy(entry => entry.Key, StringComparer.OrdinalIgnoreCase))
+        {
+            if (rawRule is not Dictionary<string, object?> rule)
+                continue;
+
+            string machineName = displayName;
+            this.GetOrCreateMachineConfig(machineName, rule);
+            this.AddMachineRuleToggle(gmcm, () => this.GetOrCreateMachineConfig(machineName, rule).Enabled, value => this.GetOrCreateMachineConfig(machineName, rule).Enabled = value, machineName, () => this.GetMachineRuleTooltip(machineName, rule));
+
+            float power = GetRuleFloat(rule, "power");
+            if (power > 0)
+                this.AddProducedOption(gmcm, () => this.GetOrCreateMachineConfig(machineName, rule).PowerProduced ?? NormalizeProducedAmount((int)Math.Round(power)), value => this.GetOrCreateMachineConfig(machineName, rule).PowerProduced = NormalizeProducedAmount(value), "Power");
+            else if (power < 0)
+                this.AddConsumedOption(gmcm, () => this.GetOrCreateMachineConfig(machineName, rule).PowerConsumed ?? NormalizeConsumedAmount((int)Math.Round(-power)), value => this.GetOrCreateMachineConfig(machineName, rule).PowerConsumed = NormalizeConsumedAmount(value), "Power");
+
+            float water = GetRuleFloat(rule, "water");
+            if (water > 0)
+                this.AddProducedOption(gmcm, () => this.GetOrCreateMachineConfig(machineName, rule).WaterProduced ?? NormalizeProducedAmount((int)Math.Round(water)), value => this.GetOrCreateMachineConfig(machineName, rule).WaterProduced = NormalizeProducedAmount(value), "Water");
+            else if (water < 0)
+                this.AddConsumedOption(gmcm, () => this.GetOrCreateMachineConfig(machineName, rule).WaterConsumed ?? NormalizeConsumedAmount((int)Math.Round(-water)), value => this.GetOrCreateMachineConfig(machineName, rule).WaterConsumed = NormalizeConsumedAmount(value), "Water");
+        }
+    }
+
+    private string GetMachineRuleTooltip(string displayName, Dictionary<string, object?> rule)
+    {
+        MachineRuleConfig config = this.GetOrCreateMachineConfig(displayName, rule);
+        string description = this.GetMachineBaseDescription(displayName);
+
+        if (!config.Enabled)
+            return description;
+
+        Dictionary<string, object?>? configuredRule = this.GetConfiguredRuleData(displayName, rule, requireEnabled: false);
+        string utilityText = configuredRule is null ? string.Empty : FormatUtilityGridTooltip(configuredRule);
+
+        if (string.IsNullOrWhiteSpace(description))
+            return utilityText;
+
+        if (string.IsNullOrWhiteSpace(utilityText))
+            return description;
+
+        return EnsureSentenceTerminator(description.TrimEnd()) + " " + utilityText;
+    }
+
+    private string GetMachineBaseDescription(string displayName)
+    {
+        Dictionary<string, object?>? bigCraftable = this.GetBigCraftableByDisplayName(displayName);
+        if (bigCraftable is null)
+            return string.Empty;
+
+        string description = Convert.ToString(bigCraftable.GetValueOrDefault("Description"), CultureInfo.InvariantCulture) ?? string.Empty;
+        return RemoveUtilityGridTooltip(description);
+    }
+
+    private void AddMachineRuleToggle(IGenericModConfigMenuApi gmcm, Func<bool> getValue, Action<bool> setValue, string machineName, Func<string>? tooltip = null)
+    {
+        gmcm.AddBoolOption(
+            this.ModManifest,
+            getValue,
+            setValue,
+            () => machineName,
+            tooltip ?? (() => "Turn this off to exclude this machine from Utility Grid management."));
+    }
+
+    private void AddProducedOption(IGenericModConfigMenuApi gmcm, Func<int> getValue, Action<int> setValue, string resourceName)
+    {
+        gmcm.AddTextOption(
+            this.ModManifest,
+            () => FormatAmountText(getValue()),
+            value => setValue(ParseProducedAmountText(value, getValue())),
+            () => $"  {resourceName.ToLowerInvariant()} produced",
+            () => $"Amount of {resourceName.ToLowerInvariant()} this machine adds to the grid. Type a value from {MinProducedAmount} to {MaxProducedAmount}.");
+    }
+
+    private void AddConsumedOption(IGenericModConfigMenuApi gmcm, Func<int> getValue, Action<int> setValue, string resourceName)
+    {
+        gmcm.AddTextOption(
+            this.ModManifest,
+            () => FormatAmountText(getValue()),
+            value => setValue(ParseConsumedAmountText(value, getValue())),
+            () => $"  {resourceName.ToLowerInvariant()} consumed",
+            () => $"Amount of {resourceName.ToLowerInvariant()} this machine removes from the grid. Type a value from {MinConsumedAmount} to {MaxConsumedAmount}.");
+    }
+
+    private static string FormatAmountText(int value)
+    {
+        return value.ToString(CultureInfo.InvariantCulture);
+    }
+
+    private static int ParseProducedAmountText(string value, int fallback)
+    {
+        return NormalizeProducedAmount(ParseAmountText(value, fallback));
+    }
+
+    private static int ParseConsumedAmountText(string value, int fallback)
+    {
+        return NormalizeConsumedAmount(ParseAmountText(value, fallback));
+    }
+
+    private static int ParseAmountText(string value, int fallback)
+    {
+        return int.TryParse(value?.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsed)
+            ? parsed
+            : fallback;
+    }
+
+    private void ReloadConfigRules()
+    {
+        this.EnsureConfigDefaults();
+        this.NormalizeConfig();
+        this.ApplyUtilityGridTooltips();
+        this.RegisterUtilityGridRules();
+        this.Helper.GameContent.InvalidateCache("Data/BigCraftables");
+    }
+
+    private void EnsureConfigDefaults()
+    {
+        this.Config.MachineRules ??= new Dictionary<string, MachineRuleConfig>(StringComparer.OrdinalIgnoreCase);
+        Dictionary<string, MachineRuleConfig> rules = new(StringComparer.OrdinalIgnoreCase);
+        foreach ((string displayName, object? rawRule) in this.utilityGridEntries)
+        {
+            if (rawRule is not Dictionary<string, object?> rule)
+                continue;
+
+            MachineRuleConfig config = this.Config.MachineRules.TryGetValue(displayName, out MachineRuleConfig? existing)
+                ? existing
+                : new MachineRuleConfig();
+
+            float power = GetRuleFloat(rule, "power");
+            if (power > 0)
+                config.PowerProduced ??= NormalizeProducedAmount((int)Math.Round(power));
+            else if (power < 0)
+                config.PowerConsumed ??= NormalizeConsumedAmount((int)Math.Round(-power));
+
+            float water = GetRuleFloat(rule, "water");
+            if (water > 0)
+                config.WaterProduced ??= NormalizeProducedAmount((int)Math.Round(water));
+            else if (water < 0)
+                config.WaterConsumed ??= NormalizeConsumedAmount((int)Math.Round(-water));
+
+            rules[displayName] = config;
+        }
+        this.Config.MachineRules = rules;
+    }
+
+    private void NormalizeConfig()
+    {
+        foreach ((string displayName, object? rawRule) in this.utilityGridEntries)
+        {
+            if (rawRule is not Dictionary<string, object?> rule)
+                continue;
+
+            MachineRuleConfig config = this.GetOrCreateMachineConfig(displayName, rule);
+            float power = GetRuleFloat(rule, "power");
+            if (power > 0)
+            {
+                config.PowerProduced = NormalizeProducedAmount(config.PowerProduced ?? (int)Math.Round(power));
+                config.PowerConsumed = null;
+            }
+            else if (power < 0)
+            {
+                config.PowerConsumed = NormalizeConsumedAmount(config.PowerConsumed ?? (int)Math.Round(-power));
+                config.PowerProduced = null;
+            }
+            else
+            {
+                config.PowerProduced = null;
+                config.PowerConsumed = null;
+            }
+
+            float water = GetRuleFloat(rule, "water");
+            if (water > 0)
+            {
+                config.WaterProduced = NormalizeProducedAmount(config.WaterProduced ?? (int)Math.Round(water));
+                config.WaterConsumed = null;
+            }
+            else if (water < 0)
+            {
+                config.WaterConsumed = NormalizeConsumedAmount(config.WaterConsumed ?? (int)Math.Round(-water));
+                config.WaterProduced = null;
+            }
+            else
+            {
+                config.WaterProduced = null;
+                config.WaterConsumed = null;
+            }
+        }
+    }
+
+    private MachineRuleConfig GetOrCreateMachineConfig(string displayName, Dictionary<string, object?> rule)
+    {
+        if (!this.Config.MachineRules.TryGetValue(displayName, out MachineRuleConfig? config))
+        {
+            config = new MachineRuleConfig();
+            this.Config.MachineRules[displayName] = config;
+        }
+
+        float power = GetRuleFloat(rule, "power");
+        if (power > 0)
+            config.PowerProduced ??= NormalizeProducedAmount((int)Math.Round(power));
+        else if (power < 0)
+            config.PowerConsumed ??= NormalizeConsumedAmount((int)Math.Round(-power));
+
+        float water = GetRuleFloat(rule, "water");
+        if (water > 0)
+            config.WaterProduced ??= NormalizeProducedAmount((int)Math.Round(water));
+        else if (water < 0)
+            config.WaterConsumed ??= NormalizeConsumedAmount((int)Math.Round(-water));
+
+        return config;
+    }
+
+    private Dictionary<string, object?>? GetConfiguredRuleData(string displayName, Dictionary<string, object?> ruleData, bool requireEnabled = true)
+    {
+        MachineRuleConfig config = this.GetOrCreateMachineConfig(displayName, ruleData);
+        if (requireEnabled && !config.Enabled)
+            return null;
+
+        Dictionary<string, object?> result = new(ruleData, StringComparer.OrdinalIgnoreCase);
+        float power = GetRuleFloat(ruleData, "power");
+        if (power > 0)
+            result["power"] = NormalizeProducedAmount(config.PowerProduced ?? (int)Math.Round(power));
+        else if (power < 0)
+            result["power"] = -NormalizeConsumedAmount(config.PowerConsumed ?? (int)Math.Round(-power));
+
+        float water = GetRuleFloat(ruleData, "water");
+        if (water > 0)
+            result["water"] = NormalizeProducedAmount(config.WaterProduced ?? (int)Math.Round(water));
+        else if (water < 0)
+            result["water"] = -NormalizeConsumedAmount(config.WaterConsumed ?? (int)Math.Round(-water));
+
+        return result;
+    }
+
+    private static int NormalizeProducedAmount(int value)
+    {
+        return Math.Clamp(value, MinProducedAmount, MaxProducedAmount);
+    }
+
+    private static int NormalizeConsumedAmount(int value)
+    {
+        return Math.Clamp(value, MinConsumedAmount, MaxConsumedAmount);
     }
 
     private Dictionary<string, object?> ReadDictionary(string relativePath)

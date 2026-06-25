@@ -1,7 +1,7 @@
 {
   "Name": "Industrialization for Utility Grid Redux",
   "Author": "ThaleTheGreat",
-  "Version": "1.0.0",
+  "Version": "1.1.0",
   "Description": "Adds Industrialization Machines to Utility Grid Redux.",
   "UniqueID": "ThaleTheGreat.IndustrializationForUtilityGridRedux",
   "EntryDll": "IndustrializationForUtilityGridRedux.dll",
@@ -16,6 +16,10 @@
     },
     {
       "UniqueID": "leclair.bettercrafting",
+      "IsRequired": false
+    },
+    {
+      "UniqueID": "spacechase0.GenericModConfigMenu",
       "IsRequired": false
     }
   ]
