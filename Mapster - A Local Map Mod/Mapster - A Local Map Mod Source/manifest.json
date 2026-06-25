@@ -1,7 +1,7 @@
 {
   "Name": "Mapster - A Local Map Mod",
   "Author": "ThaleTheGreat",
-  "Version": "1.6.0",
+  "Version": "1.7.0",
   "Description": "Adds an in-game local map preview with a dropdown for loading any installed location.",
   "UniqueID": "ThaleTheGreat.Mapster",
   "EntryDll": "Mapster.dll",

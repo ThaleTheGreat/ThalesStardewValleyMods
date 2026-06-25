@@ -268,8 +268,12 @@ namespace ThaleTheGreat.Mapster
                 return;
             }
 
-            if (e.Button == SButton.MouseRight && BeginMapDrag(Game1.getMousePosition(true)))
-                Helper.Input.Suppress(e.Button);
+            if (e.Button == SButton.MouseRight)
+            {
+                Point mouse = Game1.getMousePosition(true);
+                if (ClearSearchInputFromRightClick(mouse) || BeginMapDrag(mouse))
+                    Helper.Input.Suppress(e.Button);
+            }
         }
 
         private static bool IsMouseInput(SButton button)
@@ -1135,6 +1139,19 @@ namespace ThaleTheGreat.Mapster
             Game1.keyboardDispatcher.Subscriber = null;
         }
 
+        private bool ClearSearchInputFromRightClick(Point mouse)
+        {
+            if (!Config.ShowLocationDropdown || searchBox is null || !dropdownRect.Contains(mouse))
+                return false;
+
+            searchBox.Text = string.Empty;
+            lastSearchText = string.Empty;
+            dropdownDraggingThumb = false;
+            ApplyLocationFilter();
+            dropdownScroll = Math.Clamp(GetViewedLocationIndex(), 0, GetMaxDropdownScroll());
+            return true;
+        }
+
         private void HandleDropdownHeld(int x, int y)
         {
             if (!dropdownDraggingThumb)
@@ -1783,7 +1800,9 @@ namespace ThaleTheGreat.Mapster
 
             public override void receiveRightClick(int x, int y, bool playSound = true)
             {
-                owner.BeginMapDrag(new Point(x, y));
+                Point mouse = new(x, y);
+                if (!owner.ClearSearchInputFromRightClick(mouse))
+                    owner.BeginMapDrag(mouse);
             }
 
             public override void leftClickHeld(int x, int y)
