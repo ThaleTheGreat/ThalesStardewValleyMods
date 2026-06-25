@@ -319,6 +319,11 @@ public sealed class ModEntry : Mod
         if (missingTool is not null && missingToolPostfix is not null)
             Harmony.Patch(missingTool, postfix: new HarmonyMethod(missingToolPostfix));
 
+        MethodInfo? fixProblems = AccessTools.Method(typeof(Game1), nameof(Game1.fixProblems));
+        MethodInfo? fixProblemsPrefix = AccessTools.Method(typeof(FixProblemsPatch), nameof(FixProblemsPatch.Prefix));
+        if (fixProblems is not null && fixProblemsPrefix is not null)
+            Harmony.Patch(fixProblems, prefix: new HarmonyMethod(fixProblemsPrefix));
+
         MethodInfo? pressUseTool = AccessTools.Method(typeof(Game1), nameof(Game1.pressUseToolButton));
         MethodInfo? pressUseToolPrefix = AccessTools.Method(typeof(PressUseToolButtonPatch), nameof(PressUseToolButtonPatch.Prefix));
         if (pressUseTool is not null && pressUseToolPrefix is not null)
@@ -911,6 +916,7 @@ public sealed class ModEntry : Mod
         SyncBlacksmithUpgradeState(Game1.player);
         RemoveRuntimeToolCopies(Game1.player);
         NormalizePlayerItemsAfterWalletCleanup(Game1.player);
+        ExposeStoredToolsForOvernight(Game1.player, "day ending");
     }
 
     private void OnSaving(object? sender, SavingEventArgs e)
@@ -925,10 +931,8 @@ public sealed class ModEntry : Mod
     private void OnSaved(object? sender, SavedEventArgs e)
     {
         RestorePendingToolUseBeforeDestructiveCleanup(Game1.player);
-        CollectOvernightExposedTools(Game1.player, "post-save cleanup");
         RemoveRuntimeToolCopies(Game1.player);
         NormalizePlayerItemsAfterWalletCleanup(Game1.player);
-        ReconcileLoadedToolState(Game1.player, "post-save cleanup");
     }
 
     private void OnUpdateTicked(object? sender, UpdateTickedEventArgs e)
@@ -2344,8 +2348,7 @@ public sealed class ModEntry : Mod
         string name = member.Name;
         bool nameLooksRelevant = name.Contains("lost", StringComparison.OrdinalIgnoreCase)
             || name.Contains("found", StringComparison.OrdinalIgnoreCase)
-            || name.Contains("return", StringComparison.OrdinalIgnoreCase)
-            || name.Contains("Tool", StringComparison.OrdinalIgnoreCase);
+            || name.Contains("returnedDonations", StringComparison.OrdinalIgnoreCase);
 
         if (!nameLooksRelevant)
             return false;
@@ -2369,6 +2372,10 @@ public sealed class ModEntry : Mod
     private bool TryTakeLostFoundTool(Farmer player, WalletToolKind kind, out Tool tool)
     {
         tool = null!;
+
+        if (TryTakeReturnedDonationTool(player, kind, out tool))
+            return true;
+
         object? team = player.team;
         if (team is null)
             return false;
@@ -2387,6 +2394,27 @@ public sealed class ModEntry : Mod
 
             if (TryTakeToolFromValue(value, kind, out tool, player, requireOwner))
                 return true;
+        }
+
+        return false;
+    }
+
+    private static bool TryTakeReturnedDonationTool(Farmer player, WalletToolKind kind, out Tool tool)
+    {
+        tool = null!;
+        if (player.team?.returnedDonations is null)
+            return false;
+
+        bool requireOwner = Context.IsMultiplayer;
+        foreach (Item item in player.team.returnedDonations.ToArray())
+        {
+            if (item is not Tool candidate || !ToolMatchesWalletKind(candidate, kind) || !ToolIsEligibleForOwner(candidate, player, requireOwner))
+                continue;
+
+            ClearWalletMarkers(candidate);
+            player.team.returnedDonations.Remove(candidate);
+            tool = candidate;
+            return true;
         }
 
         return false;
@@ -3634,6 +3662,21 @@ public sealed class ModEntry : Mod
         keys = Array.Empty<InputButton>();
         return false;
     }
+    private static class FixProblemsPatch
+    {
+        public static void Prefix()
+        {
+            if (Instance is null || !Context.IsWorldReady || !Instance.Config.ModEnabled)
+                return;
+
+            Instance.RestorePendingToolUseBeforeDestructiveCleanup(Game1.player);
+            Instance.SyncBlacksmithUpgradeState(Game1.player);
+            RemoveRuntimeToolCopies(Game1.player);
+            NormalizePlayerItemsAfterWalletCleanup(Game1.player);
+            Instance.ExposeStoredToolsForOvernight(Game1.player, "vanilla missing-tool scan");
+        }
+    }
+
     private static class CheckIsMissingToolPatch
     {
         public static void Postfix(Dictionary<Type, int> missingTools, ref int missingScythes, Item item)
