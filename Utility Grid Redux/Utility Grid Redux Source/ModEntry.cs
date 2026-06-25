@@ -12,7 +12,9 @@ using StardewValley.Locations;
 using StardewValley.Menus;
 using StardewValley.TerrainFeatures;
 using System.Globalization;
+using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using Object = StardewValley.Object;
 
 namespace ThaleTheGreat.UtilityGridRedux;
@@ -30,6 +32,10 @@ public sealed class ModEntry : Mod
     private const string DropTexturePath = "assets/drop.png";
     private const int GridEditViewportPanSpeed = 16;
     private const int GridEditViewportEdgeSize = 48;
+    private const int MinProducedAmount = 1;
+    private const int MaxProducedAmount = 2500;
+    private const int MinConsumedAmount = 1;
+    private const int MaxConsumedAmount = 250;
 
     private static readonly Vector2[] AdjacentTiles =
     {
@@ -73,6 +79,7 @@ public sealed class ModEntry : Mod
 
     private static readonly Dictionary<string, Dictionary<GridKind, UtilitySystem>> Systems = new();
     private static readonly Dictionary<string, UtilityObjectRule> ObjectRules = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly List<LoadedContentPackRule> ContentPackRules = new();
     private static readonly Dictionary<string, List<Vector2>> WateringTiles = new();
     private static readonly Dictionary<string, List<Vector2>> WateringPipes = new();
     private static long PowerCacheVersion;
@@ -96,6 +103,7 @@ public sealed class ModEntry : Mod
         SMonitor = Monitor;
         SHelper = helper;
         Config = helper.ReadConfig<ModConfig>();
+        LoadContentPackRules();
         NormalizeConfig();
         LoadBuiltInRules();
 
@@ -144,13 +152,13 @@ public sealed class ModEntry : Mod
                 IDictionary<string, BigCraftableData> data = asset.AsDictionary<string, BigCraftableData>().Data;
                 string pumpTexture = Helper.ModContent.GetInternalAssetName(WaterPumpTexturePath).Name;
                 string storageTexture = Helper.ModContent.GetInternalAssetName(StorageTexturePath).Name;
-                AddBigCraftable(data, "BronzeWaterPump", "Bronze Water Pump", "Produces 10 water. Consumes 2 power.", 100, pumpTexture, 0);
-                AddBigCraftable(data, "SteelWaterPump", "Steel Water Pump", "Produces 25 water. Consumes 4 power.", 1000, pumpTexture, 1);
-                AddBigCraftable(data, "GoldWaterPump", "Gold Water Pump", "Produces 80 water. Consumes 8 power.", 10000, pumpTexture, 2);
-                AddBigCraftable(data, "IridiumWaterPump", "Iridium Water Pump", "Produces 200 water. Consumes 16 power.", 100000, pumpTexture, 3);
-                AddBigCraftable(data, "UtilityGridBattery", "Utility Grid Battery", "Stores 50 power. Outputs 2 power.", 1000, storageTexture, 0);
-                AddBigCraftable(data, "UtilityGridWaterTank", "Utility Grid Water Tank", "Stores 50 water. Outputs 2 water.", 1000, storageTexture, 1);
-                AddBigCraftable(data, "UtilityGridAdvancedBattery", "Utility Grid Advanced Battery", "Stores 100 power. Outputs 5 power.", 5000, storageTexture, 2);
+                AddBigCraftable(data, "BronzeWaterPump", "Bronze Water Pump", RuleDescription(Config.EnableBronzeWaterPumpRule, ProducedDescription(Config.BronzeWaterPumpWaterProduced, "water") + " " + ConsumedDescription(Config.BronzeWaterPumpPowerConsumed, "power")), 100, pumpTexture, 0);
+                AddBigCraftable(data, "SteelWaterPump", "Steel Water Pump", RuleDescription(Config.EnableSteelWaterPumpRule, ProducedDescription(Config.SteelWaterPumpWaterProduced, "water") + " " + ConsumedDescription(Config.SteelWaterPumpPowerConsumed, "power")), 1000, pumpTexture, 1);
+                AddBigCraftable(data, "GoldWaterPump", "Gold Water Pump", RuleDescription(Config.EnableGoldWaterPumpRule, ProducedDescription(Config.GoldWaterPumpWaterProduced, "water") + " " + ConsumedDescription(Config.GoldWaterPumpPowerConsumed, "power")), 10000, pumpTexture, 2);
+                AddBigCraftable(data, "IridiumWaterPump", "Iridium Water Pump", RuleDescription(Config.EnableIridiumWaterPumpRule, ProducedDescription(Config.IridiumWaterPumpWaterProduced, "water") + " " + ConsumedDescription(Config.IridiumWaterPumpPowerConsumed, "power")), 100000, pumpTexture, 3);
+                AddBigCraftable(data, "UtilityGridBattery", "Utility Grid Battery", RuleDescription(Config.EnableUtilityGridBatteryRule, StorageDescription(50, "power", Config.UtilityGridBatteryPowerConsumed, Config.UtilityGridBatteryPowerProduced)), 1000, storageTexture, 0);
+                AddBigCraftable(data, "UtilityGridWaterTank", "Utility Grid Water Tank", RuleDescription(Config.EnableUtilityGridWaterTankRule, StorageDescription(50, "water", Config.UtilityGridWaterTankWaterConsumed, Config.UtilityGridWaterTankWaterProduced)), 1000, storageTexture, 1);
+                AddBigCraftable(data, "UtilityGridAdvancedBattery", "Utility Grid Advanced Battery", RuleDescription(Config.EnableUtilityGridAdvancedBatteryRule, StorageDescription(100, "power", Config.UtilityGridAdvancedBatteryPowerConsumed, Config.UtilityGridAdvancedBatteryPowerProduced)), 5000, storageTexture, 2);
                 ApplyUtilityGridTooltips(data);
             });
         }
@@ -210,46 +218,66 @@ public sealed class ModEntry : Mod
         };
     }
 
+    private static string RuleDescription(bool enabled, string description)
+    {
+        return enabled ? description : "Utility Grid rule disabled in config.";
+    }
+
+    private static string ProducedDescription(int amount, string resource)
+    {
+        return $"Produces {NormalizeProducedAmount(amount)} {resource}.";
+    }
+
+    private static string ConsumedDescription(int amount, string resource)
+    {
+        return $"Consumes {NormalizeConsumedAmount(amount)} {resource}.";
+    }
+
+    private static string StorageDescription(int capacity, string resource, int consumed, int produced)
+    {
+        return $"Stores {capacity} {resource}. Consumes {NormalizeConsumedAmount(consumed)} {resource} to charge. Produces {NormalizeProducedAmount(produced)} {resource} while discharging.";
+    }
+
     private static void ApplyUtilityGridTooltips(IDictionary<string, BigCraftableData> data)
     {
-        Dictionary<string, string> notes = new(StringComparer.OrdinalIgnoreCase)
-        {
-            ["Sprinkler"] = "Consumes 1 water.",
-            ["Quality Sprinkler"] = "Consumes 2 water.",
-            ["Iridium Sprinkler"] = "Consumes 6 water. Consumes 2 power.",
-            ["Furnace"] = "Produces 10 power.",
-            ["Charcoal Kiln"] = "Produces 10 power.",
-            ["Solar Panel"] = "Produces 10 power.",
-            ["Crystalarium"] = "Consumes 3 power.",
-            ["Recycling Machine"] = "Consumes 1 power.",
-            ["Slime Incubator"] = "Consumes 2 power.",
-            ["Wood Chipper"] = "Consumes 2 power.",
-            ["Ostrich Incubator"] = "Consumes 2 power.",
-            ["Deconstructor"] = "Consumes 2 power.",
-            ["Soda Machine"] = "Consumes 1 power.",
-            ["Coffee Maker"] = "Consumes 1 power.",
-            ["Heavy Furnace"] = "Consumes 4 power.",
-            ["Geode Crusher"] = "Consumes 2 power.",
-            ["Mini-Forge"] = "Consumes 3 power.",
-            ["Bait Maker"] = "Consumes 1 power.",
-            ["Bone Mill"] = "Consumes 2 power.",
-            ["Slime Egg-Press"] = "Consumes 2 power.",
-            ["Seed Maker"] = "Consumes 1 power.",
-            ["Dehydrator"] = "Consumes 2 power.",
-            ["Fish Smoker"] = "Consumes 2 power.",
-            ["Oil Maker"] = "Consumes 2 power.",
-            ["Loom"] = "Consumes 1 power.",
-            ["Mayonnaise Machine"] = "Consumes 1 power.",
-            ["Cheese Press"] = "Consumes 1 power.",
-            ["Hopper"] = "Consumes 1 power.",
-            ["Farm Computer"] = "Consumes 1 power.",
-            ["Telephone"] = "Consumes 1 power.",
-            ["Sewing Machine"] = "Consumes 1 power.",
-            ["Mini-Jukebox"] = "Consumes 1 power.",};
+        Dictionary<string, string> notes = new(StringComparer.OrdinalIgnoreCase);
+        AddTooltipNote(notes, Config.EnableSprinklerRule, "Sprinkler", ConsumedDescription(Config.SprinklerWaterConsumed, "water"));
+        AddTooltipNote(notes, Config.EnableQualitySprinklerRule, "Quality Sprinkler", ConsumedDescription(Config.QualitySprinklerWaterConsumed, "water"));
+        AddTooltipNote(notes, Config.EnableIridiumSprinklerRule, "Iridium Sprinkler", ConsumedDescription(Config.IridiumSprinklerWaterConsumed, "water") + " " + ConsumedDescription(Config.IridiumSprinklerPowerConsumed, "power"));
+        AddTooltipNote(notes, Config.EnableFurnaceRule, "Furnace", ProducedDescription(Config.FurnacePowerProduced, "power"));
+        AddTooltipNote(notes, Config.EnableCharcoalKilnRule, "Charcoal Kiln", ProducedDescription(Config.CharcoalKilnPowerProduced, "power"));
+        AddTooltipNote(notes, Config.EnableSolarPanelRule, "Solar Panel", ProducedDescription(Config.SolarPanelPowerProduced, "power"));
+        AddTooltipNote(notes, Config.EnableCrystalariumRule, "Crystalarium", ConsumedDescription(Config.CrystalariumPowerConsumed, "power"));
+        AddTooltipNote(notes, Config.EnableRecyclingMachineRule, "Recycling Machine", ConsumedDescription(Config.RecyclingMachinePowerConsumed, "power"));
+        AddTooltipNote(notes, Config.EnableSlimeIncubatorRule, "Slime Incubator", ConsumedDescription(Config.SlimeIncubatorPowerConsumed, "power"));
+        AddTooltipNote(notes, Config.EnableWoodChipperRule, "Wood Chipper", ConsumedDescription(Config.WoodChipperPowerConsumed, "power"));
+        AddTooltipNote(notes, Config.EnableOstrichIncubatorRule, "Ostrich Incubator", ConsumedDescription(Config.OstrichIncubatorPowerConsumed, "power"));
+        AddTooltipNote(notes, Config.EnableDeconstructorRule, "Deconstructor", ConsumedDescription(Config.DeconstructorPowerConsumed, "power"));
+        AddTooltipNote(notes, Config.EnableSodaMachineRule, "Soda Machine", ConsumedDescription(Config.SodaMachinePowerConsumed, "power"));
+        AddTooltipNote(notes, Config.EnableCoffeeMakerRule, "Coffee Maker", ConsumedDescription(Config.CoffeeMakerPowerConsumed, "power"));
+        AddTooltipNote(notes, Config.EnableHeavyFurnaceRule, "Heavy Furnace", ConsumedDescription(Config.HeavyFurnacePowerConsumed, "power"));
+        AddTooltipNote(notes, Config.EnableGeodeCrusherRule, "Geode Crusher", ConsumedDescription(Config.GeodeCrusherPowerConsumed, "power"));
+        AddTooltipNote(notes, Config.EnableMiniForgeRule, "Mini-Forge", ConsumedDescription(Config.MiniForgePowerConsumed, "power"));
+        AddTooltipNote(notes, Config.EnableBaitMakerRule, "Bait Maker", ConsumedDescription(Config.BaitMakerPowerConsumed, "power"));
+        AddTooltipNote(notes, Config.EnableBoneMillRule, "Bone Mill", ConsumedDescription(Config.BoneMillPowerConsumed, "power"));
+        AddTooltipNote(notes, Config.EnableSlimeEggPressRule, "Slime Egg-Press", ConsumedDescription(Config.SlimeEggPressPowerConsumed, "power"));
+        AddTooltipNote(notes, Config.EnableSeedMakerRule, "Seed Maker", ConsumedDescription(Config.SeedMakerPowerConsumed, "power"));
+        AddTooltipNote(notes, Config.EnableDehydratorRule, "Dehydrator", ConsumedDescription(Config.DehydratorPowerConsumed, "power"));
+        AddTooltipNote(notes, Config.EnableFishSmokerRule, "Fish Smoker", ConsumedDescription(Config.FishSmokerPowerConsumed, "power"));
+        AddTooltipNote(notes, Config.EnableOilMakerRule, "Oil Maker", ConsumedDescription(Config.OilMakerPowerConsumed, "power"));
+        AddTooltipNote(notes, Config.EnableLoomRule, "Loom", ConsumedDescription(Config.LoomPowerConsumed, "power"));
+        AddTooltipNote(notes, Config.EnableMayonnaiseMachineRule, "Mayonnaise Machine", ConsumedDescription(Config.MayonnaiseMachinePowerConsumed, "power"));
+        AddTooltipNote(notes, Config.EnableCheesePressRule, "Cheese Press", ConsumedDescription(Config.CheesePressPowerConsumed, "power"));
+        AddTooltipNote(notes, Config.EnableHopperRule, "Hopper", ConsumedDescription(Config.HopperPowerConsumed, "power"));
+        AddTooltipNote(notes, Config.EnableFarmComputerRule, "Farm Computer", ConsumedDescription(Config.FarmComputerPowerConsumed, "power"));
+        AddTooltipNote(notes, Config.EnableTelephoneRule, "Telephone", ConsumedDescription(Config.TelephonePowerConsumed, "power"));
+        AddTooltipNote(notes, Config.EnableSewingMachineRule, "Sewing Machine", ConsumedDescription(Config.SewingMachinePowerConsumed, "power"));
+        AddTooltipNote(notes, Config.EnableMiniJukeboxRule, "Mini-Jukebox", ConsumedDescription(Config.MiniJukeboxPowerConsumed, "power"));
+        AddContentPackTooltipNotes(notes);
 
-        foreach (BigCraftableData craftable in data.Values)
+        foreach ((string itemId, BigCraftableData craftable) in data)
         {
-            if (!TryGetUtilityTooltipNote(craftable, notes, out string? note) || string.IsNullOrWhiteSpace(note))
+            if (!TryGetUtilityTooltipNote(itemId, craftable.DisplayName, craftable.Name, notes, out string? note) || string.IsNullOrWhiteSpace(note))
                 continue;
 
             string description = craftable.Description ?? string.Empty;
@@ -258,18 +286,24 @@ public sealed class ModEntry : Mod
         }
     }
 
+    private static void AddTooltipNote(Dictionary<string, string> notes, bool enabled, string key, string note)
+    {
+        if (enabled)
+            notes[key] = note;
+    }
+
     private static void ApplyToolAndSprinklerUpgradeTooltips(IDictionary<string, ObjectData> data)
     {
-        Dictionary<string, string> notes = new(StringComparer.OrdinalIgnoreCase)
-        {
-            ["ThaleTheGreat.ToolAndSprinklerUpgrades_CobaltSprinkler"] = "Consumes 10 water. Consumes 3 power.",
-            ["ThaleTheGreat.ToolAndSprinklerUpgrades_PrismaticSprinkler"] = "Consumes 25 water. Consumes 6 power.",
-            ["ThaleTheGreat.ToolAndSprinklerUpgrades_RadioactiveSprinkler"] = "Consumes 50 water. Consumes 10 power."
-        };
+        Dictionary<string, string> notes = new(StringComparer.OrdinalIgnoreCase);
+        AddTooltipNote(notes, Config.EnableCobaltSprinklerRule, "ThaleTheGreat.ToolAndSprinklerUpgrades_CobaltSprinkler", ConsumedDescription(Config.CobaltSprinklerWaterConsumed, "water") + " " + ConsumedDescription(Config.CobaltSprinklerPowerConsumed, "power"));
+        AddTooltipNote(notes, Config.EnablePrismaticSprinklerRule, "ThaleTheGreat.ToolAndSprinklerUpgrades_PrismaticSprinkler", ConsumedDescription(Config.PrismaticSprinklerWaterConsumed, "water") + " " + ConsumedDescription(Config.PrismaticSprinklerPowerConsumed, "power"));
+        AddTooltipNote(notes, Config.EnableRadioactiveSprinklerRule, "ThaleTheGreat.ToolAndSprinklerUpgrades_RadioactiveSprinkler", ConsumedDescription(Config.RadioactiveSprinklerWaterConsumed, "water") + " " + ConsumedDescription(Config.RadioactiveSprinklerPowerConsumed, "power"));
 
-        foreach ((string itemId, string note) in notes)
+        AddContentPackTooltipNotes(notes);
+
+        foreach ((string itemId, ObjectData obj) in data)
         {
-            if (!data.TryGetValue(itemId, out ObjectData? obj) || string.IsNullOrWhiteSpace(note))
+            if (!TryGetUtilityTooltipNote(itemId, obj.DisplayName, obj.Name, notes, out string? note) || string.IsNullOrWhiteSpace(note))
                 continue;
 
             string description = obj.Description ?? string.Empty;
@@ -278,12 +312,15 @@ public sealed class ModEntry : Mod
         }
     }
 
-    private static bool TryGetUtilityTooltipNote(BigCraftableData craftable, Dictionary<string, string> notes, out string? note)
+    private static bool TryGetUtilityTooltipNote(string itemId, string? displayName, string? name, Dictionary<string, string> notes, out string? note)
     {
-        if (!string.IsNullOrWhiteSpace(craftable.DisplayName) && notes.TryGetValue(craftable.DisplayName, out note))
+        if (!string.IsNullOrWhiteSpace(itemId) && notes.TryGetValue(itemId, out note))
             return true;
 
-        if (!string.IsNullOrWhiteSpace(craftable.Name) && notes.TryGetValue(craftable.Name, out note))
+        if (!string.IsNullOrWhiteSpace(displayName) && notes.TryGetValue(displayName, out note))
+            return true;
+
+        if (!string.IsNullOrWhiteSpace(name) && notes.TryGetValue(name, out note))
             return true;
 
         note = null;
@@ -1848,9 +1885,10 @@ public sealed class ModEntry : Mod
     private static string GetRuleKey(Object obj)
     {
         string qualifiedId = obj.QualifiedItemId;
-        if (qualifiedId.StartsWith("(BC)", StringComparison.Ordinal))
+        int qualifierEnd = qualifiedId.IndexOf(')');
+        if (qualifiedId.StartsWith("(", StringComparison.Ordinal) && qualifierEnd >= 0 && qualifierEnd + 1 < qualifiedId.Length)
         {
-            string itemId = qualifiedId.Substring(4);
+            string itemId = qualifiedId[(qualifierEnd + 1)..];
             if (ObjectRules.ContainsKey(itemId))
                 return itemId;
         }
@@ -2382,9 +2420,151 @@ public sealed class ModEntry : Mod
     }
 
 
+    private void LoadContentPackRules()
+    {
+        ContentPackRules.Clear();
+
+        foreach (IContentPack contentPack in Helper.ContentPacks.GetOwned())
+        {
+            UtilityGridContentPackData? data;
+            try
+            {
+                data = contentPack.ReadJsonFile<UtilityGridContentPackData>("content.json")
+                    ?? contentPack.ReadJsonFile<UtilityGridContentPackData>("machine-rules.json");
+            }
+            catch (Exception ex)
+            {
+                Monitor.Log($"Ignored content pack '{contentPack.Manifest.Name}' because its content.json could not be read: {ex.Message}", LogLevel.Warn);
+                continue;
+            }
+
+            if (data?.MachineRules is null)
+            {
+                Monitor.Log($"Ignored content pack '{contentPack.Manifest.Name}' because it has no content.json or machine-rules.json with a MachineRules list.", LogLevel.Warn);
+                continue;
+            }
+
+            foreach (UtilityGridContentPackRule rule in data.MachineRules)
+            {
+                if (!TryValidateContentPackRule(contentPack, rule, out string error))
+                {
+                    Monitor.Log($"Ignored machine rule from '{contentPack.Manifest.Name}': {error}", LogLevel.Warn);
+                    continue;
+                }
+
+                string id = rule.Id.Trim();
+                string displayName = string.IsNullOrWhiteSpace(rule.DisplayName) ? id : rule.DisplayName.Trim();
+                rule.Id = id;
+                rule.DisplayName = displayName;
+                rule.Keys = rule.Keys.Where(key => !string.IsNullOrWhiteSpace(key)).Select(key => key.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+
+                ContentPackRules.Add(new LoadedContentPackRule
+                {
+                    SourceName = contentPack.Manifest.Name,
+                    SourceUniqueId = contentPack.Manifest.UniqueID,
+                    ConfigKey = contentPack.Manifest.UniqueID + "/" + id,
+                    Rule = rule
+                });
+            }
+        }
+
+        EnsureContentPackConfigEntries();
+    }
+
+    private static bool TryValidateContentPackRule(IContentPack contentPack, UtilityGridContentPackRule rule, out string error)
+    {
+        if (rule is null)
+        {
+            error = "rule is null.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(rule.Id))
+        {
+            error = "rule is missing an Id.";
+            return false;
+        }
+
+        if (rule.Keys is null || rule.Keys.All(string.IsNullOrWhiteSpace))
+        {
+            error = $"rule '{rule.Id}' has no Keys.";
+            return false;
+        }
+
+        if (!ContentPackRuleHasUtilityValues(rule))
+        {
+            error = $"rule '{rule.Id}' has no produced, consumed, charge, or discharge values.";
+            return false;
+        }
+
+        string configKey = contentPack.Manifest.UniqueID + "/" + rule.Id.Trim();
+        if (ContentPackRules.Any(existing => existing.ConfigKey.Equals(configKey, StringComparison.OrdinalIgnoreCase)))
+        {
+            error = $"duplicate rule Id '{rule.Id}' in content pack '{contentPack.Manifest.UniqueID}'.";
+            return false;
+        }
+
+        error = string.Empty;
+        return true;
+    }
+
+    private static bool ContentPackRuleHasUtilityValues(UtilityGridContentPackRule rule)
+    {
+        return RuleUsesWaterProduced(rule)
+            || RuleUsesWaterConsumed(rule)
+            || RuleUsesPowerProduced(rule)
+            || RuleUsesPowerConsumed(rule)
+            || rule.WaterChargeCapacity > 0
+            || rule.PowerChargeCapacity > 0;
+    }
+
+    private static void EnsureContentPackConfigEntries()
+    {
+        Config.ContentPackMachineRules ??= new Dictionary<string, ContentPackRuleConfig>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (LoadedContentPackRule loaded in ContentPackRules)
+        {
+            if (!Config.ContentPackMachineRules.ContainsKey(loaded.ConfigKey))
+                Config.ContentPackMachineRules[loaded.ConfigKey] = new ContentPackRuleConfig();
+        }
+    }
+
     private static void NormalizeConfig()
     {
         Config.PercentWaterPerTile = NormalizeWaterPerTile(Config.PercentWaterPerTile);
+
+        foreach (PropertyInfo property in typeof(ModConfig).GetProperties(BindingFlags.Instance | BindingFlags.Public))
+        {
+            if (property.PropertyType != typeof(int))
+                continue;
+
+            int value = (int)(property.GetValue(Config) ?? 0);
+            if (property.Name.EndsWith("Produced", StringComparison.Ordinal))
+                property.SetValue(Config, NormalizeProducedAmount(value));
+            else if (property.Name.EndsWith("Consumed", StringComparison.Ordinal))
+                property.SetValue(Config, NormalizeConsumedAmount(value));
+        }
+
+        NormalizeContentPackConfig();
+    }
+
+    private static int NormalizeProducedAmount(int value)
+    {
+        return Math.Clamp(value, MinProducedAmount, MaxProducedAmount);
+    }
+
+    private static int NormalizeConsumedAmount(int value)
+    {
+        return Math.Clamp(value, MinConsumedAmount, MaxConsumedAmount);
+    }
+
+    private static void ReloadRulesFromConfig()
+    {
+        NormalizeConfig();
+        LoadBuiltInRules();
+        PowerCacheVersion++;
+        foreach (string locationName in Systems.Keys.ToArray())
+            MarkAllGroupsDirty(locationName);
     }
 
     private static float NormalizeWaterPerTile(float value)
@@ -2402,7 +2582,7 @@ public sealed class ModEntry : Mod
         if (gmcm is null)
             return;
 
-        gmcm.Register(ModManifest, () => Config = new ModConfig(), () => { NormalizeConfig(); Helper.WriteConfig(Config); });
+        gmcm.Register(ModManifest, () => { Config = new ModConfig(); ReloadRulesFromConfig(); }, SaveConfigAndReload);
         gmcm.AddSectionTitle(ModManifest, () => "General");
         gmcm.AddBoolOption(ModManifest, () => Config.EnableMod, value => Config.EnableMod = value, () => "Enable Mod");
         gmcm.AddBoolOption(ModManifest, () => Config.EnablePowerRules, value => Config.EnablePowerRules = value, () => "Enable Power Rules");
@@ -2429,6 +2609,561 @@ public sealed class ModEntry : Mod
         gmcm.AddKeybindList(ModManifest, () => Config.RotateTile, value => Config.RotateTile = value, () => "Rotate Pipe Shape");
         gmcm.AddKeybindList(ModManifest, () => Config.PlaceTile, value => Config.PlaceTile = value, () => "Place Pipe");
         gmcm.AddKeybindList(ModManifest, () => Config.DestroyTile, value => Config.DestroyTile = value, () => "Destroy Pipe");
+
+        gmcm.AddSectionTitle(ModManifest, () => "Utility Grid Machine Rules", () => "Produced amounts allow 1-2500. Consumed amounts allow 1-250. Only resources already used by each machine are shown.");
+        List<(string Name, Action AddOptions)> builtInMachineOptions = new()
+        {
+            ("Bait Maker", () =>
+            {
+                AddMachineRuleToggle(gmcm, () => Config.EnableBaitMakerRule, value => Config.EnableBaitMakerRule = value, "Bait Maker", () => RuleDescription(Config.EnableBaitMakerRule, ConsumedDescription(Config.BaitMakerPowerConsumed, "power")));
+                AddConsumedOption(gmcm, () => Config.BaitMakerPowerConsumed, value => Config.BaitMakerPowerConsumed = value, "Power");
+            }),
+            ("Bone Mill", () =>
+            {
+                AddMachineRuleToggle(gmcm, () => Config.EnableBoneMillRule, value => Config.EnableBoneMillRule = value, "Bone Mill", () => RuleDescription(Config.EnableBoneMillRule, ConsumedDescription(Config.BoneMillPowerConsumed, "power")));
+                AddConsumedOption(gmcm, () => Config.BoneMillPowerConsumed, value => Config.BoneMillPowerConsumed = value, "Power");
+            }),
+            ("Bronze Water Pump", () =>
+            {
+                AddMachineRuleToggle(gmcm, () => Config.EnableBronzeWaterPumpRule, value => Config.EnableBronzeWaterPumpRule = value, "Bronze Water Pump", () => RuleDescription(Config.EnableBronzeWaterPumpRule, ProducedDescription(Config.BronzeWaterPumpWaterProduced, "water") + " " + ConsumedDescription(Config.BronzeWaterPumpPowerConsumed, "power")));
+                AddProducedOption(gmcm, () => Config.BronzeWaterPumpWaterProduced, value => Config.BronzeWaterPumpWaterProduced = value, "Water");
+                AddConsumedOption(gmcm, () => Config.BronzeWaterPumpPowerConsumed, value => Config.BronzeWaterPumpPowerConsumed = value, "Power");
+            }),
+            ("Charcoal Kiln", () =>
+            {
+                AddMachineRuleToggle(gmcm, () => Config.EnableCharcoalKilnRule, value => Config.EnableCharcoalKilnRule = value, "Charcoal Kiln", () => RuleDescription(Config.EnableCharcoalKilnRule, ProducedDescription(Config.CharcoalKilnPowerProduced, "power")));
+                AddProducedOption(gmcm, () => Config.CharcoalKilnPowerProduced, value => Config.CharcoalKilnPowerProduced = value, "Power");
+            }),
+            ("Cheese Press", () =>
+            {
+                AddMachineRuleToggle(gmcm, () => Config.EnableCheesePressRule, value => Config.EnableCheesePressRule = value, "Cheese Press", () => RuleDescription(Config.EnableCheesePressRule, ConsumedDescription(Config.CheesePressPowerConsumed, "power")));
+                AddConsumedOption(gmcm, () => Config.CheesePressPowerConsumed, value => Config.CheesePressPowerConsumed = value, "Power");
+            }),
+            ("Cobalt Sprinkler", () =>
+            {
+                AddMachineRuleToggle(gmcm, () => Config.EnableCobaltSprinklerRule, value => Config.EnableCobaltSprinklerRule = value, "Cobalt Sprinkler", () => RuleDescription(Config.EnableCobaltSprinklerRule, ConsumedDescription(Config.CobaltSprinklerWaterConsumed, "water") + " " + ConsumedDescription(Config.CobaltSprinklerPowerConsumed, "power")));
+                AddConsumedOption(gmcm, () => Config.CobaltSprinklerWaterConsumed, value => Config.CobaltSprinklerWaterConsumed = value, "Water");
+                AddConsumedOption(gmcm, () => Config.CobaltSprinklerPowerConsumed, value => Config.CobaltSprinklerPowerConsumed = value, "Power");
+            }),
+            ("Coffee Maker", () =>
+            {
+                AddMachineRuleToggle(gmcm, () => Config.EnableCoffeeMakerRule, value => Config.EnableCoffeeMakerRule = value, "Coffee Maker", () => RuleDescription(Config.EnableCoffeeMakerRule, ConsumedDescription(Config.CoffeeMakerPowerConsumed, "power")));
+                AddConsumedOption(gmcm, () => Config.CoffeeMakerPowerConsumed, value => Config.CoffeeMakerPowerConsumed = value, "Power");
+            }),
+            ("Crystalarium", () =>
+            {
+                AddMachineRuleToggle(gmcm, () => Config.EnableCrystalariumRule, value => Config.EnableCrystalariumRule = value, "Crystalarium", () => RuleDescription(Config.EnableCrystalariumRule, ConsumedDescription(Config.CrystalariumPowerConsumed, "power")));
+                AddConsumedOption(gmcm, () => Config.CrystalariumPowerConsumed, value => Config.CrystalariumPowerConsumed = value, "Power");
+            }),
+            ("Deconstructor", () =>
+            {
+                AddMachineRuleToggle(gmcm, () => Config.EnableDeconstructorRule, value => Config.EnableDeconstructorRule = value, "Deconstructor", () => RuleDescription(Config.EnableDeconstructorRule, ConsumedDescription(Config.DeconstructorPowerConsumed, "power")));
+                AddConsumedOption(gmcm, () => Config.DeconstructorPowerConsumed, value => Config.DeconstructorPowerConsumed = value, "Power");
+            }),
+            ("Dehydrator", () =>
+            {
+                AddMachineRuleToggle(gmcm, () => Config.EnableDehydratorRule, value => Config.EnableDehydratorRule = value, "Dehydrator", () => RuleDescription(Config.EnableDehydratorRule, ConsumedDescription(Config.DehydratorPowerConsumed, "power")));
+                AddConsumedOption(gmcm, () => Config.DehydratorPowerConsumed, value => Config.DehydratorPowerConsumed = value, "Power");
+            }),
+            ("Farm Computer", () =>
+            {
+                AddMachineRuleToggle(gmcm, () => Config.EnableFarmComputerRule, value => Config.EnableFarmComputerRule = value, "Farm Computer", () => RuleDescription(Config.EnableFarmComputerRule, ConsumedDescription(Config.FarmComputerPowerConsumed, "power")));
+                AddConsumedOption(gmcm, () => Config.FarmComputerPowerConsumed, value => Config.FarmComputerPowerConsumed = value, "Power");
+            }),
+            ("Fish Smoker", () =>
+            {
+                AddMachineRuleToggle(gmcm, () => Config.EnableFishSmokerRule, value => Config.EnableFishSmokerRule = value, "Fish Smoker", () => RuleDescription(Config.EnableFishSmokerRule, ConsumedDescription(Config.FishSmokerPowerConsumed, "power")));
+                AddConsumedOption(gmcm, () => Config.FishSmokerPowerConsumed, value => Config.FishSmokerPowerConsumed = value, "Power");
+            }),
+            ("Furnace", () =>
+            {
+                AddMachineRuleToggle(gmcm, () => Config.EnableFurnaceRule, value => Config.EnableFurnaceRule = value, "Furnace", () => RuleDescription(Config.EnableFurnaceRule, ProducedDescription(Config.FurnacePowerProduced, "power")));
+                AddProducedOption(gmcm, () => Config.FurnacePowerProduced, value => Config.FurnacePowerProduced = value, "Power");
+            }),
+            ("Geode Crusher", () =>
+            {
+                AddMachineRuleToggle(gmcm, () => Config.EnableGeodeCrusherRule, value => Config.EnableGeodeCrusherRule = value, "Geode Crusher", () => RuleDescription(Config.EnableGeodeCrusherRule, ConsumedDescription(Config.GeodeCrusherPowerConsumed, "power")));
+                AddConsumedOption(gmcm, () => Config.GeodeCrusherPowerConsumed, value => Config.GeodeCrusherPowerConsumed = value, "Power");
+            }),
+            ("Gold Water Pump", () =>
+            {
+                AddMachineRuleToggle(gmcm, () => Config.EnableGoldWaterPumpRule, value => Config.EnableGoldWaterPumpRule = value, "Gold Water Pump", () => RuleDescription(Config.EnableGoldWaterPumpRule, ProducedDescription(Config.GoldWaterPumpWaterProduced, "water") + " " + ConsumedDescription(Config.GoldWaterPumpPowerConsumed, "power")));
+                AddProducedOption(gmcm, () => Config.GoldWaterPumpWaterProduced, value => Config.GoldWaterPumpWaterProduced = value, "Water");
+                AddConsumedOption(gmcm, () => Config.GoldWaterPumpPowerConsumed, value => Config.GoldWaterPumpPowerConsumed = value, "Power");
+            }),
+            ("Heavy Furnace", () =>
+            {
+                AddMachineRuleToggle(gmcm, () => Config.EnableHeavyFurnaceRule, value => Config.EnableHeavyFurnaceRule = value, "Heavy Furnace", () => RuleDescription(Config.EnableHeavyFurnaceRule, ConsumedDescription(Config.HeavyFurnacePowerConsumed, "power")));
+                AddConsumedOption(gmcm, () => Config.HeavyFurnacePowerConsumed, value => Config.HeavyFurnacePowerConsumed = value, "Power");
+            }),
+            ("Hopper", () =>
+            {
+                AddMachineRuleToggle(gmcm, () => Config.EnableHopperRule, value => Config.EnableHopperRule = value, "Hopper", () => RuleDescription(Config.EnableHopperRule, ConsumedDescription(Config.HopperPowerConsumed, "power")));
+                AddConsumedOption(gmcm, () => Config.HopperPowerConsumed, value => Config.HopperPowerConsumed = value, "Power");
+            }),
+            ("Iridium Sprinkler", () =>
+            {
+                AddMachineRuleToggle(gmcm, () => Config.EnableIridiumSprinklerRule, value => Config.EnableIridiumSprinklerRule = value, "Iridium Sprinkler", () => RuleDescription(Config.EnableIridiumSprinklerRule, ConsumedDescription(Config.IridiumSprinklerWaterConsumed, "water") + " " + ConsumedDescription(Config.IridiumSprinklerPowerConsumed, "power")));
+                AddConsumedOption(gmcm, () => Config.IridiumSprinklerWaterConsumed, value => Config.IridiumSprinklerWaterConsumed = value, "Water");
+                AddConsumedOption(gmcm, () => Config.IridiumSprinklerPowerConsumed, value => Config.IridiumSprinklerPowerConsumed = value, "Power");
+            }),
+            ("Iridium Water Pump", () =>
+            {
+                AddMachineRuleToggle(gmcm, () => Config.EnableIridiumWaterPumpRule, value => Config.EnableIridiumWaterPumpRule = value, "Iridium Water Pump", () => RuleDescription(Config.EnableIridiumWaterPumpRule, ProducedDescription(Config.IridiumWaterPumpWaterProduced, "water") + " " + ConsumedDescription(Config.IridiumWaterPumpPowerConsumed, "power")));
+                AddProducedOption(gmcm, () => Config.IridiumWaterPumpWaterProduced, value => Config.IridiumWaterPumpWaterProduced = value, "Water");
+                AddConsumedOption(gmcm, () => Config.IridiumWaterPumpPowerConsumed, value => Config.IridiumWaterPumpPowerConsumed = value, "Power");
+            }),
+            ("Loom", () =>
+            {
+                AddMachineRuleToggle(gmcm, () => Config.EnableLoomRule, value => Config.EnableLoomRule = value, "Loom", () => RuleDescription(Config.EnableLoomRule, ConsumedDescription(Config.LoomPowerConsumed, "power")));
+                AddConsumedOption(gmcm, () => Config.LoomPowerConsumed, value => Config.LoomPowerConsumed = value, "Power");
+            }),
+            ("Mayonnaise Machine", () =>
+            {
+                AddMachineRuleToggle(gmcm, () => Config.EnableMayonnaiseMachineRule, value => Config.EnableMayonnaiseMachineRule = value, "Mayonnaise Machine", () => RuleDescription(Config.EnableMayonnaiseMachineRule, ConsumedDescription(Config.MayonnaiseMachinePowerConsumed, "power")));
+                AddConsumedOption(gmcm, () => Config.MayonnaiseMachinePowerConsumed, value => Config.MayonnaiseMachinePowerConsumed = value, "Power");
+            }),
+            ("Mini-Forge", () =>
+            {
+                AddMachineRuleToggle(gmcm, () => Config.EnableMiniForgeRule, value => Config.EnableMiniForgeRule = value, "Mini-Forge", () => RuleDescription(Config.EnableMiniForgeRule, ConsumedDescription(Config.MiniForgePowerConsumed, "power")));
+                AddConsumedOption(gmcm, () => Config.MiniForgePowerConsumed, value => Config.MiniForgePowerConsumed = value, "Power");
+            }),
+            ("Mini-Jukebox", () =>
+            {
+                AddMachineRuleToggle(gmcm, () => Config.EnableMiniJukeboxRule, value => Config.EnableMiniJukeboxRule = value, "Mini-Jukebox", () => RuleDescription(Config.EnableMiniJukeboxRule, ConsumedDescription(Config.MiniJukeboxPowerConsumed, "power")));
+                AddConsumedOption(gmcm, () => Config.MiniJukeboxPowerConsumed, value => Config.MiniJukeboxPowerConsumed = value, "Power");
+            }),
+            ("Oil Maker", () =>
+            {
+                AddMachineRuleToggle(gmcm, () => Config.EnableOilMakerRule, value => Config.EnableOilMakerRule = value, "Oil Maker", () => RuleDescription(Config.EnableOilMakerRule, ConsumedDescription(Config.OilMakerPowerConsumed, "power")));
+                AddConsumedOption(gmcm, () => Config.OilMakerPowerConsumed, value => Config.OilMakerPowerConsumed = value, "Power");
+            }),
+            ("Ostrich Incubator", () =>
+            {
+                AddMachineRuleToggle(gmcm, () => Config.EnableOstrichIncubatorRule, value => Config.EnableOstrichIncubatorRule = value, "Ostrich Incubator", () => RuleDescription(Config.EnableOstrichIncubatorRule, ConsumedDescription(Config.OstrichIncubatorPowerConsumed, "power")));
+                AddConsumedOption(gmcm, () => Config.OstrichIncubatorPowerConsumed, value => Config.OstrichIncubatorPowerConsumed = value, "Power");
+            }),
+            ("Prismatic Sprinkler", () =>
+            {
+                AddMachineRuleToggle(gmcm, () => Config.EnablePrismaticSprinklerRule, value => Config.EnablePrismaticSprinklerRule = value, "Prismatic Sprinkler", () => RuleDescription(Config.EnablePrismaticSprinklerRule, ConsumedDescription(Config.PrismaticSprinklerWaterConsumed, "water") + " " + ConsumedDescription(Config.PrismaticSprinklerPowerConsumed, "power")));
+                AddConsumedOption(gmcm, () => Config.PrismaticSprinklerWaterConsumed, value => Config.PrismaticSprinklerWaterConsumed = value, "Water");
+                AddConsumedOption(gmcm, () => Config.PrismaticSprinklerPowerConsumed, value => Config.PrismaticSprinklerPowerConsumed = value, "Power");
+            }),
+            ("Quality Sprinkler", () =>
+            {
+                AddMachineRuleToggle(gmcm, () => Config.EnableQualitySprinklerRule, value => Config.EnableQualitySprinklerRule = value, "Quality Sprinkler", () => RuleDescription(Config.EnableQualitySprinklerRule, ConsumedDescription(Config.QualitySprinklerWaterConsumed, "water")));
+                AddConsumedOption(gmcm, () => Config.QualitySprinklerWaterConsumed, value => Config.QualitySprinklerWaterConsumed = value, "Water");
+            }),
+            ("Radioactive Sprinkler", () =>
+            {
+                AddMachineRuleToggle(gmcm, () => Config.EnableRadioactiveSprinklerRule, value => Config.EnableRadioactiveSprinklerRule = value, "Radioactive Sprinkler", () => RuleDescription(Config.EnableRadioactiveSprinklerRule, ConsumedDescription(Config.RadioactiveSprinklerWaterConsumed, "water") + " " + ConsumedDescription(Config.RadioactiveSprinklerPowerConsumed, "power")));
+                AddConsumedOption(gmcm, () => Config.RadioactiveSprinklerWaterConsumed, value => Config.RadioactiveSprinklerWaterConsumed = value, "Water");
+                AddConsumedOption(gmcm, () => Config.RadioactiveSprinklerPowerConsumed, value => Config.RadioactiveSprinklerPowerConsumed = value, "Power");
+            }),
+            ("Recycling Machine", () =>
+            {
+                AddMachineRuleToggle(gmcm, () => Config.EnableRecyclingMachineRule, value => Config.EnableRecyclingMachineRule = value, "Recycling Machine", () => RuleDescription(Config.EnableRecyclingMachineRule, ConsumedDescription(Config.RecyclingMachinePowerConsumed, "power")));
+                AddConsumedOption(gmcm, () => Config.RecyclingMachinePowerConsumed, value => Config.RecyclingMachinePowerConsumed = value, "Power");
+            }),
+            ("Seed Maker", () =>
+            {
+                AddMachineRuleToggle(gmcm, () => Config.EnableSeedMakerRule, value => Config.EnableSeedMakerRule = value, "Seed Maker", () => RuleDescription(Config.EnableSeedMakerRule, ConsumedDescription(Config.SeedMakerPowerConsumed, "power")));
+                AddConsumedOption(gmcm, () => Config.SeedMakerPowerConsumed, value => Config.SeedMakerPowerConsumed = value, "Power");
+            }),
+            ("Sewing Machine", () =>
+            {
+                AddMachineRuleToggle(gmcm, () => Config.EnableSewingMachineRule, value => Config.EnableSewingMachineRule = value, "Sewing Machine", () => RuleDescription(Config.EnableSewingMachineRule, ConsumedDescription(Config.SewingMachinePowerConsumed, "power")));
+                AddConsumedOption(gmcm, () => Config.SewingMachinePowerConsumed, value => Config.SewingMachinePowerConsumed = value, "Power");
+            }),
+            ("Slime Egg-Press", () =>
+            {
+                AddMachineRuleToggle(gmcm, () => Config.EnableSlimeEggPressRule, value => Config.EnableSlimeEggPressRule = value, "Slime Egg-Press", () => RuleDescription(Config.EnableSlimeEggPressRule, ConsumedDescription(Config.SlimeEggPressPowerConsumed, "power")));
+                AddConsumedOption(gmcm, () => Config.SlimeEggPressPowerConsumed, value => Config.SlimeEggPressPowerConsumed = value, "Power");
+            }),
+            ("Slime Incubator", () =>
+            {
+                AddMachineRuleToggle(gmcm, () => Config.EnableSlimeIncubatorRule, value => Config.EnableSlimeIncubatorRule = value, "Slime Incubator", () => RuleDescription(Config.EnableSlimeIncubatorRule, ConsumedDescription(Config.SlimeIncubatorPowerConsumed, "power")));
+                AddConsumedOption(gmcm, () => Config.SlimeIncubatorPowerConsumed, value => Config.SlimeIncubatorPowerConsumed = value, "Power");
+            }),
+            ("Soda Machine", () =>
+            {
+                AddMachineRuleToggle(gmcm, () => Config.EnableSodaMachineRule, value => Config.EnableSodaMachineRule = value, "Soda Machine", () => RuleDescription(Config.EnableSodaMachineRule, ConsumedDescription(Config.SodaMachinePowerConsumed, "power")));
+                AddConsumedOption(gmcm, () => Config.SodaMachinePowerConsumed, value => Config.SodaMachinePowerConsumed = value, "Power");
+            }),
+            ("Solar Panel", () =>
+            {
+                AddMachineRuleToggle(gmcm, () => Config.EnableSolarPanelRule, value => Config.EnableSolarPanelRule = value, "Solar Panel", () => RuleDescription(Config.EnableSolarPanelRule, ProducedDescription(Config.SolarPanelPowerProduced, "power")));
+                AddProducedOption(gmcm, () => Config.SolarPanelPowerProduced, value => Config.SolarPanelPowerProduced = value, "Power");
+            }),
+            ("Sprinkler", () =>
+            {
+                AddMachineRuleToggle(gmcm, () => Config.EnableSprinklerRule, value => Config.EnableSprinklerRule = value, "Sprinkler", () => RuleDescription(Config.EnableSprinklerRule, ConsumedDescription(Config.SprinklerWaterConsumed, "water")));
+                AddConsumedOption(gmcm, () => Config.SprinklerWaterConsumed, value => Config.SprinklerWaterConsumed = value, "Water");
+            }),
+            ("Steel Water Pump", () =>
+            {
+                AddMachineRuleToggle(gmcm, () => Config.EnableSteelWaterPumpRule, value => Config.EnableSteelWaterPumpRule = value, "Steel Water Pump", () => RuleDescription(Config.EnableSteelWaterPumpRule, ProducedDescription(Config.SteelWaterPumpWaterProduced, "water") + " " + ConsumedDescription(Config.SteelWaterPumpPowerConsumed, "power")));
+                AddProducedOption(gmcm, () => Config.SteelWaterPumpWaterProduced, value => Config.SteelWaterPumpWaterProduced = value, "Water");
+                AddConsumedOption(gmcm, () => Config.SteelWaterPumpPowerConsumed, value => Config.SteelWaterPumpPowerConsumed = value, "Power");
+            }),
+            ("Telephone", () =>
+            {
+                AddMachineRuleToggle(gmcm, () => Config.EnableTelephoneRule, value => Config.EnableTelephoneRule = value, "Telephone", () => RuleDescription(Config.EnableTelephoneRule, ConsumedDescription(Config.TelephonePowerConsumed, "power")));
+                AddConsumedOption(gmcm, () => Config.TelephonePowerConsumed, value => Config.TelephonePowerConsumed = value, "Power");
+            }),
+            ("Utility Grid Advanced Battery", () =>
+            {
+                AddMachineRuleToggle(gmcm, () => Config.EnableUtilityGridAdvancedBatteryRule, value => Config.EnableUtilityGridAdvancedBatteryRule = value, "Utility Grid Advanced Battery", () => RuleDescription(Config.EnableUtilityGridAdvancedBatteryRule, StorageDescription(100, "power", Config.UtilityGridAdvancedBatteryPowerConsumed, Config.UtilityGridAdvancedBatteryPowerProduced)));
+                AddProducedOption(gmcm, () => Config.UtilityGridAdvancedBatteryPowerProduced, value => Config.UtilityGridAdvancedBatteryPowerProduced = value, "Power");
+                AddConsumedOption(gmcm, () => Config.UtilityGridAdvancedBatteryPowerConsumed, value => Config.UtilityGridAdvancedBatteryPowerConsumed = value, "Power");
+            }),
+            ("Utility Grid Battery", () =>
+            {
+                AddMachineRuleToggle(gmcm, () => Config.EnableUtilityGridBatteryRule, value => Config.EnableUtilityGridBatteryRule = value, "Utility Grid Battery", () => RuleDescription(Config.EnableUtilityGridBatteryRule, StorageDescription(50, "power", Config.UtilityGridBatteryPowerConsumed, Config.UtilityGridBatteryPowerProduced)));
+                AddProducedOption(gmcm, () => Config.UtilityGridBatteryPowerProduced, value => Config.UtilityGridBatteryPowerProduced = value, "Power");
+                AddConsumedOption(gmcm, () => Config.UtilityGridBatteryPowerConsumed, value => Config.UtilityGridBatteryPowerConsumed = value, "Power");
+            }),
+            ("Utility Grid Water Tank", () =>
+            {
+                AddMachineRuleToggle(gmcm, () => Config.EnableUtilityGridWaterTankRule, value => Config.EnableUtilityGridWaterTankRule = value, "Utility Grid Water Tank", () => RuleDescription(Config.EnableUtilityGridWaterTankRule, StorageDescription(50, "water", Config.UtilityGridWaterTankWaterConsumed, Config.UtilityGridWaterTankWaterProduced)));
+                AddProducedOption(gmcm, () => Config.UtilityGridWaterTankWaterProduced, value => Config.UtilityGridWaterTankWaterProduced = value, "Water");
+                AddConsumedOption(gmcm, () => Config.UtilityGridWaterTankWaterConsumed, value => Config.UtilityGridWaterTankWaterConsumed = value, "Water");
+            }),
+            ("Wood Chipper", () =>
+            {
+                AddMachineRuleToggle(gmcm, () => Config.EnableWoodChipperRule, value => Config.EnableWoodChipperRule = value, "Wood Chipper", () => RuleDescription(Config.EnableWoodChipperRule, ConsumedDescription(Config.WoodChipperPowerConsumed, "power")));
+                AddConsumedOption(gmcm, () => Config.WoodChipperPowerConsumed, value => Config.WoodChipperPowerConsumed = value, "Power");
+            }),
+        };
+
+        foreach ((string _, Action addOptions) in builtInMachineOptions.OrderBy(option => option.Name, StringComparer.OrdinalIgnoreCase))
+            addOptions();
+
+        AddContentPackRuleOptions(gmcm);
+    }
+
+    private void SaveConfigAndReload()
+    {
+        ReloadRulesFromConfig();
+        Helper.WriteConfig(Config);
+        Helper.GameContent.InvalidateCache("Data/BigCraftables");
+        Helper.GameContent.InvalidateCache("Data/Objects");
+    }
+
+    private void AddContentPackRuleOptions(IGenericModConfigMenuApi gmcm)
+    {
+        if (ContentPackRules.Count == 0)
+            return;
+
+        gmcm.AddSectionTitle(ModManifest, () => "Content Pack Machine Rules", () => "Rules loaded from Utility Grid Redux content packs. Produced amounts allow 1-2500. Consumed amounts allow 1-250. Only resources used by each content-pack rule are shown.");
+
+        string? previousSource = null;
+        foreach (LoadedContentPackRule loaded in ContentPackRules.OrderBy(rule => rule.SourceName, StringComparer.OrdinalIgnoreCase).ThenBy(rule => rule.Rule.DisplayName, StringComparer.OrdinalIgnoreCase))
+        {
+            if (!string.Equals(previousSource, loaded.SourceName, StringComparison.OrdinalIgnoreCase))
+            {
+                previousSource = loaded.SourceName;
+                gmcm.AddSectionTitle(ModManifest, () => loaded.SourceName);
+            }
+
+            AddMachineRuleToggle(gmcm, () => GetContentPackRuleConfig(loaded).Enabled, value => GetContentPackRuleConfig(loaded).Enabled = value, loaded.Rule.DisplayName, () => RuleDescription(GetContentPackRuleConfig(loaded).Enabled, BuildContentPackRuleDescription(loaded)), loaded.Rule.Keys);
+
+            if (RuleUsesWaterProduced(loaded.Rule))
+                AddContentPackProducedOption(gmcm, loaded, "Water", () => GetContentPackWaterProduced(loaded), value => GetContentPackRuleConfig(loaded).WaterProduced = NormalizeProducedAmount(value));
+
+            if (RuleUsesWaterConsumed(loaded.Rule))
+                AddContentPackConsumedOption(gmcm, loaded, "Water", () => GetContentPackWaterConsumed(loaded), value => GetContentPackRuleConfig(loaded).WaterConsumed = NormalizeConsumedAmount(value));
+
+            if (RuleUsesPowerProduced(loaded.Rule))
+                AddContentPackProducedOption(gmcm, loaded, "Power", () => GetContentPackPowerProduced(loaded), value => GetContentPackRuleConfig(loaded).PowerProduced = NormalizeProducedAmount(value));
+
+            if (RuleUsesPowerConsumed(loaded.Rule))
+                AddContentPackConsumedOption(gmcm, loaded, "Power", () => GetContentPackPowerConsumed(loaded), value => GetContentPackRuleConfig(loaded).PowerConsumed = NormalizeConsumedAmount(value));
+        }
+    }
+
+    private void AddContentPackProducedOption(IGenericModConfigMenuApi gmcm, LoadedContentPackRule loaded, string resourceName, Func<int> getValue, Action<int> setValue)
+    {
+        gmcm.AddTextOption(
+            ModManifest,
+            () => FormatAmountText(getValue()),
+            value => setValue(ParseProducedAmountText(value, getValue())),
+            () => "  " + resourceName.ToLowerInvariant() + " produced",
+            () => $"Amount of {resourceName.ToLowerInvariant()} '{loaded.Rule.DisplayName}' adds to the grid. Type a value from {MinProducedAmount} to {MaxProducedAmount}.",
+            null,
+            null,
+            loaded.ConfigKey + "/" + resourceName + "Produced"
+        );
+    }
+
+    private void AddContentPackConsumedOption(IGenericModConfigMenuApi gmcm, LoadedContentPackRule loaded, string resourceName, Func<int> getValue, Action<int> setValue)
+    {
+        gmcm.AddTextOption(
+            ModManifest,
+            () => FormatAmountText(getValue()),
+            value => setValue(ParseConsumedAmountText(value, getValue())),
+            () => "  " + resourceName.ToLowerInvariant() + " consumed",
+            () => $"Amount of {resourceName.ToLowerInvariant()} '{loaded.Rule.DisplayName}' removes from the grid. Type a value from {MinConsumedAmount} to {MaxConsumedAmount}.",
+            null,
+            null,
+            loaded.ConfigKey + "/" + resourceName + "Consumed"
+        );
+    }
+
+    private void AddMachineRuleToggle(IGenericModConfigMenuApi gmcm, Func<bool> getValue, Action<bool> setValue, string machineName, Func<string>? tooltip = null, IEnumerable<string>? itemLookupKeys = null)
+    {
+        gmcm.AddBoolOption(
+            ModManifest,
+            getValue,
+            setValue,
+            () => machineName,
+            () => GetGmcmMachineTooltip(machineName, getValue(), tooltip?.Invoke(), itemLookupKeys)
+        );
+    }
+
+    private static string GetGmcmMachineTooltip(string machineName, bool enabled, string? utilityDescription, IEnumerable<string>? itemLookupKeys = null)
+    {
+        string baseDescription = GetMachineBaseDescription(machineName, itemLookupKeys);
+        utilityDescription = string.Equals(utilityDescription, "Utility Grid rule disabled in config.", StringComparison.OrdinalIgnoreCase)
+            ? string.Empty
+            : utilityDescription?.Trim();
+
+        if (!enabled)
+            return !string.IsNullOrWhiteSpace(baseDescription) ? baseDescription : "Utility Grid rule disabled in config.";
+
+        if (string.IsNullOrWhiteSpace(baseDescription))
+            return string.IsNullOrWhiteSpace(utilityDescription) ? "Turn this off to exclude this machine from Utility Grid management." : utilityDescription;
+
+        if (string.IsNullOrWhiteSpace(utilityDescription))
+            return baseDescription;
+
+        return EnsureSentenceTerminator(baseDescription.TrimEnd()) + " " + utilityDescription;
+    }
+
+    private static string GetMachineBaseDescription(string machineName, IEnumerable<string>? itemLookupKeys = null)
+    {
+        if (TryGetBigCraftableDescription(machineName, itemLookupKeys, out string? description))
+            return ResolveLocalizedText(RemoveUtilityGridTooltip(description ?? string.Empty));
+
+        if (TryGetObjectDescription(machineName, itemLookupKeys, out description))
+            return ResolveLocalizedText(RemoveUtilityGridTooltip(description ?? string.Empty));
+
+        return string.Empty;
+    }
+
+    private static bool TryGetBigCraftableDescription(string machineName, IEnumerable<string>? itemLookupKeys, out string? description)
+    {
+        description = null;
+
+        try
+        {
+            Dictionary<string, BigCraftableData> data = Game1.content.Load<Dictionary<string, BigCraftableData>>("Data/BigCraftables");
+            foreach (string key in GetMachineTooltipLookupKeys(machineName, itemLookupKeys))
+            {
+                if (data.TryGetValue(key, out BigCraftableData? craftable) && !string.IsNullOrWhiteSpace(craftable.Description))
+                {
+                    description = craftable.Description;
+                    return true;
+                }
+            }
+
+            foreach (BigCraftableData craftable in data.Values)
+            {
+                if (MachineNamesMatch(craftable.DisplayName, machineName) || MachineNamesMatch(craftable.Name, machineName))
+                {
+                    if (!string.IsNullOrWhiteSpace(craftable.Description))
+                    {
+                        description = craftable.Description;
+                        return true;
+                    }
+                }
+            }
+        }
+        catch
+        {
+        }
+
+        return false;
+    }
+
+    private static bool TryGetObjectDescription(string machineName, IEnumerable<string>? itemLookupKeys, out string? description)
+    {
+        description = null;
+
+        try
+        {
+            Dictionary<string, ObjectData> data = Game1.content.Load<Dictionary<string, ObjectData>>("Data/Objects");
+            foreach (string key in GetMachineTooltipLookupKeys(machineName, itemLookupKeys))
+            {
+                if (data.TryGetValue(key, out ObjectData? obj) && !string.IsNullOrWhiteSpace(obj.Description))
+                {
+                    description = obj.Description;
+                    return true;
+                }
+            }
+
+            foreach (ObjectData obj in data.Values)
+            {
+                if (MachineNamesMatch(obj.DisplayName, machineName) || MachineNamesMatch(obj.Name, machineName))
+                {
+                    if (!string.IsNullOrWhiteSpace(obj.Description))
+                    {
+                        description = obj.Description;
+                        return true;
+                    }
+                }
+            }
+        }
+        catch
+        {
+        }
+
+        return false;
+    }
+
+    private static bool MachineNamesMatch(string? dataName, string machineName)
+    {
+        if (string.IsNullOrWhiteSpace(dataName) || string.IsNullOrWhiteSpace(machineName))
+            return false;
+
+        string resolvedName = ResolveLocalizedText(dataName);
+        return string.Equals(resolvedName, machineName, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(dataName, machineName, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string ResolveLocalizedText(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            return string.Empty;
+
+        return Regex.Replace(
+            text,
+            @"\[LocalizedText\s+([^\]]+)\]",
+            match =>
+            {
+                string key = match.Groups[1].Value.Trim();
+                if (string.IsNullOrWhiteSpace(key))
+                    return string.Empty;
+
+                try
+                {
+                    return Game1.content.LoadString(key);
+                }
+                catch
+                {
+                    return match.Value;
+                }
+            });
+    }
+
+    private static IEnumerable<string> GetMachineTooltipLookupKeys(string machineName, IEnumerable<string>? itemLookupKeys)
+    {
+        HashSet<string> keys = new(StringComparer.OrdinalIgnoreCase);
+        AddMachineTooltipLookupKey(keys, machineName);
+
+        if (itemLookupKeys is not null)
+        {
+            foreach (string key in itemLookupKeys)
+                AddMachineTooltipLookupKey(keys, key);
+        }
+
+        return keys;
+    }
+
+    private static void AddMachineTooltipLookupKey(HashSet<string> keys, string? key)
+    {
+        if (string.IsNullOrWhiteSpace(key))
+            return;
+
+        key = key.Trim();
+        keys.Add(key);
+
+        int qualifierEnd = key.IndexOf(')');
+        if ((key.StartsWith("(BC)", StringComparison.OrdinalIgnoreCase) || key.StartsWith("(O)", StringComparison.OrdinalIgnoreCase)) && qualifierEnd >= 0 && qualifierEnd + 1 < key.Length)
+            keys.Add(key[(qualifierEnd + 1)..]);
+    }
+
+    private static string RemoveUtilityGridTooltip(string description)
+    {
+        if (string.IsNullOrWhiteSpace(description))
+            return string.Empty;
+
+        description = description.Trim();
+        if (string.Equals(description, "Utility Grid rule disabled in config.", StringComparison.OrdinalIgnoreCase))
+            return string.Empty;
+
+        description = Regex.Replace(
+            description,
+            @"(?:\s*Stores\s+[0-9.]+\s+(?:water|power)\.\s*Consumes\s+[0-9.]+\s+(?:water|power)\s+to\s+charge\.\s*Produces\s+[0-9.]+\s+(?:water|power)\s+while\s+discharging\.)+$",
+            string.Empty,
+            RegexOptions.IgnoreCase);
+
+        description = Regex.Replace(
+            description,
+            @"(?:\s*(?:Consumes|Produces)\s+[0-9.]+\s+(?:water|power)\.)+$",
+            string.Empty,
+            RegexOptions.IgnoreCase);
+
+        return description.TrimEnd();
+    }
+
+    private static string EnsureSentenceTerminator(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            return string.Empty;
+
+        char last = text[^1];
+        return last is '.' or '!' or '?' ? text : text + ".";
+    }
+
+    private void AddProducedOption(IGenericModConfigMenuApi gmcm, Func<int> getValue, Action<int> setValue, string resourceName)
+    {
+        gmcm.AddTextOption(
+            ModManifest,
+            () => FormatAmountText(getValue()),
+            value => setValue(ParseProducedAmountText(value, getValue())),
+            () => $"  {resourceName.ToLowerInvariant()} produced",
+            () => $"Amount of {resourceName.ToLowerInvariant()} this machine adds to the grid. Type a value from {MinProducedAmount} to {MaxProducedAmount}."
+        );
+    }
+
+    private void AddConsumedOption(IGenericModConfigMenuApi gmcm, Func<int> getValue, Action<int> setValue, string resourceName)
+    {
+        gmcm.AddTextOption(
+            ModManifest,
+            () => FormatAmountText(getValue()),
+            value => setValue(ParseConsumedAmountText(value, getValue())),
+            () => $"  {resourceName.ToLowerInvariant()} consumed",
+            () => $"Amount of {resourceName.ToLowerInvariant()} this machine removes from the grid. Type a value from {MinConsumedAmount} to {MaxConsumedAmount}."
+        );
+    }
+
+    private static string FormatAmountText(int value)
+    {
+        return value.ToString(CultureInfo.InvariantCulture);
+    }
+
+    private static int ParseProducedAmountText(string value, int fallback)
+    {
+        return NormalizeProducedAmount(ParseAmountText(value, fallback));
+    }
+
+    private static int ParseConsumedAmountText(string value, int fallback)
+    {
+        return NormalizeConsumedAmount(ParseAmountText(value, fallback));
+    }
+
+    private static int ParseAmountText(string value, int fallback)
+    {
+        return int.TryParse(value?.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsed)
+            ? parsed
+            : fallback;
+    }
+
+    private static void AddObjectRuleIfEnabled(bool enabled, UtilityObjectRule rule, params string[] keys)
+    {
+        if (enabled)
+            AddObjectRule(rule, keys);
     }
 
     private static void AddObjectRule(UtilityObjectRule rule, params string[] keys)
@@ -2440,49 +3175,239 @@ public sealed class ModEntry : Mod
     private static void LoadBuiltInRules()
     {
         ObjectRules.Clear();
-        AddObjectRule(new UtilityObjectRule { Water = 10, Power = -2, OnlyInWater = true }, ItemId("BronzeWaterPump"));
-        AddObjectRule(new UtilityObjectRule { Water = 25, Power = -4, OnlyInWater = true }, ItemId("SteelWaterPump"));
-        AddObjectRule(new UtilityObjectRule { Water = 80, Power = -8 }, ItemId("GoldWaterPump"));
-        AddObjectRule(new UtilityObjectRule { Water = 200, Power = -16 }, ItemId("IridiumWaterPump"));
-        AddObjectRule(new UtilityObjectRule { PowerChargeCapacity = 50, PowerChargeRate = 2, PowerDischargeRate = 2 }, ItemId("UtilityGridBattery"));
-        AddObjectRule(new UtilityObjectRule { PowerChargeCapacity = 100, PowerChargeRate = 5, PowerDischargeRate = 5 }, ItemId("UtilityGridAdvancedBattery"));
-        AddObjectRule(new UtilityObjectRule { WaterChargeCapacity = 50, WaterChargeRate = 2, WaterDischargeRate = 2, FillWaterFromRain = true }, ItemId("UtilityGridWaterTank"));
-        AddObjectRule(new UtilityObjectRule { Water = -1 }, "(BC)599", "599", "Sprinkler");
-        AddObjectRule(new UtilityObjectRule { Water = -2 }, "(BC)621", "621", "Quality Sprinkler");
-        AddObjectRule(new UtilityObjectRule { Water = -6, Power = -2 }, "(BC)645", "645", "Iridium Sprinkler");
-        AddObjectRule(new UtilityObjectRule { Water = -10, Power = -3 }, "(O)ThaleTheGreat.ToolAndSprinklerUpgrades_CobaltSprinkler", "ThaleTheGreat.ToolAndSprinklerUpgrades_CobaltSprinkler", "Cobalt Sprinkler");
-        AddObjectRule(new UtilityObjectRule { Water = -25, Power = -6 }, "(O)ThaleTheGreat.ToolAndSprinklerUpgrades_PrismaticSprinkler", "ThaleTheGreat.ToolAndSprinklerUpgrades_PrismaticSprinkler", "Prismatic Sprinkler");
-        AddObjectRule(new UtilityObjectRule { Water = -50, Power = -10 }, "(O)ThaleTheGreat.ToolAndSprinklerUpgrades_RadioactiveSprinkler", "ThaleTheGreat.ToolAndSprinklerUpgrades_RadioactiveSprinkler", "Radioactive Sprinkler");
-        AddObjectRule(new UtilityObjectRule { Power = 10, MustBeWorking = true, MustBeFull = true }, "(BC)13", "13", "Furnace");
-        AddObjectRule(new UtilityObjectRule { Power = 10, MustBeWorking = true, MustBeFull = true }, "(BC)114", "114", "Charcoal Kiln");
-        AddObjectRule(new UtilityObjectRule { Power = 10, MustHaveSun = true }, "(BC)231", "231", "Solar Panel");
-        AddObjectRule(new UtilityObjectRule { Power = -3, MustBeWorking = true, MustBeFull = true }, "(BC)21", "21", "Crystalarium");
-        AddObjectRule(new UtilityObjectRule { Power = -1, MustBeWorking = true, MustBeFull = true }, "(BC)20", "20", "Recycling Machine");
-        AddObjectRule(new UtilityObjectRule { Power = -2, MustBeWorking = true, MustBeFull = true }, "(BC)156", "156", "Slime Incubator");
-        AddObjectRule(new UtilityObjectRule { Power = -2, MustBeWorking = true, MustBeFull = true }, "(BC)211", "211", "Wood Chipper");
-        AddObjectRule(new UtilityObjectRule { Power = -2, MustBeWorking = true, MustBeFull = true }, "(BC)254", "254", "Ostrich Incubator");
-        AddObjectRule(new UtilityObjectRule { Power = -2, MustBeWorking = true, MustBeFull = true }, "(BC)265", "265", "Deconstructor");
-        AddObjectRule(new UtilityObjectRule { Power = -1, MustBeWorking = true, MustBeFull = true }, "(BC)117", "117", "Soda Machine");
-        AddObjectRule(new UtilityObjectRule { Power = -1, MustBeWorking = true, MustBeFull = true }, "(BC)246", "246", "Coffee Maker");
-        AddObjectRule(new UtilityObjectRule { Power = -4, MustBeWorking = true, MustBeFull = true }, "Heavy Furnace");
-        AddObjectRule(new UtilityObjectRule { Power = -2, MustBeWorking = true, MustBeFull = true }, "Geode Crusher");
-        AddObjectRule(new UtilityObjectRule { Power = -3, MustBeWorking = true, MustBeFull = true }, "Mini-Forge");
-        AddObjectRule(new UtilityObjectRule { Power = -1, MustBeWorking = true, MustBeFull = true }, "Bait Maker");
-        AddObjectRule(new UtilityObjectRule { Power = -2, MustBeWorking = true, MustBeFull = true }, "Bone Mill");
-        AddObjectRule(new UtilityObjectRule { Power = -2, MustBeWorking = true, MustBeFull = true }, "Slime Egg-Press");
-        AddObjectRule(new UtilityObjectRule { Power = -1, MustBeWorking = true, MustBeFull = true }, "Seed Maker");
-        AddObjectRule(new UtilityObjectRule { Power = -2, MustBeWorking = true, MustBeFull = true }, "Dehydrator");
-        AddObjectRule(new UtilityObjectRule { Power = -2, MustBeWorking = true, MustBeFull = true }, "Fish Smoker");
-        AddObjectRule(new UtilityObjectRule { Power = -2, MustBeWorking = true, MustBeFull = true }, "Oil Maker");
-        AddObjectRule(new UtilityObjectRule { Power = -1, MustBeWorking = true, MustBeFull = true }, "Loom");
-        AddObjectRule(new UtilityObjectRule { Power = -1, MustBeWorking = true, MustBeFull = true }, "Mayonnaise Machine");
-        AddObjectRule(new UtilityObjectRule { Power = -1, MustBeWorking = true, MustBeFull = true }, "Cheese Press");
-        AddObjectRule(new UtilityObjectRule { Power = -1 }, "Hopper");
-        AddObjectRule(new UtilityObjectRule { Power = -1 }, "Farm Computer");
-        AddObjectRule(new UtilityObjectRule { Power = -1 }, "Telephone");
-        AddObjectRule(new UtilityObjectRule { Power = -1, MustBeWorking = true, MustBeFull = true }, "Sewing Machine");
-        AddObjectRule(new UtilityObjectRule { Power = -1 }, "Mini-Jukebox");
+        AddObjectRuleIfEnabled(Config.EnableBronzeWaterPumpRule, new UtilityObjectRule { Water = NormalizeProducedAmount(Config.BronzeWaterPumpWaterProduced), Power = -NormalizeConsumedAmount(Config.BronzeWaterPumpPowerConsumed), OnlyInWater = true }, ItemId("BronzeWaterPump"));
+        AddObjectRuleIfEnabled(Config.EnableSteelWaterPumpRule, new UtilityObjectRule { Water = NormalizeProducedAmount(Config.SteelWaterPumpWaterProduced), Power = -NormalizeConsumedAmount(Config.SteelWaterPumpPowerConsumed), OnlyInWater = true }, ItemId("SteelWaterPump"));
+        AddObjectRuleIfEnabled(Config.EnableGoldWaterPumpRule, new UtilityObjectRule { Water = NormalizeProducedAmount(Config.GoldWaterPumpWaterProduced), Power = -NormalizeConsumedAmount(Config.GoldWaterPumpPowerConsumed) }, ItemId("GoldWaterPump"));
+        AddObjectRuleIfEnabled(Config.EnableIridiumWaterPumpRule, new UtilityObjectRule { Water = NormalizeProducedAmount(Config.IridiumWaterPumpWaterProduced), Power = -NormalizeConsumedAmount(Config.IridiumWaterPumpPowerConsumed) }, ItemId("IridiumWaterPump"));
+        AddObjectRuleIfEnabled(Config.EnableUtilityGridBatteryRule, new UtilityObjectRule { PowerChargeCapacity = 50, PowerChargeRate = NormalizeConsumedAmount(Config.UtilityGridBatteryPowerConsumed), PowerDischargeRate = NormalizeProducedAmount(Config.UtilityGridBatteryPowerProduced) }, ItemId("UtilityGridBattery"));
+        AddObjectRuleIfEnabled(Config.EnableUtilityGridAdvancedBatteryRule, new UtilityObjectRule { PowerChargeCapacity = 100, PowerChargeRate = NormalizeConsumedAmount(Config.UtilityGridAdvancedBatteryPowerConsumed), PowerDischargeRate = NormalizeProducedAmount(Config.UtilityGridAdvancedBatteryPowerProduced) }, ItemId("UtilityGridAdvancedBattery"));
+        AddObjectRuleIfEnabled(Config.EnableUtilityGridWaterTankRule, new UtilityObjectRule { WaterChargeCapacity = 50, WaterChargeRate = NormalizeConsumedAmount(Config.UtilityGridWaterTankWaterConsumed), WaterDischargeRate = NormalizeProducedAmount(Config.UtilityGridWaterTankWaterProduced), FillWaterFromRain = true }, ItemId("UtilityGridWaterTank"));
+        AddObjectRuleIfEnabled(Config.EnableSprinklerRule, new UtilityObjectRule { Water = -NormalizeConsumedAmount(Config.SprinklerWaterConsumed) }, "(BC)599", "599", "Sprinkler");
+        AddObjectRuleIfEnabled(Config.EnableQualitySprinklerRule, new UtilityObjectRule { Water = -NormalizeConsumedAmount(Config.QualitySprinklerWaterConsumed) }, "(BC)621", "621", "Quality Sprinkler");
+        AddObjectRuleIfEnabled(Config.EnableIridiumSprinklerRule, new UtilityObjectRule { Water = -NormalizeConsumedAmount(Config.IridiumSprinklerWaterConsumed), Power = -NormalizeConsumedAmount(Config.IridiumSprinklerPowerConsumed) }, "(BC)645", "645", "Iridium Sprinkler");
+        AddObjectRuleIfEnabled(Config.EnableCobaltSprinklerRule, new UtilityObjectRule { Water = -NormalizeConsumedAmount(Config.CobaltSprinklerWaterConsumed), Power = -NormalizeConsumedAmount(Config.CobaltSprinklerPowerConsumed) }, "(O)ThaleTheGreat.ToolAndSprinklerUpgrades_CobaltSprinkler", "ThaleTheGreat.ToolAndSprinklerUpgrades_CobaltSprinkler", "Cobalt Sprinkler");
+        AddObjectRuleIfEnabled(Config.EnablePrismaticSprinklerRule, new UtilityObjectRule { Water = -NormalizeConsumedAmount(Config.PrismaticSprinklerWaterConsumed), Power = -NormalizeConsumedAmount(Config.PrismaticSprinklerPowerConsumed) }, "(O)ThaleTheGreat.ToolAndSprinklerUpgrades_PrismaticSprinkler", "ThaleTheGreat.ToolAndSprinklerUpgrades_PrismaticSprinkler", "Prismatic Sprinkler");
+        AddObjectRuleIfEnabled(Config.EnableRadioactiveSprinklerRule, new UtilityObjectRule { Water = -NormalizeConsumedAmount(Config.RadioactiveSprinklerWaterConsumed), Power = -NormalizeConsumedAmount(Config.RadioactiveSprinklerPowerConsumed) }, "(O)ThaleTheGreat.ToolAndSprinklerUpgrades_RadioactiveSprinkler", "ThaleTheGreat.ToolAndSprinklerUpgrades_RadioactiveSprinkler", "Radioactive Sprinkler");
+        AddObjectRuleIfEnabled(Config.EnableFurnaceRule, new UtilityObjectRule { Power = NormalizeProducedAmount(Config.FurnacePowerProduced), MustBeWorking = true, MustBeFull = true }, "(BC)13", "13", "Furnace");
+        AddObjectRuleIfEnabled(Config.EnableCharcoalKilnRule, new UtilityObjectRule { Power = NormalizeProducedAmount(Config.CharcoalKilnPowerProduced), MustBeWorking = true, MustBeFull = true }, "(BC)114", "114", "Charcoal Kiln");
+        AddObjectRuleIfEnabled(Config.EnableSolarPanelRule, new UtilityObjectRule { Power = NormalizeProducedAmount(Config.SolarPanelPowerProduced), MustHaveSun = true }, "(BC)231", "231", "Solar Panel");
+        AddObjectRuleIfEnabled(Config.EnableCrystalariumRule, new UtilityObjectRule { Power = -NormalizeConsumedAmount(Config.CrystalariumPowerConsumed), MustBeWorking = true, MustBeFull = true }, "(BC)21", "21", "Crystalarium");
+        AddObjectRuleIfEnabled(Config.EnableRecyclingMachineRule, new UtilityObjectRule { Power = -NormalizeConsumedAmount(Config.RecyclingMachinePowerConsumed), MustBeWorking = true, MustBeFull = true }, "(BC)20", "20", "Recycling Machine");
+        AddObjectRuleIfEnabled(Config.EnableSlimeIncubatorRule, new UtilityObjectRule { Power = -NormalizeConsumedAmount(Config.SlimeIncubatorPowerConsumed), MustBeWorking = true, MustBeFull = true }, "(BC)156", "156", "Slime Incubator");
+        AddObjectRuleIfEnabled(Config.EnableWoodChipperRule, new UtilityObjectRule { Power = -NormalizeConsumedAmount(Config.WoodChipperPowerConsumed), MustBeWorking = true, MustBeFull = true }, "(BC)211", "211", "Wood Chipper");
+        AddObjectRuleIfEnabled(Config.EnableOstrichIncubatorRule, new UtilityObjectRule { Power = -NormalizeConsumedAmount(Config.OstrichIncubatorPowerConsumed), MustBeWorking = true, MustBeFull = true }, "(BC)254", "254", "Ostrich Incubator");
+        AddObjectRuleIfEnabled(Config.EnableDeconstructorRule, new UtilityObjectRule { Power = -NormalizeConsumedAmount(Config.DeconstructorPowerConsumed), MustBeWorking = true, MustBeFull = true }, "(BC)265", "265", "Deconstructor");
+        AddObjectRuleIfEnabled(Config.EnableSodaMachineRule, new UtilityObjectRule { Power = -NormalizeConsumedAmount(Config.SodaMachinePowerConsumed), MustBeWorking = true, MustBeFull = true }, "(BC)117", "117", "Soda Machine");
+        AddObjectRuleIfEnabled(Config.EnableCoffeeMakerRule, new UtilityObjectRule { Power = -NormalizeConsumedAmount(Config.CoffeeMakerPowerConsumed), MustBeWorking = true, MustBeFull = true }, "(BC)246", "246", "Coffee Maker");
+        AddObjectRuleIfEnabled(Config.EnableHeavyFurnaceRule, new UtilityObjectRule { Power = -NormalizeConsumedAmount(Config.HeavyFurnacePowerConsumed), MustBeWorking = true, MustBeFull = true }, "Heavy Furnace");
+        AddObjectRuleIfEnabled(Config.EnableGeodeCrusherRule, new UtilityObjectRule { Power = -NormalizeConsumedAmount(Config.GeodeCrusherPowerConsumed), MustBeWorking = true, MustBeFull = true }, "Geode Crusher");
+        AddObjectRuleIfEnabled(Config.EnableMiniForgeRule, new UtilityObjectRule { Power = -NormalizeConsumedAmount(Config.MiniForgePowerConsumed), MustBeWorking = true, MustBeFull = true }, "Mini-Forge");
+        AddObjectRuleIfEnabled(Config.EnableBaitMakerRule, new UtilityObjectRule { Power = -NormalizeConsumedAmount(Config.BaitMakerPowerConsumed), MustBeWorking = true, MustBeFull = true }, "Bait Maker");
+        AddObjectRuleIfEnabled(Config.EnableBoneMillRule, new UtilityObjectRule { Power = -NormalizeConsumedAmount(Config.BoneMillPowerConsumed), MustBeWorking = true, MustBeFull = true }, "Bone Mill");
+        AddObjectRuleIfEnabled(Config.EnableSlimeEggPressRule, new UtilityObjectRule { Power = -NormalizeConsumedAmount(Config.SlimeEggPressPowerConsumed), MustBeWorking = true, MustBeFull = true }, "Slime Egg-Press");
+        AddObjectRuleIfEnabled(Config.EnableSeedMakerRule, new UtilityObjectRule { Power = -NormalizeConsumedAmount(Config.SeedMakerPowerConsumed), MustBeWorking = true, MustBeFull = true }, "Seed Maker");
+        AddObjectRuleIfEnabled(Config.EnableDehydratorRule, new UtilityObjectRule { Power = -NormalizeConsumedAmount(Config.DehydratorPowerConsumed), MustBeWorking = true, MustBeFull = true }, "Dehydrator");
+        AddObjectRuleIfEnabled(Config.EnableFishSmokerRule, new UtilityObjectRule { Power = -NormalizeConsumedAmount(Config.FishSmokerPowerConsumed), MustBeWorking = true, MustBeFull = true }, "Fish Smoker");
+        AddObjectRuleIfEnabled(Config.EnableOilMakerRule, new UtilityObjectRule { Power = -NormalizeConsumedAmount(Config.OilMakerPowerConsumed), MustBeWorking = true, MustBeFull = true }, "Oil Maker");
+        AddObjectRuleIfEnabled(Config.EnableLoomRule, new UtilityObjectRule { Power = -NormalizeConsumedAmount(Config.LoomPowerConsumed), MustBeWorking = true, MustBeFull = true }, "Loom");
+        AddObjectRuleIfEnabled(Config.EnableMayonnaiseMachineRule, new UtilityObjectRule { Power = -NormalizeConsumedAmount(Config.MayonnaiseMachinePowerConsumed), MustBeWorking = true, MustBeFull = true }, "Mayonnaise Machine");
+        AddObjectRuleIfEnabled(Config.EnableCheesePressRule, new UtilityObjectRule { Power = -NormalizeConsumedAmount(Config.CheesePressPowerConsumed), MustBeWorking = true, MustBeFull = true }, "Cheese Press");
+        AddObjectRuleIfEnabled(Config.EnableHopperRule, new UtilityObjectRule { Power = -NormalizeConsumedAmount(Config.HopperPowerConsumed) }, "Hopper");
+        AddObjectRuleIfEnabled(Config.EnableFarmComputerRule, new UtilityObjectRule { Power = -NormalizeConsumedAmount(Config.FarmComputerPowerConsumed) }, "Farm Computer");
+        AddObjectRuleIfEnabled(Config.EnableTelephoneRule, new UtilityObjectRule { Power = -NormalizeConsumedAmount(Config.TelephonePowerConsumed) }, "Telephone");
+        AddObjectRuleIfEnabled(Config.EnableSewingMachineRule, new UtilityObjectRule { Power = -NormalizeConsumedAmount(Config.SewingMachinePowerConsumed), MustBeWorking = true, MustBeFull = true }, "Sewing Machine");
+        AddObjectRuleIfEnabled(Config.EnableMiniJukeboxRule, new UtilityObjectRule { Power = -NormalizeConsumedAmount(Config.MiniJukeboxPowerConsumed) }, "Mini-Jukebox");
+        AddContentPackRules();
+    }
 
+    private static void NormalizeContentPackConfig()
+    {
+        EnsureContentPackConfigEntries();
+
+        foreach (LoadedContentPackRule loaded in ContentPackRules)
+        {
+            ContentPackRuleConfig config = GetContentPackRuleConfig(loaded);
+            config.WaterProduced = NormalizeOptionalProduced(config.WaterProduced);
+            config.WaterConsumed = NormalizeOptionalConsumed(config.WaterConsumed);
+            config.PowerProduced = NormalizeOptionalProduced(config.PowerProduced);
+            config.PowerConsumed = NormalizeOptionalConsumed(config.PowerConsumed);
+        }
+    }
+
+    private static int? NormalizeOptionalProduced(int? value)
+    {
+        return value.HasValue ? NormalizeProducedAmount(value.Value) : null;
+    }
+
+    private static int? NormalizeOptionalConsumed(int? value)
+    {
+        return value.HasValue ? NormalizeConsumedAmount(value.Value) : null;
+    }
+
+    private static ContentPackRuleConfig GetContentPackRuleConfig(LoadedContentPackRule loaded)
+    {
+        Config.ContentPackMachineRules ??= new Dictionary<string, ContentPackRuleConfig>(StringComparer.OrdinalIgnoreCase);
+
+        if (!Config.ContentPackMachineRules.TryGetValue(loaded.ConfigKey, out ContentPackRuleConfig? config) || config is null)
+        {
+            config = new ContentPackRuleConfig();
+            Config.ContentPackMachineRules[loaded.ConfigKey] = config;
+        }
+
+        return config;
+    }
+
+    private static bool RuleUsesWaterProduced(UtilityGridContentPackRule rule)
+    {
+        return rule.WaterProduced.HasValue || rule.WaterDischargeProduced.HasValue;
+    }
+
+    private static bool RuleUsesWaterConsumed(UtilityGridContentPackRule rule)
+    {
+        return rule.WaterConsumed.HasValue || rule.WaterChargeConsumed.HasValue;
+    }
+
+    private static bool RuleUsesPowerProduced(UtilityGridContentPackRule rule)
+    {
+        return rule.PowerProduced.HasValue || rule.PowerDischargeProduced.HasValue;
+    }
+
+    private static bool RuleUsesPowerConsumed(UtilityGridContentPackRule rule)
+    {
+        return rule.PowerConsumed.HasValue || rule.PowerChargeConsumed.HasValue;
+    }
+
+    private static int GetContentPackWaterProduced(LoadedContentPackRule loaded)
+    {
+        return NormalizeProducedAmount(GetContentPackRuleConfig(loaded).WaterProduced ?? loaded.Rule.WaterProduced ?? loaded.Rule.WaterDischargeProduced ?? MinProducedAmount);
+    }
+
+    private static int GetContentPackWaterConsumed(LoadedContentPackRule loaded)
+    {
+        return NormalizeConsumedAmount(GetContentPackRuleConfig(loaded).WaterConsumed ?? loaded.Rule.WaterConsumed ?? loaded.Rule.WaterChargeConsumed ?? MinConsumedAmount);
+    }
+
+    private static int GetContentPackPowerProduced(LoadedContentPackRule loaded)
+    {
+        return NormalizeProducedAmount(GetContentPackRuleConfig(loaded).PowerProduced ?? loaded.Rule.PowerProduced ?? loaded.Rule.PowerDischargeProduced ?? MinProducedAmount);
+    }
+
+    private static int GetContentPackPowerConsumed(LoadedContentPackRule loaded)
+    {
+        return NormalizeConsumedAmount(GetContentPackRuleConfig(loaded).PowerConsumed ?? loaded.Rule.PowerConsumed ?? loaded.Rule.PowerChargeConsumed ?? MinConsumedAmount);
+    }
+
+    private static void AddContentPackRules()
+    {
+        foreach (LoadedContentPackRule loaded in ContentPackRules)
+        {
+            ContentPackRuleConfig config = GetContentPackRuleConfig(loaded);
+            if (!config.Enabled)
+                continue;
+
+            UtilityObjectRule rule = CreateContentPackObjectRule(loaded);
+            string[] keys = GetContentPackRuleKeys(loaded).ToArray();
+            AddObjectRule(rule, keys);
+        }
+    }
+
+    private static UtilityObjectRule CreateContentPackObjectRule(LoadedContentPackRule loaded)
+    {
+        UtilityGridContentPackRule source = loaded.Rule;
+        int waterProduced = GetContentPackWaterProduced(loaded);
+        int waterConsumed = GetContentPackWaterConsumed(loaded);
+        int powerProduced = GetContentPackPowerProduced(loaded);
+        int powerConsumed = GetContentPackPowerConsumed(loaded);
+
+        return new UtilityObjectRule
+        {
+            Water = source.WaterProduced.HasValue ? waterProduced : source.WaterConsumed.HasValue ? -waterConsumed : 0,
+            Power = source.PowerProduced.HasValue ? powerProduced : source.PowerConsumed.HasValue ? -powerConsumed : 0,
+            MustBeOn = source.MustBeOn,
+            OnlyMorning = source.OnlyMorning,
+            OnlyDay = source.OnlyDay,
+            OnlyNight = source.OnlyNight,
+            MustBeFull = source.MustBeFull,
+            MustNeedOther = source.MustNeedOther,
+            MustContain = source.MustContain,
+            MustBeWorking = source.MustBeWorking,
+            OnlyInWater = source.OnlyInWater,
+            MustHaveSun = source.MustHaveSun,
+            MustHaveRain = source.MustHaveRain,
+            MustHaveLightning = source.MustHaveLightning,
+            WaterChargeCapacity = Math.Max(0, source.WaterChargeCapacity),
+            PowerChargeCapacity = Math.Max(0, source.PowerChargeCapacity),
+            WaterChargeRate = source.WaterChargeConsumed.HasValue ? waterConsumed : 0,
+            PowerChargeRate = source.PowerChargeConsumed.HasValue ? powerConsumed : 0,
+            WaterDischargeRate = source.WaterDischargeProduced.HasValue ? waterProduced : 0,
+            PowerDischargeRate = source.PowerDischargeProduced.HasValue ? powerProduced : 0,
+            FillWaterFromRain = source.FillWaterFromRain
+        };
+    }
+
+    private static IEnumerable<string> GetContentPackRuleKeys(LoadedContentPackRule loaded)
+    {
+        foreach (string key in loaded.Rule.Keys)
+        {
+            foreach (string expanded in ExpandContentPackRuleKey(key))
+                yield return expanded;
+        }
+
+        if (!string.IsNullOrWhiteSpace(loaded.Rule.DisplayName))
+            yield return loaded.Rule.DisplayName;
+    }
+
+    private static IEnumerable<string> ExpandContentPackRuleKey(string key)
+    {
+        if (string.IsNullOrWhiteSpace(key))
+            yield break;
+
+        string trimmed = key.Trim();
+        yield return trimmed;
+
+        int qualifierEnd = trimmed.IndexOf(')');
+        if (trimmed.StartsWith("(", StringComparison.Ordinal) && qualifierEnd >= 0 && qualifierEnd + 1 < trimmed.Length)
+            yield return trimmed[(qualifierEnd + 1)..];
+    }
+
+    private static void AddContentPackTooltipNotes(Dictionary<string, string> notes)
+    {
+        foreach (LoadedContentPackRule loaded in ContentPackRules)
+        {
+            ContentPackRuleConfig config = GetContentPackRuleConfig(loaded);
+            if (!config.Enabled || !loaded.Rule.AddTooltip)
+                continue;
+
+            string note = BuildContentPackRuleDescription(loaded);
+            if (string.IsNullOrWhiteSpace(note))
+                continue;
+
+            foreach (string key in GetContentPackRuleKeys(loaded))
+                AddTooltipNote(notes, true, key, note);
+        }
+    }
+
+    private static string BuildContentPackRuleDescription(LoadedContentPackRule loaded)
+    {
+        UtilityGridContentPackRule rule = loaded.Rule;
+        List<string> parts = new();
+
+        if (rule.WaterProduced.HasValue)
+            parts.Add(ProducedDescription(GetContentPackWaterProduced(loaded), "water"));
+        if (rule.WaterConsumed.HasValue)
+            parts.Add(ConsumedDescription(GetContentPackWaterConsumed(loaded), "water"));
+        if (rule.PowerProduced.HasValue)
+            parts.Add(ProducedDescription(GetContentPackPowerProduced(loaded), "power"));
+        if (rule.PowerConsumed.HasValue)
+            parts.Add(ConsumedDescription(GetContentPackPowerConsumed(loaded), "power"));
+
+        if (rule.WaterChargeCapacity > 0 || rule.WaterChargeConsumed.HasValue || rule.WaterDischargeProduced.HasValue)
+            parts.Add(StorageDescription(Math.Max(0, rule.WaterChargeCapacity), "water", GetContentPackWaterConsumed(loaded), GetContentPackWaterProduced(loaded)));
+
+        if (rule.PowerChargeCapacity > 0 || rule.PowerChargeConsumed.HasValue || rule.PowerDischargeProduced.HasValue)
+            parts.Add(StorageDescription(Math.Max(0, rule.PowerChargeCapacity), "power", GetContentPackPowerConsumed(loaded), GetContentPackPowerProduced(loaded)));
+
+        return string.Join(" ", parts);
     }
 
     private static void DebugLog(string message)
