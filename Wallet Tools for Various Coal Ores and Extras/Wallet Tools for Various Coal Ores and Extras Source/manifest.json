@@ -1,0 +1,26 @@
+{
+  "Name": "Wallet Tools for Various Coal Ores and Extras",
+  "Author": "ThaleTheGreat",
+  "Version": "1.0.0",
+  "Description": "Lets Wallet Tools to work with Various Coal Ores and Extras.",
+  "UniqueID": "ThaleTheGreat.WalletToolsForVariousCoalOresAndExtras",
+  "EntryDll": "WalletToolsForVariousCoalOresAndExtras.dll",
+  "MinimumApiVersion": "4.0.0",
+  "UpdateKeys": [
+    "Nexus:48560"
+  ],
+  "Dependencies": [
+    {
+      "UniqueID": "ThaleTheGreat.WalletTools",
+      "IsRequired": true
+    },
+    {
+      "UniqueID": "mistyspring.ItemExtensions",
+      "IsRequired": true
+    },
+    {
+      "UniqueID": "6135.VariousCoalOresExtras",
+      "IsRequired": true
+    }
+  ]
+}

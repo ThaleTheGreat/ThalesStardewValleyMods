@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using HarmonyLib;
@@ -10,33 +11,43 @@ using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
-using StardewValley.Characters;
 using StardewValley.GameData.Powers;
-using StardewValley.Locations;
 using StardewValley.Tools;
 
-namespace ThaleTheGreat.WalletToolsForAnimalHusbandry;
+namespace ThaleTheGreat.WalletToolsForNatureInTheValley;
 
 public sealed class ModEntry : Mod
 {
     private static ModEntry? Instance;
-    private const string LegacySaveDataKey = "WalletToolsForAnimalHusbandry.MeatTool";
-    private const string MeatToolItemId = "DIGUS.ANIMALHUSBANDRYMOD.MeatCleaver";
-    private const string MeatToolQualifiedItemId = "(T)DIGUS.ANIMALHUSBANDRYMOD.MeatCleaver";
-    private const string MeatToolModDataKey = "DIGUS.ANIMALHUSBANDRYMOD/MeatCleaver";
-    private const string WalletPowerId = "ThaleTheGreat.WalletTools_AnimalHusbandryMeatTool";
-    private const string HasMeatToolFlag = "ThaleTheGreat.WalletToolsForAnimalHusbandry/HasMeatTool";
-    private const string RuntimeToolMarker = "ThaleTheGreat.WalletToolsForAnimalHusbandry/RuntimeTool";
-    private const string RuntimeOwnerMarker = "ThaleTheGreat.WalletToolsForAnimalHusbandry/OwnerPlayerId";
-    private const string OvernightExposureMarker = "ThaleTheGreat.WalletToolsForAnimalHusbandry/OvernightExposure";
-    private const string ToolTexturePath = "Mods/DIGUS.ANIMALHUSBANDRYMOD/Tools";
+    private const string LegacySaveDataKey = "WalletToolsForNatureInTheValley.NatureNet";
+    private const string NatureModUniqueId = "Nature.NatureInTheValley";
+    private const string NatureEntryTypeName = "NatureInTheValley.NatureInTheValleyEntry, NatureInTheValley";
+    private const string AssetPrefix = "Mods/ThaleTheGreat.WalletToolsForNatureInTheValley";
+    private const string WalletPowerId = "ThaleTheGreat.WalletTools_NatureInTheValleyNet";
+    private const string HasNatureNetFlag = "ThaleTheGreat.WalletToolsForNatureInTheValley/HasNatureNet";
+    private const string RuntimeToolMarker = "ThaleTheGreat.WalletToolsForNatureInTheValley/RuntimeTool";
+    private const string RuntimeOwnerMarker = "ThaleTheGreat.WalletToolsForNatureInTheValley/OwnerPlayerId";
+    private const string OvernightExposureMarker = "ThaleTheGreat.WalletToolsForNatureInTheValley/OvernightExposure";
+    private const string NatureNetInstanceIdMarker = "ThaleTheGreat.WalletToolsForNatureInTheValley/NetInstanceId";
+    private const string NatureNetSpeedBuffId = "NatCSpeedN";
+    private const string WalletToolsRuntimeToolMarker = "ThaleTheGreat.WalletTools/RuntimeTool";
+    private const string WalletToolsOwnerPlayerIdMarker = "ThaleTheGreat.WalletTools/OwnerPlayerId";
+    private const string WalletToolsModEntryTypeName = "ThaleTheGreat.WalletTools.ModEntry, WalletTools";
+
+    private static readonly NetDefinition[] NetDefinitions =
+    {
+        new("NIVNet", "(T)NIVNet", 0, "Nature Net", AssetPrefix + "/NormalNet", "NormalNet.png", "NatureInTheValley.NatInValeyNet"),
+        new("NIVSaphNet", "(T)NIVSaphNet", 1, "Sapphire Nature Net", AssetPrefix + "/SaphireNet", "SaphireNet.png", "NatureInTheValley.NatInValeySaphNet"),
+        new("NIVGoldNet", "(T)NIVGoldNet", 2, "Golden Nature Net", AssetPrefix + "/GoldenNet", "GoldenNet.png", "NatureInTheValley.NatInValeyGoldenNet"),
+        new("NIVJadeNet", "(T)NIVJadeNet", 3, "Jade Nature Net", AssetPrefix + "/JadeNet", "JadeNet.png", "NatureInTheValley.NatInValeyJadeNet", "NIVjadeNet", "(T)NIVjadeNet")
+    };
 
     private ModConfig Config = new();
     private Harmony Harmony = null!;
     private bool GmcmRegistered;
     private bool GmcmMissingLogged;
-    private readonly Dictionary<long, MeatToolState?> StoredToolByPlayer = new();
-    private MeatToolState? StoredTool
+    private readonly Dictionary<long, NatureNetState?> StoredToolByPlayer = new();
+    private NatureNetState? StoredTool
     {
         get => GetStoredTool(Game1.player);
         set => SetStoredTool(Game1.player, value);
@@ -98,6 +109,14 @@ public sealed class ModEntry : Mod
         MethodInfo? pressUseToolPrefix = AccessTools.Method(typeof(PressUseToolButtonPatch), nameof(PressUseToolButtonPatch.Prefix));
         if (pressUseTool is not null && pressUseToolPrefix is not null)
             Harmony.Patch(pressUseTool, prefix: new HarmonyMethod(pressUseToolPrefix));
+
+        Type? walletToolsEntryType = AccessTools.TypeByName("ThaleTheGreat.WalletTools.ModEntry");
+        MethodInfo? walletToolsPrepareUse = walletToolsEntryType is null
+            ? null
+            : AccessTools.Method(walletToolsEntryType, "TryPrepareWalletToolUse", new[] { typeof(Farmer) });
+        MethodInfo? walletToolsPrepareUsePrefix = AccessTools.Method(typeof(WalletToolsPrepareWalletToolUsePatch), nameof(WalletToolsPrepareWalletToolUsePatch.Prefix));
+        if (walletToolsPrepareUse is not null && walletToolsPrepareUsePrefix is not null)
+            Harmony.Patch(walletToolsPrepareUse, prefix: new HarmonyMethod(walletToolsPrepareUsePrefix));
     }
 
     private static long GetWalletOwnerId(Farmer? player)
@@ -105,13 +124,13 @@ public sealed class ModEntry : Mod
         return player?.UniqueMultiplayerID ?? 0L;
     }
 
-    private MeatToolState? GetStoredTool(Farmer? player)
+    private NatureNetState? GetStoredTool(Farmer? player)
     {
-        StoredToolByPlayer.TryGetValue(GetWalletOwnerId(player), out MeatToolState? state);
+        StoredToolByPlayer.TryGetValue(GetWalletOwnerId(player), out NatureNetState? state);
         return state;
     }
 
-    private void SetStoredTool(Farmer? player, MeatToolState? state)
+    private void SetStoredTool(Farmer? player, NatureNetState? state)
     {
         long ownerId = GetWalletOwnerId(player);
         if (state is null)
@@ -140,23 +159,38 @@ public sealed class ModEntry : Mod
 
     private void OnAssetRequested(object? sender, AssetRequestedEventArgs e)
     {
-        if (!e.NameWithoutLocale.IsEquivalentTo("Data/Powers") || !Context.IsWorldReady || !IsMeatToolEnabled())
+        foreach (NetDefinition definition in NetDefinitions)
+        {
+            if (e.NameWithoutLocale.IsEquivalentTo(definition.TextureAssetPath))
+            {
+                e.LoadFrom(() => LoadEmbeddedTexture(definition.EmbeddedTextureName), AssetLoadPriority.Exclusive);
+                return;
+            }
+        }
+
+        if (!e.NameWithoutLocale.IsEquivalentTo("Data/Powers") || !Context.IsWorldReady || !IsNatureNetEnabled())
             return;
 
         e.Edit(asset =>
         {
             IDictionary<string, PowersData> powers = asset.AsDictionary<string, PowersData>().Data;
-            MeatToolState state = GetStoredTool(Game1.player) ?? MeatToolState.CreatePlaceholder(Monitor);
-            MeatToolIconData icon = state.GetIconData(Monitor);
+            NatureNetState state = GetStoredTool(Game1.player) ?? NatureNetState.CreatePlaceholder(Monitor);
+            NatureNetIconData icon = state.GetIconData(Monitor);
             powers[WalletPowerId] = new PowersData
             {
                 DisplayName = state.GetDisplayName(Monitor),
                 Description = state.GetDescription(Monitor),
                 TexturePath = icon.TexturePath,
                 TexturePosition = icon.TexturePosition,
-                UnlockedCondition = $"PLAYER_MOD_DATA Current {HasMeatToolFlag} true"
+                UnlockedCondition = $"PLAYER_MOD_DATA Current {HasNatureNetFlag} true"
             };
         });
+    }
+
+    private static Texture2D LoadEmbeddedTexture(string fileName)
+    {
+        using MemoryStream stream = new(EmbeddedAssets.GetBytes(fileName));
+        return Texture2D.FromStream(Game1.graphics.GraphicsDevice, stream);
     }
 
     private void RegisterGmcm()
@@ -169,7 +203,7 @@ public sealed class ModEntry : Mod
         {
             if (!GmcmMissingLogged)
             {
-                Monitor.Log("Generic Mod Config Menu was not detected. Wallet Tools for Animal Husbandry settings remain available through config.json.", LogLevel.Warn);
+                Monitor.Log("Generic Mod Config Menu was not detected. Wallet Tools for Nature in the Valley settings remain available through config.json.", LogLevel.Warn);
                 GmcmMissingLogged = true;
             }
             return;
@@ -179,18 +213,18 @@ public sealed class ModEntry : Mod
         {
             gmcm.Unregister(ModManifest);
             gmcm.Register(ModManifest, ResetConfig, SaveConfig);
-            AddBool(gmcm, nameof(Config.ModEnabled), () => Config.ModEnabled, SetModEnabled, "Mod Enabled", "Enables Wallet Tools for Animal Husbandry.");
-            AddBool(gmcm, nameof(Config.AutoUseEnabled), () => Config.AutoUseEnabled, value => SetAutoUseMasterEnabled(value, false), "Enable Auto Use", "Automatically supplies the stored Meat Cleaver or Meat Wand when using it on a nearby farm animal. Manual hotkey use still works when this is disabled.");
-            AddBool(gmcm, nameof(Config.RequireLeftControlForAutoUse), () => Config.RequireLeftControlForAutoUse, value => Config.RequireLeftControlForAutoUse = value, "Require Left Ctrl + Click", "Require Left Ctrl to be held while clicking an animal before the wallet Meat Cleaver or Meat Wand is supplied automatically.");
-            AddBool(gmcm, nameof(Config.PlayToolSwapSound), () => Config.PlayToolSwapSound, value => Config.PlayToolSwapSound = value, "Play Tool Swap Sound", "Play the Wallet Tools swap sound when the meat tool is readied.");
-            AddBool(gmcm, nameof(Config.ShowHudMessageWhenStored), () => Config.ShowHudMessageWhenStored, value => Config.ShowHudMessageWhenStored = value, "Show Stored Message", "Show a HUD message when the Meat Cleaver or Meat Wand is moved to the wallet.");
-            AddKeybind(gmcm, nameof(Config.ToggleAutoUseHotkey), () => Config.ToggleAutoUseHotkey, value => Config.ToggleAutoUseHotkey = value, "Toggle Auto Use", "Hotkey to toggle automatic Animal Husbandry wallet use on or off.");
-            AddKeybind(gmcm, nameof(Config.UseMeatToolHotkey), () => Config.UseMeatToolHotkey, value => Config.UseMeatToolHotkey = value, "Use Meat Tool", "Immediately use the wallet Meat Cleaver or Meat Wand.");
+            AddBool(gmcm, nameof(Config.ModEnabled), () => Config.ModEnabled, SetModEnabled, "Mod Enabled", "Enables Wallet Tools for Nature in the Valley.");
+            AddBool(gmcm, nameof(Config.AutoUseEnabled), () => Config.AutoUseEnabled, value => SetAutoUseMasterEnabled(value, false), "Enable Auto Use", "Automatically supplies the stored Nature in the Valley net when using it on a nearby Nature in the Valley creature. Manual hotkey use still works when this is disabled.");
+            AddBool(gmcm, nameof(Config.RequireLeftShiftForAutoUse), () => Config.RequireLeftShiftForAutoUse, value => Config.RequireLeftShiftForAutoUse = value, "Require Left Shift + Click", "Require Left Shift to be held while clicking near a Nature in the Valley creature before the wallet Nature in the Valley net is supplied automatically.");
+            AddBool(gmcm, nameof(Config.PlayToolSwapSound), () => Config.PlayToolSwapSound, value => Config.PlayToolSwapSound = value, "Play Tool Swap Sound", "Play the Wallet Tools swap sound when the nature net is readied.");
+            AddBool(gmcm, nameof(Config.ShowHudMessageWhenStored), () => Config.ShowHudMessageWhenStored, value => Config.ShowHudMessageWhenStored = value, "Show Stored Message", "Show a HUD message when the Nature in the Valley net is moved to the wallet.");
+            AddKeybind(gmcm, nameof(Config.ToggleAutoUseHotkey), () => Config.ToggleAutoUseHotkey, value => Config.ToggleAutoUseHotkey = value, "Toggle Auto Use", "Hotkey to toggle automatic Nature in the Valley wallet use on or off.");
+            AddKeybind(gmcm, nameof(Config.UseNatureNetHotkey), () => Config.UseNatureNetHotkey, value => Config.UseNatureNetHotkey = value, "Use Nature Net", "Immediately use the wallet Nature in the Valley net.");
             GmcmRegistered = true;
         }
         catch (Exception ex)
         {
-            Monitor.Log($"Failed to register Wallet Tools for Animal Husbandry options with Generic Mod Config Menu: {ex}", LogLevel.Error);
+            Monitor.Log($"Failed to register Wallet Tools for Nature in the Valley options with Generic Mod Config Menu: {ex}", LogLevel.Error);
         }
     }
 
@@ -222,7 +256,7 @@ public sealed class ModEntry : Mod
         if (!Context.IsWorldReady)
             return;
 
-        if (!IsMeatToolEnabled())
+        if (!IsNatureNetEnabled())
             MaterializeStoredToolToInventory(Game1.player, true);
 
         ReconcileLoadedToolState(Game1.player);
@@ -268,7 +302,7 @@ public sealed class ModEntry : Mod
                 RestoreTemporaryTool(Game1.player);
 
             if (showMessage)
-                Game1.addHUDMessage(new HUDMessage(enabled ? "Animal Husbandry wallet auto use enabled." : "Animal Husbandry wallet auto use disabled.", HUDMessage.newQuest_type));
+                Game1.addHUDMessage(new HUDMessage(enabled ? "Nature in the Valley wallet auto use enabled." : "Nature in the Valley wallet auto use disabled.", HUDMessage.newQuest_type));
         }
 
         Helper.WriteConfig(Config);
@@ -280,11 +314,11 @@ public sealed class ModEntry : Mod
 
         if (Context.IsMainPlayer)
         {
-            MeatToolState? legacyState = Helper.Data.ReadSaveData<MeatToolState>(LegacySaveDataKey);
+            NatureNetState? legacyState = Helper.Data.ReadSaveData<NatureNetState>(LegacySaveDataKey);
             if (legacyState is not null)
                 SetStoredTool(Game1.player, legacyState);
 
-            Helper.Data.WriteSaveData<MeatToolState>(LegacySaveDataKey, null);
+            Helper.Data.WriteSaveData<NatureNetState>(LegacySaveDataKey, null);
         }
 
         if (!Config.ModEnabled)
@@ -365,23 +399,25 @@ public sealed class ModEntry : Mod
         }
 
         if (Config.ModEnabled && e.IsMultipleOf(300))
-            ScanLostFoundForMeatTool();
+            ScanLostFoundForNatureNet();
     }
 
     private void UpdatePendingTemporaryToolUse()
     {
-        if (PendingToolUse is null)
+        TemporaryToolUse? pending = PendingToolUse;
+        if (pending is null)
             return;
 
+        Farmer player = Game1.player;
         if (PendingManualUseHotkey.HasValue)
         {
             if (IsManualHotkeyPhysicallyHeld())
-                UpdateManualWalletToolCharge(Game1.player);
+                UpdateManualWalletToolCharge(player);
             else
-                FinishManualWalletToolHotkeyUse(Game1.player);
+                FinishManualWalletToolHotkeyUse(player);
         }
-        else if (!IsPlayerUsingTool(Game1.player))
-            RestoreTemporaryTool(Game1.player);
+        else if (!player.UsingTool && !IsTemporaryNatureNetUseInProgress(player, pending))
+            RestoreTemporaryTool(player);
     }
 
     private void OnInventoryChanged(object? sender, InventoryChangedEventArgs e)
@@ -413,7 +449,7 @@ public sealed class ModEntry : Mod
         if (Game1.activeClickableMenu is not null || !Context.CanPlayerMove)
             return;
 
-        if (Config.UseMeatToolHotkey.JustPressed())
+        if (Config.UseNatureNetHotkey.JustPressed())
         {
             Helper.Input.Suppress(e.Button);
             TryUseWalletToolHotkey(Game1.player, e.Button);
@@ -426,7 +462,16 @@ public sealed class ModEntry : Mod
 
     private void OnButtonReleased(object? sender, ButtonReleasedEventArgs e)
     {
-        if (!Context.IsWorldReady || PendingManualUseHotkey != e.Button)
+        if (!Context.IsWorldReady)
+            return;
+
+        if (PendingToolUse is not null && PendingManualUseHotkey is null && IsAutoUseReleaseTrigger(e.Button))
+        {
+            TryReleaseTemporaryNatureNetUse(Game1.player);
+            return;
+        }
+
+        if (PendingManualUseHotkey != e.Button)
             return;
 
         if (IsManualHotkeyPhysicallyHeld())
@@ -437,7 +482,7 @@ public sealed class ModEntry : Mod
 
     private void TryUseWalletToolHotkey(Farmer player, SButton pressedButton)
     {
-        if (!IsMeatToolEnabled() || GetStoredTool(player) is null)
+        if (!IsNatureNetEnabled() || GetStoredTool(player) is null)
             return;
 
         if (!TrySetTemporaryWalletTool(player))
@@ -470,11 +515,11 @@ public sealed class ModEntry : Mod
         else if (PendingToolUse is not null && player.CurrentTool is not null)
         {
             Game1.pressUseToolButton();
-            if (player.UsingTool)
+            if (!TryReleaseTemporaryNatureNetUse(player) && player.UsingTool)
                 player.EndUsingTool();
         }
 
-        if (PendingToolUse is not null && !IsPlayerUsingTool(player))
+        if (PendingToolUse is not null && !player.UsingTool && !IsTemporaryNatureNetUseInProgress(player, PendingToolUse))
             RestoreTemporaryTool(player);
     }
 
@@ -484,14 +529,14 @@ public sealed class ModEntry : Mod
             && (Helper.Input.IsDown(PendingManualUseHotkey.Value) || Helper.Input.IsSuppressed(PendingManualUseHotkey.Value));
     }
 
-    private bool IsMeatToolEnabled()
+    private bool IsNatureNetEnabled()
     {
-        return Config.ModEnabled;
+        return Config.ModEnabled && Helper.ModRegistry.IsLoaded(NatureModUniqueId);
     }
 
     private bool IsAutoUseEnabled()
     {
-        return IsMeatToolEnabled() && Config.AutoUseEnabled;
+        return IsNatureNetEnabled() && Config.AutoUseEnabled;
     }
 
 
@@ -500,13 +545,13 @@ public sealed class ModEntry : Mod
         if (PendingToolUse is not null || !IsAutoUseEnabled() || Game1.fadeToBlack || !Context.CanPlayerMove || Game1.activeClickableMenu is not null)
             return false;
 
-        if (IsMeatTool(player.CurrentItem))
+        if (IsNatureNet(player.CurrentItem))
             return false;
 
-        if (Config.RequireLeftControlForAutoUse && !Helper.Input.IsDown(SButton.LeftControl))
+        if (Config.RequireLeftShiftForAutoUse && !Helper.Input.IsDown(SButton.LeftShift) && !Helper.Input.IsSuppressed(SButton.LeftShift))
             return false;
 
-        if (!IsAnimalInToolReach(player))
+        if (!IsNatureCreatureInNetReach(player))
             return false;
 
         return TrySetTemporaryWalletTool(player);
@@ -514,15 +559,39 @@ public sealed class ModEntry : Mod
 
     private bool IsAutoUseTrigger(SButton button)
     {
-        if (!Config.RequireLeftControlForAutoUse)
+        if (!Config.RequireLeftShiftForAutoUse)
             return button is SButton.MouseLeft or SButton.ControllerA;
 
-        return button == SButton.MouseLeft && Helper.Input.IsDown(SButton.LeftControl);
+        return button == SButton.MouseLeft && Helper.Input.IsDown(SButton.LeftShift);
+    }
+
+    private static bool IsAutoUseReleaseTrigger(SButton button)
+    {
+        return button is SButton.MouseLeft or SButton.ControllerA;
+    }
+
+    private bool ShouldReservePressForNatureNet(Farmer player)
+    {
+        if (PendingToolUse is not null && IsNatureNet(PendingToolUse))
+            return true;
+
+        if (!IsAutoUseEnabled() || Game1.fadeToBlack || !Context.CanPlayerMove || Game1.activeClickableMenu is not null)
+            return false;
+
+        if (Config.RequireLeftShiftForAutoUse && !Helper.Input.IsDown(SButton.LeftShift) && !Helper.Input.IsSuppressed(SButton.LeftShift))
+            return false;
+
+        return GetStoredTool(player) is not null && IsNatureCreatureInNetReach(player);
+    }
+
+    private static bool IsNatureNet(TemporaryToolUse? pending)
+    {
+        return pending is not null && IsNatureNet(pending.TemporaryTool);
     }
 
     private bool CanConvertInventoryTools(Farmer player)
     {
-        return IsMeatToolEnabled() && PendingToolUse is null && !IsPlayerUsingTool(player);
+        return IsNatureNetEnabled() && PendingToolUse is null && !IsPlayerUsingTool(player);
     }
 
     private void ConvertInventoryTools(Farmer player)
@@ -536,10 +605,10 @@ public sealed class ModEntry : Mod
         {
             for (int i = 0; i < player.Items.Count; i++)
             {
-                if (player.Items[i] is not Tool tool || IsRuntimeTool(tool) || IsOvernightExposure(tool) || IsCurrentlySelectedItem(player, i, tool) || !IsMeatTool(tool))
+                if (player.Items[i] is not Tool tool || IsRuntimeTool(tool) || IsOvernightExposure(tool) || IsCurrentlySelectedItem(player, i, tool) || !IsNatureNet(tool))
                     continue;
 
-                SetStoredTool(player, MeatToolState.FromTool(tool));
+                StoreBestNatureNet(player, tool);
                 player.Items[i] = null;
                 changed = true;
             }
@@ -555,7 +624,7 @@ public sealed class ModEntry : Mod
         NormalizePlayerItemsAfterCleanup(player);
         RefreshWalletStateAfterStoredToolChange(player);
         if (Config.ShowHudMessageWhenStored)
-            Game1.addHUDMessage(new HUDMessage("Animal Husbandry tool moved to wallet.", HUDMessage.newQuest_type));
+            Game1.addHUDMessage(new HUDMessage("Nature in the Valley net moved to wallet.", HUDMessage.newQuest_type));
     }
 
     private void ReconcileLoadedToolState(Farmer player)
@@ -572,20 +641,20 @@ public sealed class ModEntry : Mod
 
             if (GetStoredTool(player) is not null)
             {
-                if (RemoveInventoryCopiesOfMeatTool(player))
+                if (RemoveInventoryCopiesOfNatureNet(player))
                     changed = true;
-                if (CollectLostFoundMeatTool(player))
+                if (CollectLostFoundNatureNet(player))
                     changed = true;
             }
             else
             {
-                if (TryTakeInventoryMeatTool(player, out Tool? inventoryTool))
+                if (TryTakeInventoryNatureNet(player, out Tool? inventoryTool))
                 {
-                    SetStoredTool(player, MeatToolState.FromTool(inventoryTool));
+                    StoreBestNatureNet(player, inventoryTool);
                     changed = true;
                 }
 
-                if (CollectLostFoundMeatTool(player))
+                if (CollectLostFoundNatureNet(player))
                     changed = true;
             }
         }
@@ -605,7 +674,7 @@ public sealed class ModEntry : Mod
 
     private bool MaterializeStoredToolToInventory(Farmer player, bool useOverflowMenu)
     {
-        MeatToolState? storedTool = GetStoredTool(player);
+        NatureNetState? storedTool = GetStoredTool(player);
         if (storedTool is null)
             return false;
 
@@ -637,7 +706,7 @@ public sealed class ModEntry : Mod
         InvalidatePowers();
 
         if (showMessage && returnedTool)
-            Game1.addHUDMessage(new HUDMessage("Animal Husbandry tool returned to inventory.", HUDMessage.newQuest_type));
+            Game1.addHUDMessage(new HUDMessage("Nature in the Valley net returned to inventory.", HUDMessage.newQuest_type));
     }
 
     private void ClearStoredWalletState()
@@ -658,8 +727,8 @@ public sealed class ModEntry : Mod
 
     private void ExposeStoredToolForOvernight(Farmer player)
     {
-        MeatToolState? storedTool = GetStoredTool(player);
-        if (!IsMeatToolEnabled() || storedTool is null || HasOvernightExposure(player))
+        NatureNetState? storedTool = GetStoredTool(player);
+        if (!IsNatureNetEnabled() || storedTool is null || HasOvernightExposure(player))
             return;
 
         Tool? tool = storedTool.CreateTool(Monitor);
@@ -680,10 +749,10 @@ public sealed class ModEntry : Mod
         {
             for (int i = player.Items.Count - 1; i >= 0; i--)
             {
-                if (player.Items[i] is Tool tool && IsOvernightExposureForPlayer(tool, player) && IsMeatTool(tool))
+                if (player.Items[i] is Tool tool && IsOvernightExposureForPlayer(tool, player) && IsNatureNet(tool))
                 {
                     ClearWalletMarkers(tool);
-                    SetStoredTool(player, MeatToolState.FromTool(tool));
+                    SetStoredTool(player, NatureNetState.FromTool(tool));
                     player.Items[i] = null;
                     changed = true;
                 }
@@ -703,8 +772,8 @@ public sealed class ModEntry : Mod
 
     private bool TrySetTemporaryWalletTool(Farmer player)
     {
-        MeatToolState? storedTool = GetStoredTool(player);
-        if (PendingToolUse is not null || !IsMeatToolEnabled() || storedTool is null)
+        NatureNetState? storedTool = GetStoredTool(player);
+        if (PendingToolUse is not null || !IsNatureNetEnabled() || storedTool is null)
             return false;
 
         Tool? walletTool = storedTool.CreateTool(Monitor);
@@ -734,14 +803,14 @@ public sealed class ModEntry : Mod
             RefreshWalletStateAfterStoredToolChange(player, false);
             player.Items[previousToolIndex] = walletTool;
             player.CurrentToolIndex = previousToolIndex;
-            PendingToolUse = new TemporaryToolUse(previousToolIndex, walletTool, previousItem);
+            PendingToolUse = new TemporaryToolUse(previousToolIndex, walletTool, previousItem, player.addedSpeed);
         }
         catch
         {
             if (leasedFromWallet)
             {
                 ClearWalletMarkers(walletTool);
-                SetStoredTool(player, MeatToolState.FromTool(walletTool));
+                SetStoredTool(player, NatureNetState.FromTool(walletTool));
                 RefreshWalletStateAfterStoredToolChange(player, false);
             }
 
@@ -774,13 +843,15 @@ public sealed class ModEntry : Mod
                 ? player.Items[temporarySlot] as Tool
                 : null;
 
+            RestorePlayerSpeedAfterTemporaryNetUse(player, pending);
+
             if (usedTool is not null)
             {
                 if (temporarySlot >= 0 && temporarySlot < player.Items.Count)
                     player.Items[temporarySlot] = null;
 
                 ClearWalletMarkers(usedTool);
-                SetStoredTool(player, MeatToolState.FromTool(usedTool));
+                SetStoredTool(player, NatureNetState.FromTool(usedTool));
                 RefreshWalletStateAfterStoredToolChange(player, false);
             }
             else
@@ -792,6 +863,8 @@ public sealed class ModEntry : Mod
 
             UpdateToolEnchantmentsForSelectedSlot(player, usedTool, pending.PreviousItem as Tool);
             RestoreTemporaryToolSlot(player, pending);
+            if (IsWalletToolsRuntimeToolForPlayer(pending.PreviousItem, player) || HasWalletToolsRuntimeTool(player))
+                TryRestoreWalletToolsPendingToolUse(player);
             player.CurrentToolIndex = Math.Max(0, Math.Min(pending.Slot, Math.Max(0, player.Items.Count - 1)));
             NormalizePlayerItemsAfterCleanup(player);
         }
@@ -828,7 +901,7 @@ public sealed class ModEntry : Mod
 
     private static bool IsPendingRuntimeToolForPlayer(Item? item, Farmer player)
     {
-        return item is Tool tool && IsRuntimeToolForPlayer(tool, player) && IsMeatTool(tool);
+        return item is Tool tool && IsRuntimeToolForPlayer(tool, player) && IsNatureNet(tool);
     }
 
     private static void RestoreTemporaryToolSlot(Farmer player, TemporaryToolUse pending)
@@ -883,15 +956,15 @@ public sealed class ModEntry : Mod
         }
         catch (Exception ex)
         {
-            Monitor.Log($"Could not update vanilla enchantment equip state for Animal Husbandry wallet tool: {ex.Message}", LogLevel.Warn);
+            Monitor.Log($"Could not update vanilla enchantment equip state for Nature in the Valley wallet tool: {ex.Message}", LogLevel.Warn);
         }
     }
 
-    private bool TryTakeInventoryMeatTool(Farmer player, out Tool tool)
+    private bool TryTakeInventoryNatureNet(Farmer player, out Tool tool)
     {
         for (int i = 0; i < player.Items.Count; i++)
         {
-            if (player.Items[i] is Tool candidate && IsMeatTool(candidate) && !IsRuntimeTool(candidate) && !IsOvernightExposure(candidate) && !IsCurrentlySelectedItem(player, i, candidate))
+            if (player.Items[i] is Tool candidate && IsNatureNet(candidate) && !IsRuntimeTool(candidate) && !IsOvernightExposure(candidate) && !IsCurrentlySelectedItem(player, i, candidate))
             {
                 ClearWalletMarkers(candidate);
                 player.Items[i] = null;
@@ -905,16 +978,16 @@ public sealed class ModEntry : Mod
         return false;
     }
 
-    private bool RemoveInventoryCopiesOfMeatTool(Farmer player)
+    private bool RemoveInventoryCopiesOfNatureNet(Farmer player)
     {
         bool removed = false;
         for (int i = 0; i < player.Items.Count; i++)
         {
-            if (player.Items[i] is not Tool tool || IsRuntimeTool(tool) || IsOvernightExposure(tool) || IsCurrentlySelectedItem(player, i, tool) || !IsMeatTool(tool))
+            if (player.Items[i] is not Tool tool || IsRuntimeTool(tool) || IsOvernightExposure(tool) || IsCurrentlySelectedItem(player, i, tool) || !IsNatureNet(tool))
                 continue;
 
             ClearWalletMarkers(tool);
-            SetStoredTool(player, MeatToolState.FromTool(tool));
+            StoreBestNatureNet(player, tool);
             player.Items[i] = null;
             removed = true;
         }
@@ -925,28 +998,28 @@ public sealed class ModEntry : Mod
         return removed;
     }
 
-    private bool CollectLostFoundMeatTool(Farmer player)
+    private bool CollectLostFoundNatureNet(Farmer player)
     {
         bool changed = false;
         for (int i = 0; i < 16; i++)
         {
-            if (!TryTakeLostFoundMeatTool(player, out Tool? recoveredTool))
+            if (!TryTakeLostFoundNatureNet(player, out Tool? recoveredTool))
                 break;
 
-            SetStoredTool(player, MeatToolState.FromTool(recoveredTool));
+            StoreBestNatureNet(player, recoveredTool);
             changed = true;
         }
 
         return changed;
     }
 
-    private void ScanLostFoundForMeatTool()
+    private void ScanLostFoundForNatureNet()
     {
-        if (!IsMeatToolEnabled() || !Context.IsWorldReady)
+        if (!IsNatureNetEnabled() || !Context.IsWorldReady)
             return;
 
         Farmer player = Game1.player;
-        if (CollectLostFoundMeatTool(player))
+        if (CollectLostFoundNatureNet(player))
             RefreshWalletStateAfterStoredToolChange(player);
     }
 
@@ -975,7 +1048,7 @@ public sealed class ModEntry : Mod
         return valueProperty is not null && valueProperty.GetIndexParameters().Length == 0 && typeof(Tool).IsAssignableFrom(valueProperty.PropertyType);
     }
 
-    private static bool TryTakeLostFoundMeatTool(Farmer player, out Tool tool)
+    private static bool TryTakeLostFoundNatureNet(Farmer player, out Tool tool)
     {
         tool = null!;
         object? team = player.team;
@@ -993,27 +1066,27 @@ public sealed class ModEntry : Mod
             if (!IsLikelyLostFoundToolContainer(member, value))
                 continue;
 
-            if (TryTakeMeatToolFromValue(value, out tool, player, requireOwner))
+            if (TryTakeNatureNetFromValue(value, out tool, player, requireOwner))
                 return true;
         }
 
         return false;
     }
 
-    private static bool TryTakeMeatToolFromValue(object? value, out Tool tool, Farmer? player = null, bool requireOwner = false)
+    private static bool TryTakeNatureNetFromValue(object? value, out Tool tool, Farmer? player = null, bool requireOwner = false)
     {
         tool = null!;
         if (value is null || value is string)
             return false;
 
-        if (TryTakeMeatToolFromWrappedValue(value, out tool, player, requireOwner))
+        if (TryTakeNatureNetFromWrappedValue(value, out tool, player, requireOwner))
             return true;
 
         object? unwrapped = TryGetNetValue(value);
-        if (!ReferenceEquals(unwrapped, value) && unwrapped is not Tool && TryTakeMeatToolFromValue(unwrapped, out tool, player, requireOwner))
+        if (!ReferenceEquals(unwrapped, value) && unwrapped is not Tool && TryTakeNatureNetFromValue(unwrapped, out tool, player, requireOwner))
             return true;
 
-        if (value is Tool directTool && IsMeatTool(directTool) && ToolIsEligibleForOwner(directTool, player, requireOwner))
+        if (value is Tool directTool && IsNatureNet(directTool) && ToolIsEligibleForOwner(directTool, player, requireOwner))
         {
             ClearWalletMarkers(directTool);
             tool = directTool;
@@ -1024,7 +1097,7 @@ public sealed class ModEntry : Mod
         {
             for (int i = 0; i < list.Count; i++)
             {
-                if (list[i] is Tool candidate && IsMeatTool(candidate) && ToolIsEligibleForOwner(candidate, player, requireOwner))
+                if (list[i] is Tool candidate && IsNatureNet(candidate) && ToolIsEligibleForOwner(candidate, player, requireOwner))
                 {
                     ClearWalletMarkers(candidate);
                     list.RemoveAt(i);
@@ -1042,7 +1115,7 @@ public sealed class ModEntry : Mod
                     continue;
 
                 object? dictionaryValue = dictionary[key];
-                if (dictionaryValue is Tool candidate && IsMeatTool(candidate) && ToolIsEligibleForOwner(candidate, player, requireOwner))
+                if (dictionaryValue is Tool candidate && IsNatureNet(candidate) && ToolIsEligibleForOwner(candidate, player, requireOwner))
                 {
                     ClearWalletMarkers(candidate);
                     dictionary.Remove(key);
@@ -1050,7 +1123,7 @@ public sealed class ModEntry : Mod
                     return true;
                 }
 
-                if (TryTakeMeatToolFromValue(dictionaryValue, out tool, player, requireOwner))
+                if (TryTakeNatureNetFromValue(dictionaryValue, out tool, player, requireOwner))
                     return true;
             }
         }
@@ -1058,7 +1131,7 @@ public sealed class ModEntry : Mod
         return false;
     }
 
-    private static bool TryTakeMeatToolFromWrappedValue(object value, out Tool tool, Farmer? player = null, bool requireOwner = false)
+    private static bool TryTakeNatureNetFromWrappedValue(object value, out Tool tool, Farmer? player = null, bool requireOwner = false)
     {
         tool = null!;
         try
@@ -1068,7 +1141,7 @@ public sealed class ModEntry : Mod
                 return false;
 
             object? inner = property.GetValue(value);
-            if (inner is not Tool candidate || !IsMeatTool(candidate))
+            if (inner is not Tool candidate || !IsNatureNet(candidate))
                 return false;
 
             if (!ToolIsEligibleForOwner(candidate, player, requireOwner))
@@ -1126,47 +1199,177 @@ public sealed class ModEntry : Mod
         }
     }
 
-    private static bool IsAnimalInToolReach(Farmer player)
+    private static bool IsNatureCreatureInNetReach(Farmer player)
     {
-        GameLocation location = player.currentLocation;
-        if (location is not (Farm or AnimalHouse))
+        GameLocation? location = player.currentLocation;
+        if (location is null || location.Name.Equals("NIVInnerInsec", StringComparison.OrdinalIgnoreCase))
             return false;
 
-        Vector2 position = !Game1.wasMouseVisibleThisFrame
-            ? player.GetToolLocation(false)
-            : new Vector2(Game1.getOldMouseX() + Game1.viewport.X, Game1.getOldMouseY() + Game1.viewport.Y);
+        Type? entryType = Type.GetType(NatureEntryTypeName);
+        FieldInfo? creaturesField = entryType?.GetField("creatures", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+        if (creaturesField?.GetValue(null) is not IEnumerable creatures)
+            return false;
 
-        Vector2 tile = player.GetToolLocation(position, false) / 64f;
-        tile = new Vector2((int)tile.X, (int)tile.Y);
-
-        foreach (FarmAnimal animal in location.getAllFarmAnimals())
+        Vector2 catchPoint = GetNatureNetCatchPoint(player);
+        foreach (object? creature in creatures)
         {
-            if (animal.currentLocation == location && Vector2.Distance(tile, animal.Tile) <= 1f)
-                return true;
+            if (creature is null)
+                continue;
+
+            if (!CreatureIsCatchable(creature, location, catchPoint))
+                continue;
+
+            return true;
         }
 
         return false;
     }
 
-    private static bool IsMeatTool(Item? item)
+    private static Vector2 GetNatureNetCatchPoint(Farmer player)
     {
-        if (item is not Tool tool || MeatToolState.IsErrorTool(tool))
+        return player.FacingDirection switch
+        {
+            0 => player.Position + new Vector2(0f, -96f),
+            1 => player.Position + new Vector2(96f, 0f),
+            2 => player.Position + new Vector2(0f, 96f),
+            3 => player.Position + new Vector2(-96f, 0f),
+            _ => player.Position
+        };
+    }
+
+    private static bool CreatureIsCatchable(object creature, GameLocation location, Vector2 catchPoint)
+    {
+        Type type = creature.GetType();
+        if (IsCreatureExplicitlyExcluded(type, creature))
             return false;
 
-        if (tool.modData.ContainsKey(MeatToolModDataKey))
-            return true;
+        GameLocation? creatureLocation = InvokeGameLocationMethod(type, creature, "GetLocation");
+        if (creatureLocation is null || !creatureLocation.Name.Equals(location.Name, StringComparison.OrdinalIgnoreCase))
+            return false;
 
-        string text = string.Join("\n", tool.ItemId, tool.QualifiedItemId, tool.Name, tool.DisplayName);
-        return text.Contains(MeatToolItemId, StringComparison.OrdinalIgnoreCase)
-            || text.Contains(MeatToolQualifiedItemId, StringComparison.OrdinalIgnoreCase)
-            || text.Contains("MeatCleaver", StringComparison.OrdinalIgnoreCase)
-            || text.Contains("Meat Cleaver", StringComparison.OrdinalIgnoreCase)
-            || text.Contains("Meat Wand", StringComparison.OrdinalIgnoreCase);
+        Vector2 effectivePosition = InvokeVector2Method(type, creature, "GetEffectivePosition");
+        bool isGrounded = GetBoolMember(type, creature, "IsGrounded", true);
+        float scale = Math.Max(0.01f, GetFloatMember(type, creature, "scale", 1f));
+        float catchingDifficultyMultiplier = Math.Max(0.01f, GetNatureConfigFloat("catchingDifficultyMultiplier", 1f));
+        Vector2 adjustedPosition = effectivePosition + (isGrounded ? Vector2.Zero : new Vector2(0f, -30f));
+        float catchRadius = (isGrounded ? 80f : 105f) * catchingDifficultyMultiplier * (float)Math.Sqrt(scale);
+        return Vector2.Distance(adjustedPosition, catchPoint) < catchRadius;
+    }
+
+    private static bool IsCreatureExplicitlyExcluded(Type creatureType, object creature)
+    {
+        string name = GetStringMember(creatureType, creature, "name");
+        if (string.IsNullOrWhiteSpace(name))
+            return false;
+
+        Type? entryType = Type.GetType(NatureEntryTypeName);
+        FieldInfo? dataField = entryType?.GetField("staticCreatureData", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+        if (dataField?.GetValue(null) is not IDictionary data || !data.Contains(name) || data[name] is not IList values)
+            return false;
+
+        return values.Count > 36 && values[35]?.ToString()?.Equals("true", StringComparison.OrdinalIgnoreCase) == true;
+    }
+
+    private static GameLocation? InvokeGameLocationMethod(Type type, object instance, string methodName)
+    {
+        try
+        {
+            return type.GetMethod(methodName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)?.Invoke(instance, null) as GameLocation;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static Vector2 InvokeVector2Method(Type type, object instance, string methodName)
+    {
+        try
+        {
+            object? value = type.GetMethod(methodName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)?.Invoke(instance, null);
+            return value is Vector2 vector ? vector : Vector2.Zero;
+        }
+        catch
+        {
+            return Vector2.Zero;
+        }
+    }
+
+    private static bool GetBoolMember(Type type, object instance, string name, bool fallback = false)
+    {
+        object? value = GetNamedMemberValue(type, instance, name);
+        return value is bool boolValue ? boolValue : fallback;
+    }
+
+    private static float GetFloatMember(Type type, object instance, string name, float fallback)
+    {
+        object? value = GetNamedMemberValue(type, instance, name);
+        return value switch
+        {
+            float f => f,
+            double d => (float)d,
+            int i => i,
+            _ => fallback
+        };
+    }
+
+    private static string GetStringMember(Type type, object instance, string name)
+    {
+        return GetNamedMemberValue(type, instance, name)?.ToString() ?? string.Empty;
+    }
+
+    private static object? GetNamedMemberValue(Type type, object instance, string name)
+    {
+        try
+        {
+            FieldInfo? field = type.GetField(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            if (field is not null)
+                return field.GetValue(instance);
+
+            PropertyInfo? property = type.GetProperty(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            if (property is not null && property.GetIndexParameters().Length == 0)
+                return property.GetValue(instance);
+        }
+        catch
+        {
+        }
+
+        return null;
+    }
+
+    private static float GetNatureConfigFloat(string memberName, float fallback)
+    {
+        try
+        {
+            Type? entryType = Type.GetType(NatureEntryTypeName);
+            object? config = entryType?.GetField("staticConfig", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)?.GetValue(null);
+            if (config is null)
+                return fallback;
+
+            Type configType = config.GetType();
+            object? value = GetNamedMemberValue(configType, config, memberName);
+            return value switch
+            {
+                float f => f,
+                double d => (float)d,
+                int i => i,
+                _ => fallback
+            };
+        }
+        catch
+        {
+            return fallback;
+        }
+    }
+
+    private static bool IsNatureNet(Item? item)
+    {
+        return item is Tool tool && !NatureNetState.IsErrorTool(tool) && TryGetNetDefinition(tool, out _);
     }
 
     private static void MarkRuntimeTool(Tool tool, Farmer player)
     {
-        EnsureMeatToolInstanceId(tool);
+        EnsureNatureNetInstanceId(tool);
         tool.modData[RuntimeToolMarker] = "true";
         MarkWalletOwner(tool, player);
     }
@@ -1183,7 +1386,7 @@ public sealed class ModEntry : Mod
 
     private static void MarkOvernightExposure(Tool tool, Farmer player)
     {
-        EnsureMeatToolInstanceId(tool);
+        EnsureNatureNetInstanceId(tool);
         tool.modData[OvernightExposureMarker] = "true";
         MarkWalletOwner(tool, player);
     }
@@ -1202,7 +1405,7 @@ public sealed class ModEntry : Mod
     {
         foreach (Item? item in player.Items)
         {
-            if (IsOvernightExposure(item) && IsMeatTool(item))
+            if (IsOvernightExposure(item) && IsNatureNet(item))
                 return true;
         }
 
@@ -1216,6 +1419,42 @@ public sealed class ModEntry : Mod
         tool.modData.Remove(RuntimeOwnerMarker);
     }
 
+    private static bool IsWalletToolsRuntimeToolForPlayer(Item? item, Farmer player)
+    {
+        if (item is not Tool tool || !tool.modData.ContainsKey(WalletToolsRuntimeToolMarker))
+            return false;
+
+        if (!tool.modData.TryGetValue(WalletToolsOwnerPlayerIdMarker, out string? rawOwnerId))
+            return !Context.IsMultiplayer;
+
+        return long.TryParse(rawOwnerId, out long ownerId) && ownerId == player.UniqueMultiplayerID;
+    }
+
+    private static bool HasWalletToolsRuntimeTool(Farmer player)
+    {
+        foreach (Item? item in player.Items)
+        {
+            if (IsWalletToolsRuntimeToolForPlayer(item, player))
+                return true;
+        }
+
+        return false;
+    }
+
+    private void TryRestoreWalletToolsPendingToolUse(Farmer player)
+    {
+        try
+        {
+            Type? walletToolsEntryType = Type.GetType(WalletToolsModEntryTypeName);
+            object? walletToolsEntry = walletToolsEntryType?.GetField("Instance", BindingFlags.Static | BindingFlags.NonPublic)?.GetValue(null);
+            MethodInfo? restoreMethod = walletToolsEntryType?.GetMethod("RestorePendingToolUseBeforeDestructiveCleanup", BindingFlags.Instance | BindingFlags.NonPublic);
+            restoreMethod?.Invoke(walletToolsEntry, new object[] { player });
+        }
+        catch
+        {
+        }
+    }
+
     private void RestorePendingToolUseBeforeDestructiveCleanup(Farmer player)
     {
         if (PendingToolUse is not null)
@@ -1227,7 +1466,7 @@ public sealed class ModEntry : Mod
         if (PendingToolUse is null)
             return;
 
-        MeatToolState? storedTool = GetStoredTool(player);
+        NatureNetState? storedTool = GetStoredTool(player);
         TemporaryToolUse pending = PendingToolUse;
         PendingToolUse = null;
         PendingManualUseHotkey = null;
@@ -1270,7 +1509,7 @@ public sealed class ModEntry : Mod
         if (!Context.IsWorldReady || !Context.IsMainPlayer)
             return;
 
-        Helper.Data.WriteSaveData<MeatToolState>(LegacySaveDataKey, null);
+        Helper.Data.WriteSaveData<NatureNetState>(LegacySaveDataKey, null);
     }
 
     private static void RemoveRuntimeToolCopies(Farmer player)
@@ -1305,13 +1544,88 @@ public sealed class ModEntry : Mod
 
     private static bool IsPlayerUsingTool(Farmer player)
     {
-        return player.UsingTool;
+        return player.UsingTool || player.hasBuff(NatureNetSpeedBuffId);
     }
 
-    private static void EnsureMeatToolInstanceId(Tool tool)
+    private static bool IsTemporaryNatureNetUseInProgress(Farmer player, TemporaryToolUse? pending)
     {
-        if (!tool.modData.ContainsKey(MeatToolModDataKey) || string.IsNullOrWhiteSpace(tool.modData[MeatToolModDataKey]))
-            tool.modData[MeatToolModDataKey] = Game1.random.Next().ToString();
+        return pending is not null
+            && IsNatureNet(pending.TemporaryTool)
+            && (IsNatureNetHeld(pending.TemporaryTool) || player.hasBuff(NatureNetSpeedBuffId));
+    }
+
+    private static bool IsTemporaryNatureNetHeld(TemporaryToolUse? pending)
+    {
+        return pending is not null && IsNatureNet(pending.TemporaryTool) && IsNatureNetHeld(pending.TemporaryTool);
+    }
+
+    private static bool IsNatureNetHeld(Tool tool)
+    {
+        try
+        {
+            FieldInfo? field = tool.GetType().GetField("isHeld", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            return field?.GetValue(tool) is bool held && held;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private bool TryReleaseTemporaryNatureNetUse(Farmer player)
+    {
+        TemporaryToolUse? pending = PendingToolUse;
+        if (!IsTemporaryNatureNetHeld(pending) || player.currentLocation is null)
+            return false;
+
+        try
+        {
+            pending!.TemporaryTool.onRelease(player.currentLocation, 0, 0, player);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Monitor.Log($"Failed to release Nature in the Valley wallet net: {ex.Message}", LogLevel.Error);
+            return false;
+        }
+    }
+
+    private static void RestorePlayerSpeedAfterTemporaryNetUse(Farmer player, TemporaryToolUse pending)
+    {
+        if (!IsNatureNet(pending.TemporaryTool))
+            return;
+
+        ClearTemporaryNatureNetEffects(player, pending);
+        player.addedSpeed = pending.PreviousAddedSpeed;
+    }
+
+    private static void ClearTemporaryNatureNetEffects(Farmer player, TemporaryToolUse pending)
+    {
+        if (!IsNatureNet(pending.TemporaryTool))
+            return;
+
+        if (player.hasBuff(NatureNetSpeedBuffId))
+            player.buffs.Remove(NatureNetSpeedBuffId);
+
+        player.stopJittering();
+        player.jitterStrength = 0f;
+        player.canMove = true;
+        player.UsingTool = false;
+
+        try
+        {
+            FieldInfo? field = pending.TemporaryTool.GetType().GetField("isHeld", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            field?.SetValue(pending.TemporaryTool, false);
+        }
+        catch
+        {
+        }
+    }
+
+    private static void EnsureNatureNetInstanceId(Tool tool)
+    {
+        if (!tool.modData.ContainsKey(NatureNetInstanceIdMarker) || string.IsNullOrWhiteSpace(tool.modData[NatureNetInstanceIdMarker]))
+            tool.modData[NatureNetInstanceIdMarker] = Game1.random.Next().ToString();
     }
 
     private static void AddToolToInventoryOrAppend(Farmer player, Tool tool)
@@ -1412,16 +1726,30 @@ public sealed class ModEntry : Mod
 
     private void UpdateWalletFlag(Farmer player)
     {
-        if (IsMeatToolEnabled() && GetStoredTool(player) is not null)
-            player.modData[HasMeatToolFlag] = "true";
+        if (IsNatureNetEnabled() && GetStoredTool(player) is not null)
+            player.modData[HasNatureNetFlag] = "true";
         else
-            player.modData.Remove(HasMeatToolFlag);
+            player.modData.Remove(HasNatureNetFlag);
     }
 
     private void InvalidatePowers()
     {
         Helper.GameContent.InvalidateCache("Data/Powers");
     }
+    private static class WalletToolsPrepareWalletToolUsePatch
+    {
+        public static bool Prefix(Farmer player, ref bool __result)
+        {
+            if (Instance?.ShouldReservePressForNatureNet(player) == true)
+            {
+                __result = false;
+                return false;
+            }
+
+            return true;
+        }
+    }
+
     private static class PressUseToolButtonPatch
     {
         public static void Prefix()
@@ -1432,21 +1760,23 @@ public sealed class ModEntry : Mod
 
     private sealed class TemporaryToolUse
     {
-        public TemporaryToolUse(int slot, Tool temporaryTool, Item? previousItem)
+        public TemporaryToolUse(int slot, Tool temporaryTool, Item? previousItem, float previousAddedSpeed)
         {
             Slot = slot;
             TemporaryTool = temporaryTool;
             PreviousItem = previousItem;
+            PreviousAddedSpeed = previousAddedSpeed;
         }
 
         public int Slot { get; }
         public Tool TemporaryTool { get; }
         public Item? PreviousItem { get; }
+        public float PreviousAddedSpeed { get; }
     }
 
-    private sealed class MeatToolIconData
+    private sealed class NatureNetIconData
     {
-        public MeatToolIconData(string texturePath, Point texturePosition)
+        public NatureNetIconData(string texturePath, Point texturePosition)
         {
             TexturePath = texturePath;
             TexturePosition = texturePosition;
@@ -1456,23 +1786,36 @@ public sealed class ModEntry : Mod
         public Point TexturePosition { get; }
     }
 
-    private sealed class MeatToolState
+    private sealed class NatureNetState
     {
+        public string ItemId { get; set; } = "NIVNet";
+        public string QualifiedItemId { get; set; } = "(T)NIVNet";
+        public int UpgradeLevel { get; set; }
         public Dictionary<string, string> ModData { get; set; } = new();
 
-        public static MeatToolState CreatePlaceholder(IMonitor monitor)
+        public static NatureNetState CreatePlaceholder(IMonitor monitor)
         {
-            Tool? tool = CreateFreshTool(monitor);
-            return tool is null ? new MeatToolState() : FromTool(tool);
+            Tool? tool = CreateFreshTool(GetDefinitionForItemId("NIVNet"), monitor);
+            return tool is null ? new NatureNetState() : FromTool(tool);
         }
 
-        public static MeatToolState FromTool(Tool tool)
+        public static NatureNetState FromTool(Tool tool)
         {
-            EnsureMeatToolInstanceId(tool);
-            MeatToolState state = new();
+            EnsureNatureNetInstanceId(tool);
+            NetDefinition definition = TryGetNetDefinition(tool, out NetDefinition matchedDefinition)
+                ? matchedDefinition
+                : GetDefinitionForItemId("NIVNet");
+
+            NatureNetState state = new()
+            {
+                ItemId = definition.ItemId,
+                QualifiedItemId = definition.QualifiedItemId,
+                UpgradeLevel = definition.UpgradeLevel
+            };
+
             foreach (KeyValuePair<string, string> pair in tool.modData.Pairs)
             {
-                if (pair.Key == RuntimeToolMarker || pair.Key == OvernightExposureMarker)
+                if (pair.Key == RuntimeToolMarker || pair.Key == OvernightExposureMarker || pair.Key == RuntimeOwnerMarker)
                     continue;
 
                 state.ModData[pair.Key] = pair.Value;
@@ -1484,59 +1827,57 @@ public sealed class ModEntry : Mod
         public string GetDisplayName(IMonitor monitor)
         {
             Tool? tool = CreateTool(monitor);
-            return tool is not null && !string.IsNullOrWhiteSpace(tool.DisplayName) ? tool.DisplayName : "Meat Cleaver";
+            if (tool is not null && !string.IsNullOrWhiteSpace(tool.DisplayName) && !IsErrorTool(tool))
+                return tool.DisplayName;
+
+            return GetDefinitionForItemId(ItemId).DisplayNameFallback;
         }
 
         public string GetDescription(IMonitor monitor)
         {
             Tool? tool = CreateTool(monitor);
-            return tool?.getDescription() ?? string.Empty;
+            return tool is not null && !IsErrorTool(tool) ? tool.getDescription() : string.Empty;
         }
 
-        public MeatToolIconData GetIconData(IMonitor monitor)
+        public NatureNetIconData GetIconData(IMonitor monitor)
         {
-            Tool? tool = CreateTool(monitor);
-            string texturePath = GetToolDataString(tool, "Texture") ?? ToolTexturePath;
-            int menuSpriteIndex = GetToolDataInt(tool, "MenuSpriteIndex") ?? GetToolMenuSpriteIndex(tool);
-            Point texturePosition = menuSpriteIndex >= 0
-                ? GetTexturePositionFromMenuIndex(texturePath, menuSpriteIndex, monitor)
-                : GetTexturePositionFromMenuIndex(ToolTexturePath, 33, monitor);
-
-            return new MeatToolIconData(texturePath, texturePosition);
+            NetDefinition definition = GetDefinitionForItemId(ItemId);
+            return new NatureNetIconData(definition.TextureAssetPath, Point.Zero);
         }
 
         public Tool? CreateTool(IMonitor monitor)
         {
-            Tool? tool = CreateFreshTool(monitor);
+            NetDefinition definition = GetDefinitionForItemId(ItemId);
+            Tool? tool = CreateFreshTool(definition, monitor);
             if (tool is null)
                 return null;
 
             foreach (KeyValuePair<string, string> pair in ModData)
             {
-                if (pair.Key == RuntimeToolMarker || pair.Key == OvernightExposureMarker)
+                if (pair.Key == RuntimeToolMarker || pair.Key == OvernightExposureMarker || pair.Key == RuntimeOwnerMarker)
                     continue;
 
                 tool.modData[pair.Key] = pair.Value;
             }
 
-            EnsureMeatToolInstanceId(tool);
+            EnsureNatureNetInstanceId(tool);
             return tool;
         }
 
-        private static Tool? CreateFreshTool(IMonitor monitor)
+        private static Tool? CreateFreshTool(NetDefinition definition, IMonitor monitor)
         {
-            foreach (string id in new[] { MeatToolItemId, MeatToolQualifiedItemId })
+            foreach (string id in definition.ItemRegistryIds)
             {
                 try
                 {
                     Tool tool = ItemRegistry.Create<Tool>(id);
-                    EnsureMeatToolInstanceId(tool);
-                    if (!IsErrorTool(tool))
+                    EnsureNatureNetInstanceId(tool);
+                    if (!IsErrorTool(tool) && TryGetNetDefinition(tool, out _))
                         return tool;
                 }
                 catch (Exception ex)
                 {
-                    monitor.Log($"Could not create Animal Husbandry meat tool from '{id}': {ex.Message}", LogLevel.Trace);
+                    monitor.Log($"Could not create Nature in the Valley net from '{id}': {ex.Message}", LogLevel.Trace);
                 }
             }
 
@@ -1545,120 +1886,104 @@ public sealed class ModEntry : Mod
 
         public static bool IsErrorTool(Tool tool)
         {
-            string text = string.Join("\n", tool.Name, tool.DisplayName, tool.ItemId, tool.QualifiedItemId);
+            string text = string.Join("\n", tool.Name, tool.DisplayName, tool.ItemId, tool.QualifiedItemId, tool.GetType().FullName);
             return text.Contains("Error Item", StringComparison.OrdinalIgnoreCase) || text.Contains("ErrorItem", StringComparison.OrdinalIgnoreCase);
         }
+    }
 
-        private static int GetToolMenuSpriteIndex(Tool? tool)
+    private sealed class NetDefinition
+    {
+        public NetDefinition(string itemId, string qualifiedItemId, int upgradeLevel, string displayNameFallback, string textureAssetPath, string embeddedTextureName, string className, params string[] aliases)
         {
-            if (tool is null)
-                return -1;
-
-            foreach (string memberName in new[] { "IndexOfMenuItemView", "indexOfMenuItemView" })
-            {
-                try
-                {
-                    PropertyInfo? property = tool.GetType().GetProperty(memberName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                    if (property?.GetValue(tool) is int propertyValue && propertyValue >= 0)
-                        return propertyValue;
-
-                    FieldInfo? field = tool.GetType().GetField(memberName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                    if (field?.GetValue(tool) is int fieldValue && fieldValue >= 0)
-                        return fieldValue;
-                }
-                catch
-                {
-                }
-            }
-
-            return -1;
+            ItemId = itemId;
+            QualifiedItemId = qualifiedItemId;
+            UpgradeLevel = upgradeLevel;
+            DisplayNameFallback = displayNameFallback;
+            TextureAssetPath = textureAssetPath;
+            EmbeddedTextureName = embeddedTextureName;
+            ClassName = className;
+            Aliases = aliases;
         }
 
-        private static string? GetToolDataString(Tool? tool, string propertyName)
+        public string ItemId { get; }
+        public string QualifiedItemId { get; }
+        public int UpgradeLevel { get; }
+        public string DisplayNameFallback { get; }
+        public string TextureAssetPath { get; }
+        public string EmbeddedTextureName { get; }
+        public string ClassName { get; }
+        public string[] Aliases { get; }
+
+        public IEnumerable<string> ItemRegistryIds
         {
-            object? data = GetToolData(tool);
-            if (data is null)
-                return null;
-
-            try
+            get
             {
-                PropertyInfo? property = data.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                if (property?.GetValue(data) is string value && !string.IsNullOrWhiteSpace(value))
-                    return value;
-
-                FieldInfo? field = data.GetType().GetField(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                if (field?.GetValue(data) is string fieldValue && !string.IsNullOrWhiteSpace(fieldValue))
-                    return fieldValue;
-            }
-            catch
-            {
-            }
-
-            return null;
-        }
-
-        private static int? GetToolDataInt(Tool? tool, string propertyName)
-        {
-            object? data = GetToolData(tool);
-            if (data is null)
-                return null;
-
-            try
-            {
-                PropertyInfo? property = data.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                if (property?.GetValue(data) is int value && value >= 0)
-                    return value;
-
-                FieldInfo? field = data.GetType().GetField(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                if (field?.GetValue(data) is int fieldValue && fieldValue >= 0)
-                    return fieldValue;
-            }
-            catch
-            {
-            }
-
-            return null;
-        }
-
-        private static object? GetToolData(Tool? tool)
-        {
-            if (tool is null)
-                return null;
-
-            try
-            {
-                MethodInfo? method = typeof(Tool).GetMethod("GetToolData", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                return method?.Invoke(tool, null);
-            }
-            catch
-            {
-                return null;
+                yield return QualifiedItemId;
+                yield return ItemId;
+                foreach (string alias in Aliases)
+                    yield return alias;
             }
         }
 
-        private static Point GetTexturePositionFromMenuIndex(string texturePath, int menuSpriteIndex, IMonitor monitor)
+        public bool MatchesText(string text)
         {
-            int textureWidth = GetTextureWidth(texturePath, monitor);
-            int columns = Math.Max(1, textureWidth / 16);
-            int x = Math.Max(0, menuSpriteIndex % columns) * 16;
-            int y = Math.Max(0, menuSpriteIndex / columns) * 16;
-            return new Point(x, y);
-        }
+            if (text.Contains(ItemId, StringComparison.OrdinalIgnoreCase)
+                || text.Contains(QualifiedItemId, StringComparison.OrdinalIgnoreCase)
+                || text.Contains(ClassName, StringComparison.OrdinalIgnoreCase))
+                return true;
 
-        private static int GetTextureWidth(string texturePath, IMonitor monitor)
-        {
-            try
+            foreach (string alias in Aliases)
             {
-                Texture2D texture = Game1.content.Load<Texture2D>(texturePath);
-                if (texture.Width > 0)
-                    return texture.Width;
-            }
-            catch (Exception ex)
-            {
-                monitor.Log($"Could not read tool texture width for '{texturePath}': {ex.Message}", LogLevel.Trace);
+                if (text.Contains(alias, StringComparison.OrdinalIgnoreCase))
+                    return true;
             }
 
-            return texturePath.Equals(ToolTexturePath, StringComparison.OrdinalIgnoreCase) ? 336 : 336;
+            return false;
         }
     }
+
+    private static bool TryGetNetDefinition(Tool tool, out NetDefinition definition)
+    {
+        string text = string.Join("\n", tool.ItemId, tool.QualifiedItemId, tool.Name, tool.DisplayName, tool.GetType().FullName);
+        foreach (NetDefinition candidate in NetDefinitions.OrderByDescending(candidateDefinition => candidateDefinition.UpgradeLevel))
+        {
+            if (candidate.MatchesText(text))
+            {
+                definition = candidate;
+                return true;
+            }
+        }
+
+        definition = NetDefinitions[0];
+        return false;
+    }
+
+    private static NetDefinition GetDefinitionForItemId(string itemId)
+    {
+        foreach (NetDefinition definition in NetDefinitions)
+        {
+            if (definition.ItemId.Equals(itemId, StringComparison.OrdinalIgnoreCase))
+                return definition;
+
+            foreach (string alias in definition.Aliases)
+            {
+                if (alias.Equals(itemId, StringComparison.OrdinalIgnoreCase) || alias.Equals($"(T){itemId}", StringComparison.OrdinalIgnoreCase))
+                    return definition;
+            }
+        }
+
+        return NetDefinitions[0];
+    }
+
+    private bool StoreBestNatureNet(Farmer player, Tool tool)
+    {
+        NatureNetState incoming = NatureNetState.FromTool(tool);
+        NatureNetState? current = GetStoredTool(player);
+        if (current is not null && current.UpgradeLevel > incoming.UpgradeLevel)
+            return false;
+
+        SetStoredTool(player, incoming);
+        return true;
+    }
+
 }

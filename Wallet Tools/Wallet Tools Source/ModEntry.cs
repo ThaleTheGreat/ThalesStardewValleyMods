@@ -1027,8 +1027,9 @@ public sealed class ModEntry : Mod
         if (requested is null)
             return;
 
+        Farmer player = Game1.player;
         Helper.Input.Suppress(e.Button);
-        TryUseWalletToolHotkey(Game1.player, requested.Value, e.Button);
+        TryUseWalletToolHotkey(player, requested.Value, e.Button);
     }
 
     private void OnButtonReleased(object? sender, ButtonReleasedEventArgs e)
@@ -2779,7 +2780,12 @@ public sealed class ModEntry : Mod
 
     private static string GetToolIdentityText(Tool tool)
     {
-        return string.Join("\n", tool.ItemId, tool.QualifiedItemId, tool.Name, tool.DisplayName);
+        return GetItemIdentityText(tool);
+    }
+
+    private static string GetItemIdentityText(Item item)
+    {
+        return string.Join("\n", item.GetType().FullName, item.ItemId, item.QualifiedItemId, item.Name, item.DisplayName);
     }
 
     private static bool ToolMatchesWalletKind(Tool tool, WalletToolKind kind)
@@ -3266,9 +3272,26 @@ public sealed class ModEntry : Mod
         return TrySetTemporaryWalletTool(player, kind);
     }
 
+    private bool ShouldBlockAutomaticWalletToolUseForHeldItem(Farmer player)
+    {
+        return IsProtectedHeldItemForNormalUse(player.CurrentItem) && !IsLeftShiftHeld();
+    }
+
+    private bool IsLeftShiftHeld()
+    {
+        return Helper.Input.IsDown(SButton.LeftShift) || Helper.Input.IsSuppressed(SButton.LeftShift);
+    }
+
+    private static bool IsProtectedHeldItemForNormalUse(Item? item)
+    {
+        return item is FishingRod || item is MeleeWeapon;
+    }
+
     private bool TryMaterializeWalletToolForAutomaticUse(Farmer player, WalletToolKind kind)
     {
-        return IsAutoUseEnabled(kind) && TrySetTemporaryWalletTool(player, kind);
+        return !ShouldBlockAutomaticWalletToolUseForHeldItem(player)
+            && IsAutoUseEnabled(kind)
+            && TrySetTemporaryWalletTool(player, kind);
     }
 
     private bool TrySetTemporaryWalletTool(Farmer player, WalletToolKind kind)
@@ -3679,7 +3702,7 @@ public sealed class ModEntry : Mod
 
     private static class CheckIsMissingToolPatch
     {
-        public static void Postfix(Dictionary<Type, int> missingTools, ref int missingScythes, Item item)
+        public static void Postfix(Dictionary<Type, int> missingTools, Item item)
         {
             if (Instance is null || item is not Tool tool || !IsOvernightExposure(tool, out WalletToolKind kind))
                 return;
@@ -3687,11 +3710,11 @@ public sealed class ModEntry : Mod
             if (Context.IsMultiplayer && !HasOwnerMarker(tool))
                 return;
 
-            Instance.ApplyWalletToolOwnershipToMissingToolScan(missingTools, ref missingScythes, kind, tool);
+            Instance.ApplyWalletToolOwnershipToMissingToolScan(missingTools, kind, tool);
         }
     }
 
-    private void ApplyWalletToolOwnershipToMissingToolScan(Dictionary<Type, int> missingTools, ref int missingScythes, WalletToolKind kind, Tool tool)
+    private void ApplyWalletToolOwnershipToMissingToolScan(Dictionary<Type, int> missingTools, WalletToolKind kind, Tool tool)
     {
         Type? vanillaType = GetVanillaMissingToolType(kind);
         if (vanillaType is not null && missingTools.TryGetValue(vanillaType, out int count) && count > 0)

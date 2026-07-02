@@ -4,11 +4,11 @@
     <LangVersion>10.0</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
-    <AssemblyName>WalletToolsForAnimalHusbandry</AssemblyName>
-    <RootNamespace>ThaleTheGreat.WalletToolsForAnimalHusbandry</RootNamespace>
-    <Version>1.1.1</Version>
+    <AssemblyName>WalletToolsForNatureInTheValley</AssemblyName>
+    <RootNamespace>ThaleTheGreat.WalletToolsForNatureInTheValley</RootNamespace>
+    <Version>1.0.0</Version>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <ModFolderName>Wallet Tools for Animal Husbandry</ModFolderName>
+    <ModFolderName>Wallet Tools for Nature in the Valley</ModFolderName>
     <EnableHarmony>true</EnableHarmony>
   </PropertyGroup>
 

@@ -1,13 +1,13 @@
 {
-  "Name": "Wallet Tools for Animal Husbandry",
+  "Name": "Wallet Tools for Nature in the Valley",
   "Author": "ThaleTheGreat",
-  "Version": "1.1.1",
-  "Description": "Adds Animal Husbandry's Meat Cleaver/Wand to Wallet Tools.",
-  "UniqueID": "ThaleTheGreat.WalletToolsForAnimalHusbandry",
-  "EntryDll": "WalletToolsForAnimalHusbandry.dll",
+  "Version": "1.0.0",
+  "Description": "Adds Nature in the Valley nets to Wallet Tools.",
+  "UniqueID": "ThaleTheGreat.WalletToolsForNatureInTheValley",
+  "EntryDll": "WalletToolsForNatureInTheValley.dll",
   "MinimumApiVersion": "4.0.0",
   "UpdateKeys": [
-    "Nexus:47465"
+    "Nexus:48556"
   ],
   "Dependencies": [
     {
@@ -15,7 +15,11 @@
       "IsRequired": true
     },
     {
-      "UniqueID": "DIGUS.ANIMALHUSBANDRYMOD",
+      "UniqueID": "Nature.NatureInTheValley",
+      "IsRequired": true
+    },
+    {
+      "UniqueID": "Nature.NatureInValleyContent",
       "IsRequired": true
     },
     {
