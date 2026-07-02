@@ -264,3 +264,15 @@ internal static class CustomSprinklerRecognitionPatch
         __result = ModEntry.IsCustomSprinkler(__instance.ItemId);
     }
 }
+internal static class ImmersiveSprinklerRadiusCompatibilityPatch
+{
+    public static void AfterGetSprinklerRadius(SObject __0, ref int __result)
+    {
+        if (!ModEntry.IsCustomSprinkler(__0.ItemId))
+            return;
+
+        int range = ModEntry.GetSprinklerRange(__0);
+        if (range > 0)
+            __result = range;
+    }
+}

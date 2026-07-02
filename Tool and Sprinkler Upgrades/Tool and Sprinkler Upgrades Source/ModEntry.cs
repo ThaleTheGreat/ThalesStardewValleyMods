@@ -43,6 +43,7 @@ public sealed class ModEntry : Mod
         harmony.PatchAll(Assembly.GetExecutingAssembly());
         PatchToolStaminaUse(harmony);
         PatchCustomSprinklerRecognition(harmony);
+        PatchImmersiveSprinklersAndScarecrows(harmony);
     }
 
 
@@ -110,6 +111,28 @@ public sealed class ModEntry : Mod
         }
 
         harmony.Patch(isSprinkler, postfix: new HarmonyMethod(postfix));
+    }
+
+
+    private void PatchImmersiveSprinklersAndScarecrows(Harmony harmony)
+    {
+        if (!Helper.ModRegistry.IsLoaded(Constants.ImmersiveSprinklersAndScarecrowsModId))
+            return;
+
+        Type? immersiveModEntryType = AccessTools.TypeByName("ImmersiveSprinklersAndScarecrows.ModEntry");
+        MethodInfo? getSprinklerRadius = immersiveModEntryType == null
+            ? null
+            : AccessTools.Method(immersiveModEntryType, "GetSprinklerRadius", new[] { typeof(SObject) });
+        MethodInfo? postfix = AccessTools.Method(typeof(ImmersiveSprinklerRadiusCompatibilityPatch), nameof(ImmersiveSprinklerRadiusCompatibilityPatch.AfterGetSprinklerRadius));
+
+        if (getSprinklerRadius == null || postfix == null)
+        {
+            Monitor.Log("Immersive Sprinklers and Scarecrows compatibility was skipped because its expected GetSprinklerRadius method was not found.", LogLevel.Warn);
+            return;
+        }
+
+        harmony.Patch(getSprinklerRadius, postfix: new HarmonyMethod(postfix));
+        DebugLog("Applied Immersive Sprinklers and Scarecrows radius compatibility.");
     }
 
     private void PatchToolStaminaUse(Harmony harmony)
@@ -403,7 +426,7 @@ public sealed class ModEntry : Mod
         if (baseRange <= 0)
             return 0;
 
-        if (!IsPressureNozzle(sprinkler.heldObject.Value))
+        if (!HasPressureNozzle(sprinkler))
             return baseRange;
 
         int upgradedRange = baseRange + 1;
@@ -440,6 +463,11 @@ public sealed class ModEntry : Mod
         return Config.RadioactiveSprinklerActsAsScarecrow && IsObjectId(obj, Constants.RadioactiveSprinklerId);
     }
 
+    private static bool HasPressureNozzle(SObject sprinkler)
+    {
+        return IsPressureNozzle(sprinkler.heldObject.Value) || sprinkler.modData.ContainsKey(Constants.ImmersivePressureNozzleKey);
+    }
+
     private static bool IsPressureNozzle(SObject? obj)
     {
         return obj != null && IsObjectId(obj, Constants.PressureNozzleId);
@@ -450,7 +478,7 @@ public sealed class ModEntry : Mod
         return item.ItemId == id || item.QualifiedItemId == "(O)" + id;
     }
 
-    private const string SpriteRefreshVersion = "1.2.0";
+    private const string SpriteRefreshVersion = "1.3.0";
 
     private void RefreshExistingCustomToolSprites()
     {

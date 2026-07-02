@@ -8,6 +8,8 @@ internal static class Constants
     public const int DeluxeScarecrowRadius = 17;
 
     public const string ModId = "ThaleTheGreat.ToolAndSprinklerUpgrades";
+    public const string ImmersiveSprinklersAndScarecrowsModId = "aedenthorn.ImmersiveSprinklersAndScarecrows";
+    public const string ImmersivePressureNozzleKey = "aedenthorn.ImmersiveSprinklersAndScarecrows/nozzle";
     public const string CobaltTextureAsset = "Mods/ThaleTheGreat.ToolAndSprinklerUpgrades/Cobalt";
     public const string PrismaticTextureAsset = "Mods/ThaleTheGreat.ToolAndSprinklerUpgrades/Prismatic";
     public const string RadioactiveTextureAsset = "Mods/ThaleTheGreat.ToolAndSprinklerUpgrades/Radioactive";
