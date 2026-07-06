@@ -61,6 +61,13 @@ public sealed class ModEntry : Mod
         set => PendingManualUseHotkeyScreen.Value = value;
     }
 
+    private readonly PerScreen<bool> SuppressWeaponRepeatUseUntilReleaseScreen = new();
+    private bool SuppressWeaponRepeatUseUntilRelease
+    {
+        get => SuppressWeaponRepeatUseUntilReleaseScreen.Value;
+        set => SuppressWeaponRepeatUseUntilReleaseScreen.Value = value;
+    }
+
     private Harmony Harmony = null!;
     private readonly PerScreen<bool> SuppressInventoryConversionScreen = new();
     private bool SuppressInventoryConversion
@@ -87,6 +94,7 @@ public sealed class ModEntry : Mod
     private IGenericModConfigMenuApi? GmcmApi;
     private IMobilePhoneApi? MobilePhoneApi;
     private ISpecialPowerAPI? SpecialPowerApi;
+    private IItemExtensionsApi? ItemExtensionsApi;
     private bool GmcmMissingLogged;
     private bool ToolSmartSwitchPatched;
     private bool ToolSmartSwitchPatchAttempted;
@@ -292,6 +300,7 @@ public sealed class ModEntry : Mod
 
     private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
     {
+        ItemExtensionsApi = Helper.ModRegistry.GetApi<IItemExtensionsApi>("mistyspring.ItemExtensions");
         RegisterGmcm();
         RegisterMobilePhoneApp();
         RegisterSpecialPowerUtilities();
@@ -907,6 +916,7 @@ public sealed class ModEntry : Mod
         ActiveBlacksmithExposures.Clear();
         PendingToolUse = null;
         PendingManualUseHotkey = null;
+        SuppressWeaponRepeatUseUntilRelease = false;
         PendingInventoryConversion = false;
         MayHaveMenuVirtualToolsInInventory = false;
         SuppressInventoryConversion = false;
@@ -977,6 +987,8 @@ public sealed class ModEntry : Mod
 
     private void UpdatePendingTemporaryToolUse()
     {
+        ClearWeaponRepeatUseSuppressionIfReleased();
+
         if (PendingToolUse is null)
             return;
 
@@ -1048,7 +1060,13 @@ public sealed class ModEntry : Mod
 
     private void OnButtonReleased(object? sender, ButtonReleasedEventArgs e)
     {
-        if (!Context.IsWorldReady || PendingManualUseHotkey != e.Button)
+        if (!Context.IsWorldReady)
+            return;
+
+        if (SuppressWeaponRepeatUseUntilRelease && IsVanillaUseToolButton(e.Button))
+            SuppressWeaponRepeatUseUntilRelease = false;
+
+        if (PendingManualUseHotkey != e.Button)
             return;
 
         if (IsManualWalletToolHotkeyPhysicallyHeld())
@@ -1107,6 +1125,43 @@ public sealed class ModEntry : Mod
     private static bool IsUseToolButtonBinding(InputButton[] keys)
     {
         return ReferenceEquals(keys, Game1.options?.useToolButton);
+    }
+
+    private bool IsVanillaUseToolInputHeld()
+    {
+        InputButton[]? keys = Game1.options?.useToolButton;
+        if (keys is not null)
+        {
+            foreach (InputButton key in keys)
+            {
+                SButton button = key.ToSButton();
+                if (Helper.Input.IsDown(button) || Helper.Input.IsSuppressed(button))
+                    return true;
+            }
+        }
+
+        return Helper.Input.IsDown(SButton.ControllerX) || Helper.Input.IsSuppressed(SButton.ControllerX);
+    }
+
+    private static bool IsVanillaUseToolButton(SButton button)
+    {
+        InputButton[]? keys = Game1.options?.useToolButton;
+        if (keys is not null)
+        {
+            foreach (InputButton key in keys)
+            {
+                if (key.ToSButton() == button)
+                    return true;
+            }
+        }
+
+        return button == SButton.ControllerX;
+    }
+
+    private void ClearWeaponRepeatUseSuppressionIfReleased()
+    {
+        if (SuppressWeaponRepeatUseUntilRelease && !IsVanillaUseToolInputHeld())
+            SuppressWeaponRepeatUseUntilRelease = false;
     }
 
     private WalletToolKind? GetRequestedHotkeyTool()
@@ -3022,6 +3077,20 @@ public sealed class ModEntry : Mod
             || Helper.ModRegistry.IsLoaded("Trapyy.AutomatetoolSwap");
     }
 
+    private bool BeforeVanillaPressUseToolButton(Farmer player)
+    {
+        if (SuppressWeaponRepeatUseUntilRelease)
+        {
+            if (IsVanillaUseToolInputHeld())
+                return false;
+
+            SuppressWeaponRepeatUseUntilRelease = false;
+        }
+
+        TryPrepareWalletToolUse(player);
+        return true;
+    }
+
     private bool TryPrepareWalletToolUse(Farmer player)
     {
         if (PendingToolUse is not null || !Config.ModEnabled || !Config.AutoUseEnabled || Game1.fadeToBlack || !Context.CanPlayerMove || IsToolUpgradeLocation(player.currentLocation))
@@ -3039,220 +3108,395 @@ public sealed class ModEntry : Mod
         return TrySupplyRequestedWalletTool(player, toolType, anyTool);
     }
 
+    private enum ToolUseRuleResult
+    {
+        NoMatch,
+        Handled,
+        UseTool
+    }
+
     private static bool TryGetFallbackAnimalToolRequest(Farmer player, [NotNullWhen(true)] out Type? toolType)
     {
-        Vector2 position = !Game1.wasMouseVisibleThisFrame
-            ? player.GetToolLocation(false)
-            : new Vector2(Game1.getOldMouseX() + Game1.viewport.X, Game1.getOldMouseY() + Game1.viewport.Y);
-
-        Vector2 tile = player.GetToolLocation(position, false) / 64f;
-        tile = new Vector2((int)tile.X, (int)tile.Y);
-
-        return TryGetToolRequestForFarmAnimal(player.currentLocation, tile, player, out toolType);
+        Vector2 tile = GetHybridTargetTile(player);
+        bool anyTool;
+        return TryGetAnimalToolRequest(player.currentLocation, tile, player, out toolType, out anyTool) == ToolUseRuleResult.UseTool;
     }
 
     private bool TryGetFallbackToolRequest(Farmer player, [NotNullWhen(true)] out Type? toolType, out bool anyTool)
     {
+        Vector2 tile = GetHybridTargetTile(player);
+        GameLocation location = player.currentLocation;
+
+        ToolUseRuleResult result = TryGetObjectToolRequest(location, tile, player, out toolType, out anyTool);
+        if (result != ToolUseRuleResult.NoMatch)
+            return result == ToolUseRuleResult.UseTool;
+
+        result = TryGetResourceClumpToolRequest(location, tile, player, out toolType, out anyTool);
+        if (result != ToolUseRuleResult.NoMatch)
+            return result == ToolUseRuleResult.UseTool;
+
+        result = TryGetTerrainFeatureToolRequest(location, tile, player, out toolType, out anyTool);
+        if (result != ToolUseRuleResult.NoMatch)
+            return result == ToolUseRuleResult.UseTool;
+
+        result = TryGetMonsterToolRequest(location, tile, player, out toolType, out anyTool);
+        if (result != ToolUseRuleResult.NoMatch)
+            return result == ToolUseRuleResult.UseTool;
+
+        result = TryGetWaterToolRequest(location, tile, player, out toolType, out anyTool);
+        if (result != ToolUseRuleResult.NoMatch)
+            return result == ToolUseRuleResult.UseTool;
+
+        result = TryGetAnimalToolRequest(location, tile, player, out toolType, out anyTool);
+        if (result != ToolUseRuleResult.NoMatch)
+            return result == ToolUseRuleResult.UseTool;
+
+        result = TryGetSoilToolRequest(location, tile, player, out toolType, out anyTool);
+        return result == ToolUseRuleResult.UseTool;
+    }
+
+    private static Vector2 GetHybridTargetTile(Farmer player)
+    {
         Vector2 position = !Game1.wasMouseVisibleThisFrame
             ? player.GetToolLocation(false)
             : new Vector2(Game1.getOldMouseX() + Game1.viewport.X, Game1.getOldMouseY() + Game1.viewport.Y);
 
-        Vector2 tile = player.GetToolLocation(position, false) / 64f;
-        tile = new Vector2((int)tile.X, (int)tile.Y);
-
-        if (TryGetToolRequestForFarmAnimal(player.currentLocation, tile, player, out toolType))
-        {
-            anyTool = false;
-            return true;
-        }
-
-        if (player.currentLocation.objects.TryGetValue(tile, out Object obj) && TryGetToolRequestForObject(obj, out toolType, out anyTool))
-            return true;
-
-        if (player.currentLocation.terrainFeatures.TryGetValue(tile, out TerrainFeature feature))
-        {
-            if (TryGetToolRequestForTerrainFeature(feature, out toolType, out anyTool))
-                return true;
-
-            if (player.currentLocation is Farm && feature is HoeDirt dirt && dirt.state.Value == 0)
-            {
-                toolType = typeof(WateringCan);
-                anyTool = false;
-                return true;
-            }
-
-            if (feature is HoeDirt cropDirt && cropDirt.crop is not null && cropDirt.crop.forageCrop.Value && cropDirt.crop.whichForageCrop.Value == Crop.forageCrop_ginger.ToString())
-            {
-                toolType = typeof(Hoe);
-                anyTool = false;
-                return true;
-            }
-        }
-
-        {
-            Rectangle tileRect = new((int)tile.X * 64, (int)tile.Y * 64, 64, 64);
-            foreach (ResourceClump clump in player.currentLocation.resourceClumps)
-            {
-                if (clump.getBoundingBox().Intersects(tileRect) && TryGetToolRequestForClump(clump, out toolType))
-                {
-                    anyTool = false;
-                    return true;
-                }
-            }
-        }
-
-
-        if (ShouldPreserveWeaponUseForNearbyMonster(player, tile))
-        {
-            toolType = null;
-            anyTool = false;
-            return false;
-        }
-        {
-            int panX = player.currentLocation.orePanPoint.X;
-            int panY = player.currentLocation.orePanPoint.Y;
-            if (panX != 0 || panY != 0)
-            {
-                Rectangle panRect = new(panX * 64 - 64, panY * 64 - 64, 256, 256);
-                if (panRect.Contains((int)tile.X * 64, (int)tile.Y * 64) && Utility.distance(player.getStandingPosition().X, panRect.Center.X, player.getStandingPosition().Y, panRect.Center.Y) <= 192f)
-                {
-                    toolType = typeof(Pan);
-                    anyTool = false;
-                    return true;
-                }
-            }
-        }
-
-
-        if (TryNeedsWateringCan(player, tile))
-        {
-            if (ShouldPreserveFishingRodWaterUse(player, tile))
-            {
-                toolType = null;
-                anyTool = false;
-                return false;
-            }
-
-            toolType = typeof(WateringCan);
-            anyTool = false;
-            return true;
-        }
-
-        if (IsDiggableHoeTile(player.currentLocation, tile))
-        {
-            toolType = typeof(Hoe);
-            anyTool = false;
-            return true;
-        }
-
-        toolType = null;
-        anyTool = false;
-        return false;
+        Vector2 tile = player.GetToolLocation(position, false) / Game1.tileSize;
+        return new Vector2((int)tile.X, (int)tile.Y);
     }
 
-    private static bool TryGetToolRequestForFarmAnimal(GameLocation location, Vector2 tile, Farmer player, [NotNullWhen(true)] out Type? toolType)
+    private ToolUseRuleResult TryGetObjectToolRequest(GameLocation location, Vector2 tile, Farmer player, out Type? toolType, out bool anyTool)
     {
-        if (location is not (Farm or AnimalHouse))
+        toolType = null;
+        anyTool = false;
+
+        Object? obj = location.getObjectAtTile((int)tile.X, (int)tile.Y);
+        if (obj is null)
+            return ToolUseRuleResult.NoMatch;
+
+        Item? currentItem = player.CurrentItem;
+        string currentItemName = currentItem?.Name ?? string.Empty;
+        int currentItemCategory = currentItem?.category.Value ?? 0;
+        bool currentItemIsNull = currentItem is null;
+        bool currentItemCantBreak = currentItem is not (Pickaxe or Axe);
+        bool currentItemIsNotForMine = currentItemIsNull || (!currentItemName.Contains("Bomb", StringComparison.OrdinalIgnoreCase) && !currentItemName.Contains("Staircase", StringComparison.OrdinalIgnoreCase));
+
+        ToolUseRuleResult moddedTool = TryGetItemExtensionsToolRequest(obj.ItemId, ItemExtensionsApi?.IsClump(obj.ItemId) == true, currentItemIsNotForMine, out toolType, out anyTool);
+        if (moddedTool != ToolUseRuleResult.NoMatch)
+            return moddedTool;
+
+        if (obj.IsWeeds())
+            return ToolUseRuleResult.Handled;
+
+        if (obj.IsBreakableStone())
+            return currentItemIsNotForMine ? UseTool(typeof(Pickaxe), out toolType, out anyTool) : ToolUseRuleResult.Handled;
+
+        if (obj.IsTwig())
+            return UseTool(typeof(Axe), out toolType, out anyTool);
+
+        if (obj.isForage())
+            return ToolUseRuleResult.Handled;
+
+        if (obj is CrabPot crabPot && crabPot.bait.Value is null)
+            return ToolUseRuleResult.Handled;
+
+        switch (obj.Name)
         {
-            toolType = null;
-            return false;
+            case "Seed Spot":
+            case "Artifact Spot":
+                return UseTool(typeof(Hoe), out toolType, out anyTool);
+
+            case "Garden Pot":
+                if (currentItemIsNull || (currentItemCantBreak && currentItemCategory != -74))
+                    return UseTool(typeof(WateringCan), out toolType, out anyTool);
+                return ToolUseRuleResult.Handled;
+
+            case "Supply Crate":
+                return UseTool(typeof(Hoe), out toolType, out anyTool, true);
+
+            case "Water Bowl":
+                if (currentItemCantBreak)
+                    return UseTool(typeof(WateringCan), out toolType, out anyTool);
+                return ToolUseRuleResult.Handled;
         }
 
-        foreach (FarmAnimal animal in location.getAllFarmAnimals())
+        if (string.Equals(obj.QualifiedItemId, "(O)590", StringComparison.OrdinalIgnoreCase) || string.Equals(obj.ItemId, "590", StringComparison.OrdinalIgnoreCase))
+            return UseTool(typeof(Hoe), out toolType, out anyTool);
+
+        return ToolUseRuleResult.Handled;
+    }
+
+    private ToolUseRuleResult TryGetResourceClumpToolRequest(GameLocation location, Vector2 tile, Farmer player, out Type? toolType, out bool anyTool)
+    {
+        toolType = null;
+        anyTool = false;
+
+        Item? currentItem = player.CurrentItem;
+        string currentItemName = currentItem?.Name ?? string.Empty;
+        bool currentItemIsNull = currentItem is null;
+        bool currentItemIsNotForMine = currentItemIsNull || (!currentItemName.Contains("Bomb", StringComparison.OrdinalIgnoreCase) && !currentItemName.Contains("Staircase", StringComparison.OrdinalIgnoreCase));
+
+        foreach (ResourceClump clump in location.resourceClumps)
         {
-            if (animal.currentLocation != player.currentLocation)
+            if (!clump.occupiesTile((int)tile.X, (int)tile.Y))
                 continue;
 
-            if (Vector2.Distance(tile, animal.Tile) > 1f)
+            if (TryGetModdedClumpId(clump, out string clumpId))
+            {
+                ToolUseRuleResult moddedTool = TryGetItemExtensionsToolRequest(clumpId, true, currentItemIsNotForMine, out toolType, out anyTool);
+                if (moddedTool != ToolUseRuleResult.NoMatch)
+                    return moddedTool;
+            }
+
+            if (clump is GiantCrop)
+                return !string.Equals(currentItemName, "Tapper", StringComparison.OrdinalIgnoreCase) ? UseTool(typeof(Axe), out toolType, out anyTool) : ToolUseRuleResult.Handled;
+
+            if (IsStumpOrLog(clump))
+                return UseTool(typeof(Axe), out toolType, out anyTool);
+
+            if (IsBoulder(clump))
+                return UseTool(typeof(Pickaxe), out toolType, out anyTool);
+
+            if (IsGreenRainBush(clump))
+                return ToolUseRuleResult.Handled;
+
+            return ToolUseRuleResult.Handled;
+        }
+
+        return ToolUseRuleResult.NoMatch;
+    }
+
+    private ToolUseRuleResult TryGetTerrainFeatureToolRequest(GameLocation location, Vector2 tile, Farmer player, out Type? toolType, out bool anyTool)
+    {
+        toolType = null;
+        anyTool = false;
+
+        Item? currentItem = player.CurrentItem;
+        string currentItemName = currentItem?.Name ?? string.Empty;
+        int currentItemCategory = currentItem?.category.Value ?? 0;
+        bool currentItemIsNull = currentItem is null;
+
+        foreach (LargeTerrainFeature terrainFeature in location.largeTerrainFeatures)
+        {
+            if (terrainFeature is not Bush bush)
                 continue;
 
-            if (animal.type.Contains("Cow") || animal.type.Contains("Goat"))
-            {
-                toolType = typeof(MilkPail);
-                return true;
-            }
-
-            if (animal.type.Contains("Sheep"))
-            {
-                toolType = typeof(Shears);
-                return true;
-            }
+            Rectangle bushBox = bush.getBoundingBox();
+            Vector2 tilePixel = tile * Game1.tileSize;
+            if (bushBox.Contains((int)tilePixel.X, (int)tilePixel.Y) && bush.inBloom())
+                return ToolUseRuleResult.Handled;
         }
 
-        toolType = null;
-        return false;
-    }
-
-    private static bool TryGetToolRequestForObject(Object obj, [NotNullWhen(true)] out Type? toolType, out bool anyTool)
-    {
-        anyTool = false;
-
-        if (obj.Name.Equals("Stone", StringComparison.OrdinalIgnoreCase))
-        {
-            toolType = typeof(Pickaxe);
-            return true;
-        }
-
-        if (obj.Name.Contains("Twig", StringComparison.OrdinalIgnoreCase))
-        {
-            toolType = typeof(Axe);
-            return true;
-        }
-
-        if (obj.ParentSheetIndex == 590)
-        {
-            toolType = typeof(Hoe);
-            return true;
-        }
-
-        if (obj is BreakableContainer)
-        {
-            toolType = typeof(Axe);
-            anyTool = true;
-            return true;
-        }
-
-        toolType = null;
-        return false;
-    }
-
-    private bool TryGetToolRequestForTerrainFeature(TerrainFeature feature, [NotNullWhen(true)] out Type? toolType, out bool anyTool)
-    {
-        anyTool = false;
+        if (!location.terrainFeatures.TryGetValue(tile, out TerrainFeature? feature))
+            return ToolUseRuleResult.NoMatch;
 
         if (feature is Tree tree)
         {
-            if (tree.growthStage.Value >= 3)
-            {
-                toolType = typeof(Axe);
-                return true;
-            }
+            if (tree.hasMoss.Value && tree.growthStage.Value >= Tree.stageForMossGrowth)
+                return ToolUseRuleResult.Handled;
 
-            toolType = typeof(Axe);
-            anyTool = true;
-            return true;
+            if (!currentItemIsNull && (string.Equals(currentItemName, "Tapper", StringComparison.OrdinalIgnoreCase) || string.Equals(currentItemName, "Heavy Tapper", StringComparison.OrdinalIgnoreCase) || string.Equals(currentItemName, "Tree Fertilizer", StringComparison.OrdinalIgnoreCase)))
+                return ToolUseRuleResult.Handled;
+
+            return UseTool(typeof(Axe), out toolType, out anyTool);
         }
 
+        if (feature is Grass)
+            return player.CurrentTool is MilkPail or Shears ? ToolUseRuleResult.NoMatch : ToolUseRuleResult.Handled;
+
+        if (feature is HoeDirt dirt)
+        {
+            Crop? crop = dirt.crop;
+
+            if (crop is null)
+            {
+                bool holdingSeeds = currentItem is not null && currentItem.HasContextTag("category_seeds") && !currentItem.HasContextTag("tree_seed_item");
+                if (!holdingSeeds && !player.isRidingHorse())
+                    return UseTool(typeof(Pickaxe), out toolType, out anyTool);
+
+                return ToolUseRuleResult.Handled;
+            }
+
+            if (dirt.readyForHarvest() || crop.dead.Value)
+                return ToolUseRuleResult.Handled;
+
+            if (crop.whichForageCrop.Value == Crop.forageCrop_ginger.ToString())
+                return UseTool(typeof(Hoe), out toolType, out anyTool);
+
+            if (!dirt.isWatered())
+            {
+                if (!(IsRidingTractor(player) && player.CurrentTool is Hoe))
+                    return UseTool(typeof(WateringCan), out toolType, out anyTool);
+
+                return ToolUseRuleResult.Handled;
+            }
+
+            if (!dirt.HasFertilizer() && dirt.CanApplyFertilizer("(O)369") && currentItemCategory == -19)
+                return ToolUseRuleResult.Handled;
+
+            return ToolUseRuleResult.Handled;
+        }
+
+        return ToolUseRuleResult.NoMatch;
+    }
+
+    private static ToolUseRuleResult TryGetMonsterToolRequest(GameLocation location, Vector2 tile, Farmer player, out Type? toolType, out bool anyTool)
+    {
         toolType = null;
+        anyTool = false;
+
+        foreach (NPC character in location.characters)
+        {
+            if (character.IsMonster && Vector2.Distance(tile, character.Tile) < 3f)
+                return ToolUseRuleResult.Handled;
+        }
+
+        return ToolUseRuleResult.NoMatch;
+    }
+
+    private ToolUseRuleResult TryGetWaterToolRequest(GameLocation location, Vector2 tile, Farmer player, out Type? toolType, out bool anyTool)
+    {
+        toolType = null;
+        anyTool = false;
+
+        if (IsPetBowlTile(location, tile) || IsStableTile(location, tile))
+            return UseTool(typeof(WateringCan), out toolType, out anyTool);
+
+        if (IsPanSpot(location, tile, player))
+            return UseTool(typeof(Pan), out toolType, out anyTool);
+
+        bool shouldUseWateringCan = ShouldUseWateringCanForAutomateToolSwapLocation(location);
+        if ((IsWaterSourceTile(location, tile) || IsWaterTileForAutomateToolSwap(location, tile, player)) && shouldUseWateringCan)
+        {
+            if (player.CurrentItem is not FishingRod)
+                return UseTool(typeof(WateringCan), out toolType, out anyTool);
+
+            return ToolUseRuleResult.Handled;
+        }
+
+        if (IsWaterTileForAutomateToolSwap(location, tile, player))
+            return ToolUseRuleResult.Handled;
+
+        return ToolUseRuleResult.NoMatch;
+    }
+
+    private static ToolUseRuleResult TryGetAnimalToolRequest(GameLocation location, Vector2 tile, Farmer player, out Type? toolType, out bool anyTool)
+    {
+        toolType = null;
+        anyTool = false;
+
+        if (location is not (Farm or AnimalHouse))
+            return ToolUseRuleResult.NoMatch;
+
+        foreach (FarmAnimal animal in location.getAllFarmAnimals())
+        {
+            if (animal.currentLocation != player.currentLocation || Vector2.Distance(tile, animal.Tile) > 1f)
+                continue;
+
+            if (animal.type.Contains("Cow") || animal.type.Contains("Goat"))
+                return UseTool(typeof(MilkPail), out toolType, out anyTool);
+
+            if (animal.type.Contains("Sheep"))
+                return UseTool(typeof(Shears), out toolType, out anyTool);
+        }
+
+        bool tileIsFeedingBench = location is AnimalHouse && location.doesTileHaveProperty((int)tile.X, (int)tile.Y, "Trough", "Back") is not null;
+        return tileIsFeedingBench ? ToolUseRuleResult.Handled : ToolUseRuleResult.NoMatch;
+    }
+
+    private static bool IsRidingTractor(Farmer player)
+    {
+        return player.isRidingHorse()
+            && player.mount?.Name?.Contains("tractor", StringComparison.OrdinalIgnoreCase) == true;
+    }
+
+    private static ToolUseRuleResult TryGetSoilToolRequest(GameLocation location, Vector2 tile, Farmer player, out Type? toolType, out bool anyTool)
+    {
+        toolType = null;
+        anyTool = false;
+
+        if (!IsDiggableHoeTile(location, tile))
+            return ToolUseRuleResult.NoMatch;
+
+        if (location is Mine or MineShaft or VolcanoDungeon)
+            return ToolUseRuleResult.NoMatch;
+
+        bool isWeaponEquipped = player.CurrentItem is MeleeWeapon && player.CurrentItem?.category.Value == -98;
+        if (isWeaponEquipped && Game1.spawnMonstersAtNight)
+            return ToolUseRuleResult.NoMatch;
+
+        if (player.CurrentItem is FishingRod or GenericTool or Wand)
+            return ToolUseRuleResult.NoMatch;
+
+        bool isPathTile = location.isPath(tile);
+        bool isPlaceableItem = player.CurrentItem is not null && player.CurrentItem.isPlaceable();
+
+        if (isPathTile)
+        {
+            if (player.CurrentTool is not Pickaxe && !isPlaceableItem)
+                return UseTool(typeof(Pickaxe), out toolType, out anyTool);
+
+            return ToolUseRuleResult.Handled;
+        }
+
+        if (player.CurrentItem is null || (!isPlaceableItem && player.CurrentItem is not Hoe))
+            return UseTool(typeof(Hoe), out toolType, out anyTool);
+
+        return ToolUseRuleResult.Handled;
+    }
+
+    private ToolUseRuleResult TryGetItemExtensionsToolRequest(string itemId, bool isClump, bool currentItemIsNotForMine, out Type? toolType, out bool anyTool)
+    {
+        toolType = null;
+        anyTool = false;
+
+        if (ItemExtensionsApi is null || string.IsNullOrWhiteSpace(itemId) || !ItemExtensionsApi.GetBreakingTool(itemId, isClump, out string tool))
+            return ToolUseRuleResult.NoMatch;
+
+        if (tool.Equals("Pickaxe", StringComparison.OrdinalIgnoreCase))
+            return currentItemIsNotForMine ? UseTool(typeof(Pickaxe), out toolType, out anyTool) : ToolUseRuleResult.Handled;
+
+        if (tool.Equals("Axe", StringComparison.OrdinalIgnoreCase))
+            return UseTool(typeof(Axe), out toolType, out anyTool);
+
+        return ToolUseRuleResult.Handled;
+    }
+
+    private static ToolUseRuleResult UseTool(Type requestedToolType, out Type? toolType, out bool anyTool, bool allowAnyTool = false)
+    {
+        toolType = requestedToolType;
+        anyTool = allowAnyTool;
+        return ToolUseRuleResult.UseTool;
+    }
+
+    private static bool TryGetModdedClumpId(ResourceClump clump, out string itemId)
+    {
+        foreach (var pair in clump.modDataForSerialization.Pairs)
+        {
+            if (pair.Key.Contains("clumpid", StringComparison.OrdinalIgnoreCase))
+            {
+                itemId = pair.Value;
+                return !string.IsNullOrWhiteSpace(itemId);
+            }
+        }
+
+        itemId = string.Empty;
         return false;
     }
 
-    private static bool TryGetToolRequestForClump(ResourceClump clump, [NotNullWhen(true)] out Type? toolType)
+    private static bool IsStumpOrLog(ResourceClump clump)
     {
-        if (clump.parentSheetIndex.Value == 600 || clump.parentSheetIndex.Value == 602)
-        {
-            toolType = typeof(Axe);
-            return true;
-        }
+        return clump.parentSheetIndex.Value is 600 or 602;
+    }
 
-        if (new[] { 622, 672, 752, 754, 756, 758 }.Contains(clump.parentSheetIndex.Value))
-        {
-            toolType = typeof(Pickaxe);
-            return true;
-        }
+    private static bool IsBoulder(ResourceClump clump)
+    {
+        return clump.parentSheetIndex.Value is 148 or 622 or 672 or 752 or 754 or 756 or 758;
+    }
 
-        toolType = null;
-        return false;
+    private static bool IsGreenRainBush(ResourceClump clump)
+    {
+        return clump.parentSheetIndex.Value is 44 or 46;
     }
 
     private static bool IsDiggableHoeTile(GameLocation location, Vector2 tile)
@@ -3267,28 +3511,16 @@ public sealed class ModEntry : Mod
             || location.doesTileHaveProperty(x, y, "Diggable", "Buildings") is not null;
     }
 
-    private static bool TryNeedsWateringCan(Farmer player, Vector2 tile)
+    private static bool IsPanSpot(GameLocation location, Vector2 tile, Farmer player)
     {
-        GameLocation location = player.currentLocation;
-        int x = (int)tile.X;
-        int y = (int)tile.Y;
-
-        if (IsPetBowlTile(location, tile))
-            return true;
-
-        if (!ShouldUseWateringCanForAutomateToolSwapLocation(location))
+        int panX = location.orePanPoint.X;
+        int panY = location.orePanPoint.Y;
+        if (panX == 0 && panY == 0)
             return false;
 
-        if (location is VolcanoDungeon volcano && volcano.level.Value != 5 && IsWaterTileOnMap(location, tile) && !volcano.cooledLavaTiles.ContainsKey(tile))
-            return true;
-
-        if (IsWaterSourceTile(location, tile))
-            return true;
-
-        if (IsWaterTileForAutomateToolSwap(location, tile, player))
-            return true;
-
-        return location.isTileOnMap(tile) && location.CanRefillWateringCanOnTile(x, y);
+        Rectangle panRect = new(panX * 64 - 64, panY * 64 - 64, 256, 256);
+        return panRect.Contains((int)tile.X * 64, (int)tile.Y * 64)
+            && Utility.distance(player.StandingPixel.X, panRect.Center.X, player.StandingPixel.Y, panRect.Center.Y) <= 192f;
     }
 
     private static bool ShouldUseWateringCanForAutomateToolSwapLocation(GameLocation location)
@@ -3318,13 +3550,10 @@ public sealed class ModEntry : Mod
         return location.objects.TryGetValue(tile, out Object bowl) && bowl.Name.EndsWith("Pet Bowl", StringComparison.OrdinalIgnoreCase);
     }
 
-    private static bool ShouldPreserveFishingRodWaterUse(Farmer player, Vector2 tile)
+    private static bool IsStableTile(GameLocation location, Vector2 tile)
     {
-        if (player.CurrentItem is not FishingRod)
-            return false;
-
-        GameLocation location = player.currentLocation;
-        return IsWaterSourceTile(location, tile) || IsWaterTileOnMap(location, tile);
+        Building? building = location.getBuildingAt(tile);
+        return building is Stable;
     }
 
     private static bool IsWaterSourceTile(GameLocation location, Vector2 tile)
@@ -3348,24 +3577,8 @@ public sealed class ModEntry : Mod
         int x = (int)tile.X;
         int y = (int)tile.Y;
 
-        if (!location.isTileOnMap(tile))
-            return false;
-
-        return location.doesTileHaveProperty(x, y, "Water", "Back") is not null || location.waterTiles[x, y];
-    }
-
-    private static bool ShouldPreserveWeaponUseForNearbyMonster(Farmer player, Vector2 tile)
-    {
-        if (player.CurrentItem is not MeleeWeapon)
-            return false;
-
-        foreach (NPC character in player.currentLocation.characters)
-        {
-            if (character.IsMonster && Vector2.Distance(tile, character.Tile) < 3f)
-                return true;
-        }
-
-        return false;
+        return location.isTileOnMap(tile)
+            && location.doesTileHaveProperty(x, y, "Water", "Back") is not null;
     }
 
     private bool TryMaterializeWalletToolForManualUse(Farmer player, WalletToolKind kind)
@@ -3373,53 +3586,9 @@ public sealed class ModEntry : Mod
         return TrySetTemporaryWalletTool(player, kind);
     }
 
-    private bool ShouldBlockAutomaticWalletToolUseForHeldItem(Farmer player)
-    {
-        return Config.UseNewToolUseLogic
-            && IsProtectedHeldItemForNormalUse(player.CurrentItem)
-            && !IsHeldItemAutoUseModifierHeld();
-    }
-
-    private bool IsHeldItemAutoUseModifierHeld()
-    {
-        return Config.HeldItemAutoUseModifierHotkey.IsDown()
-            || IsSuppressedKeybindDown(Config.HeldItemAutoUseModifierHotkey);
-    }
-
-    private bool IsSuppressedKeybindDown(KeybindList keybindList)
-    {
-        foreach (Keybind keybind in keybindList.Keybinds)
-        {
-            bool hasButton = false;
-            bool allButtonsDownOrSuppressed = true;
-
-            foreach (SButton button in keybind.Buttons)
-            {
-                hasButton = true;
-
-                if (!Helper.Input.IsDown(button) && !Helper.Input.IsSuppressed(button))
-                {
-                    allButtonsDownOrSuppressed = false;
-                    break;
-                }
-            }
-
-            if (hasButton && allButtonsDownOrSuppressed)
-                return true;
-        }
-
-        return false;
-    }
-
-    private static bool IsProtectedHeldItemForNormalUse(Item? item)
-    {
-        return item is FishingRod || item is MeleeWeapon;
-    }
-
     private bool TryMaterializeWalletToolForAutomaticUse(Farmer player, WalletToolKind kind)
     {
-        return !ShouldBlockAutomaticWalletToolUseForHeldItem(player)
-            && IsAutoUseEnabled(kind)
+        return IsAutoUseEnabled(kind)
             && TrySetTemporaryWalletTool(player, kind);
     }
 
@@ -3601,6 +3770,7 @@ public sealed class ModEntry : Mod
 
         Dictionary<WalletToolKind, WalletToolState> storedTools = GetStoredTools(player);
         TemporaryToolUse pending = PendingToolUse;
+        bool wasAutomaticWeaponUse = PendingManualUseHotkey is null && pending.PreviousItem is MeleeWeapon;
         PendingToolUse = null;
         PendingManualUseHotkey = null;
         SuppressInventoryConversion = true;
@@ -3631,6 +3801,9 @@ public sealed class ModEntry : Mod
             RestoreTemporaryToolSlot(player, pending);
             player.CurrentToolIndex = Math.Max(0, Math.Min(pending.PreviousToolIndex, Math.Max(0, player.Items.Count - 1)));
             NormalizePlayerItemsAfterWalletCleanup(player);
+
+            if (wasAutomaticWeaponUse && IsVanillaUseToolInputHeld())
+                SuppressWeaponRepeatUseUntilRelease = true;
         }
         finally
         {
@@ -3868,11 +4041,17 @@ public sealed class ModEntry : Mod
     }
     private static class PressUseToolButtonPatch
     {
-        public static void Prefix()
+        public static bool Prefix()
         {
-            Instance?.TryPrepareWalletToolUse(Game1.player);
+            return Instance?.BeforeVanillaPressUseToolButton(Game1.player) ?? true;
         }
     }
+}
+
+public interface IItemExtensionsApi
+{
+    bool IsClump(string qualifiedItemId);
+    bool GetBreakingTool(string id, bool isClump, out string tool);
 }
 
 internal enum WalletToolKind
