@@ -1,0 +1,30 @@
+{
+  "Name": "Wallet Tools for Sword and Sorcery",
+  "Author": "ThaleTheGreat",
+  "Version": "1.0.2",
+  "Description": "Adds Sword and Sorcery tool support to Wallet Tools.",
+  "UniqueID": "ThaleTheGreat.WalletToolsForSwordAndSorcery",
+  "EntryDll": "WalletToolsForSwordAndSorcery.dll",
+  "MinimumApiVersion": "4.0.0",
+  "UpdateKeys": [
+    "Nexus:48699"
+  ],
+  "Dependencies": [
+    {
+      "UniqueID": "ThaleTheGreat.WalletTools",
+      "IsRequired": true
+    },
+    {
+      "UniqueID": "DN.SnS",
+      "IsRequired": true
+    },
+    {
+      "UniqueID": "KCC.SnS",
+      "IsRequired": false
+    },
+    {
+      "UniqueID": "spacechase0.GenericModConfigMenu",
+      "IsRequired": false
+    }
+  ]
+}
