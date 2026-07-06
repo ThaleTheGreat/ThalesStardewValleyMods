@@ -6,7 +6,7 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <AssemblyName>WalletTools</AssemblyName>
     <RootNamespace>ThaleTheGreat.WalletTools</RootNamespace>
-    <Version>2.2.0</Version>
+    <Version>2.2.1</Version>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <ModFolderName>Wallet Tools</ModFolderName>
     <EnableHarmony>true</EnableHarmony>
@@ -19,6 +19,7 @@
   <ItemGroup>
     <None Include="manifest.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="LICENSE" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="i18n\**\*.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <Target Name="RemoveSourceAssetFoldersFromBuildOutputs" AfterTargets="Build">

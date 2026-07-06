@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -12,6 +13,7 @@ using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.Buildings;
+using StardewValley.Extensions;
 using StardewValley.GameData.Powers;
 using StardewValley.Locations;
 using StardewValley.Menus;
@@ -455,7 +457,7 @@ public sealed class ModEntry : Mod
         try
         {
             Texture2D icon = LoadEmbeddedTexture("MobilePhone.png");
-            MobilePhoneApi.AddApp(ModManifest.UniqueID, "Wallet Tools", OpenConfigFromMobilePhone, icon);
+            MobilePhoneApi.AddApp(ModManifest.UniqueID, T("app.name"), OpenConfigFromMobilePhone, icon);
         }
         catch (Exception ex)
         {
@@ -473,7 +475,7 @@ public sealed class ModEntry : Mod
 
         try
         {
-            SpecialPowerApi.RegisterPowerCategory(ModManifest.UniqueID, () => "Wallet Tools", PowerCategoryIconTexturePath);
+            SpecialPowerApi.RegisterPowerCategory(ModManifest.UniqueID, () => T("app.name"), PowerCategoryIconTexturePath);
         }
         catch (Exception ex)
         {
@@ -495,7 +497,7 @@ public sealed class ModEntry : Mod
         GmcmApi ??= Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
         if (GmcmApi is null)
         {
-            Game1.addHUDMessage(new HUDMessage("Generic Mod Config Menu is not installed.", HUDMessage.error_type));
+            Game1.addHUDMessage(new HUDMessage(T("hud.gmcm-missing"), HUDMessage.error_type));
             return;
         }
 
@@ -523,33 +525,35 @@ public sealed class ModEntry : Mod
             GmcmApi.Unregister(ModManifest);
             GmcmApi.Register(ModManifest, reset: () => { Config = new ModConfig(); ApplyConfigVisibilityState(); }, save: () => { ApplyConfigVisibilityState(); Helper.WriteConfig(Config); });
 
-            AddBool(GmcmApi, nameof(Config.ModEnabled), () => Config.ModEnabled, SetModEnabled, "Mod Enabled", "Enables or disables Wallet Tools.");
-            AddBool(GmcmApi, nameof(Config.PlayToolSwapSound), () => Config.PlayToolSwapSound, value => Config.PlayToolSwapSound = value, "Play Tool Swap Sound", "Play the Wallet Tools tool swap sound when a wallet tool is readied for use.");
-            AddBool(GmcmApi, nameof(Config.AxeEnabled), () => Config.AxeEnabled, value => SetToolEnabled(WalletToolKind.Axe, value), "Wallet Axe", "Store and use the axe from the wallet.");
-            AddBool(GmcmApi, nameof(Config.PickaxeEnabled), () => Config.PickaxeEnabled, value => SetToolEnabled(WalletToolKind.Pickaxe, value), "Wallet Pickaxe", "Store and use the pickaxe from the wallet.");
-            AddBool(GmcmApi, nameof(Config.HoeEnabled), () => Config.HoeEnabled, value => SetToolEnabled(WalletToolKind.Hoe, value), "Wallet Hoe", "Store and use the hoe from the wallet.");
-            AddBool(GmcmApi, nameof(Config.WateringCanEnabled), () => Config.WateringCanEnabled, value => SetToolEnabled(WalletToolKind.WateringCan, value), "Wallet Watering Can", "Store and use the watering can from the wallet.");
-            AddBool(GmcmApi, nameof(Config.PanEnabled), () => Config.PanEnabled, value => SetToolEnabled(WalletToolKind.Pan, value), "Wallet Pan", "Store and use the pan from the wallet.");
-            AddBool(GmcmApi, nameof(Config.MilkPailEnabled), () => Config.MilkPailEnabled, value => SetToolEnabled(WalletToolKind.MilkPail, value), "Wallet Milk Pail", "Store and use the milk pail from the wallet.");
-            AddBool(GmcmApi, nameof(Config.ShearsEnabled), () => Config.ShearsEnabled, value => SetToolEnabled(WalletToolKind.Shears, value), "Wallet Shears", "Store and use the shears from the wallet.");
+            AddBool(GmcmApi, nameof(Config.ModEnabled), () => Config.ModEnabled, SetModEnabled, "config.mod-enabled.name", "config.mod-enabled.tooltip");
+            AddBool(GmcmApi, nameof(Config.PlayToolSwapSound), () => Config.PlayToolSwapSound, value => Config.PlayToolSwapSound = value, "config.play-tool-swap-sound.name", "config.play-tool-swap-sound.tooltip");
+            AddBool(GmcmApi, nameof(Config.AxeEnabled), () => Config.AxeEnabled, value => SetToolEnabled(WalletToolKind.Axe, value), "config.wallet-axe.name", "config.wallet-axe.tooltip");
+            AddBool(GmcmApi, nameof(Config.PickaxeEnabled), () => Config.PickaxeEnabled, value => SetToolEnabled(WalletToolKind.Pickaxe, value), "config.wallet-pickaxe.name", "config.wallet-pickaxe.tooltip");
+            AddBool(GmcmApi, nameof(Config.HoeEnabled), () => Config.HoeEnabled, value => SetToolEnabled(WalletToolKind.Hoe, value), "config.wallet-hoe.name", "config.wallet-hoe.tooltip");
+            AddBool(GmcmApi, nameof(Config.WateringCanEnabled), () => Config.WateringCanEnabled, value => SetToolEnabled(WalletToolKind.WateringCan, value), "config.wallet-watering-can.name", "config.wallet-watering-can.tooltip");
+            AddBool(GmcmApi, nameof(Config.PanEnabled), () => Config.PanEnabled, value => SetToolEnabled(WalletToolKind.Pan, value), "config.wallet-pan.name", "config.wallet-pan.tooltip");
+            AddBool(GmcmApi, nameof(Config.MilkPailEnabled), () => Config.MilkPailEnabled, value => SetToolEnabled(WalletToolKind.MilkPail, value), "config.wallet-milk-pail.name", "config.wallet-milk-pail.tooltip");
+            AddBool(GmcmApi, nameof(Config.ShearsEnabled), () => Config.ShearsEnabled, value => SetToolEnabled(WalletToolKind.Shears, value), "config.wallet-shears.name", "config.wallet-shears.tooltip");
 
-            AddBool(GmcmApi, nameof(Config.AutoUseEnabled), () => Config.AutoUseEnabled, value => SetAutoUseMasterEnabled(value, showMessage: false), "Auto Use Enabled", "Master toggle for automatic Wallet Tools logic. Manual wallet hotkeys still work.");
-            AddKeybind(GmcmApi, nameof(Config.ToggleAutoUseHotkey), () => Config.ToggleAutoUseHotkey, value => Config.ToggleAutoUseHotkey = value, "Toggle Auto Use", "Hotkey to toggle automatic Wallet Tools logic on or off.");
-            AddBool(GmcmApi, nameof(Config.AxeAutoUseEnabled), () => Config.AxeAutoUseEnabled, value => SetToolAutoUseEnabled(WalletToolKind.Axe, value), "Auto Axe", "Allows automatic axe supply. Manual axe hotkey still works when this is off.");
-            AddBool(GmcmApi, nameof(Config.PickaxeAutoUseEnabled), () => Config.PickaxeAutoUseEnabled, value => SetToolAutoUseEnabled(WalletToolKind.Pickaxe, value), "Auto Pickaxe", "Allows automatic pickaxe supply. Manual pickaxe hotkey still works when this is off.");
-            AddBool(GmcmApi, nameof(Config.HoeAutoUseEnabled), () => Config.HoeAutoUseEnabled, value => SetToolAutoUseEnabled(WalletToolKind.Hoe, value), "Auto Hoe", "Allows automatic hoe supply. Manual hoe hotkey still works when this is off.");
-            AddBool(GmcmApi, nameof(Config.WateringCanAutoUseEnabled), () => Config.WateringCanAutoUseEnabled, value => SetToolAutoUseEnabled(WalletToolKind.WateringCan, value), "Auto Watering Can", "Allows automatic watering can supply. Manual watering can hotkey still works when this is off.");
-            AddBool(GmcmApi, nameof(Config.PanAutoUseEnabled), () => Config.PanAutoUseEnabled, value => SetToolAutoUseEnabled(WalletToolKind.Pan, value), "Auto Pan", "Allows automatic pan supply. Manual pan hotkey still works when this is off.");
-            AddBool(GmcmApi, nameof(Config.MilkPailAutoUseEnabled), () => Config.MilkPailAutoUseEnabled, value => SetToolAutoUseEnabled(WalletToolKind.MilkPail, value), "Auto Milk Pail", "Allows automatic milk pail supply. Manual milk pail hotkey still works when this is off.");
-            AddBool(GmcmApi, nameof(Config.ShearsAutoUseEnabled), () => Config.ShearsAutoUseEnabled, value => SetToolAutoUseEnabled(WalletToolKind.Shears, value), "Auto Shears", "Allows automatic shears supply. Manual shears hotkey still works when this is off.");
+            AddBool(GmcmApi, nameof(Config.AutoUseEnabled), () => Config.AutoUseEnabled, value => SetAutoUseMasterEnabled(value, showMessage: false), "config.auto-use-enabled.name", "config.auto-use-enabled.tooltip");
+            AddBool(GmcmApi, nameof(Config.UseNewToolUseLogic), () => Config.UseNewToolUseLogic, value => Config.UseNewToolUseLogic = value, "config.use-new-tool-use-logic.name", "config.use-new-tool-use-logic.tooltip");
+            AddKeybind(GmcmApi, nameof(Config.ToggleAutoUseHotkey), () => Config.ToggleAutoUseHotkey, value => Config.ToggleAutoUseHotkey = value, "config.toggle-auto-use-hotkey.name", "config.toggle-auto-use-hotkey.tooltip");
+            AddKeybind(GmcmApi, nameof(Config.HeldItemAutoUseModifierHotkey), () => Config.HeldItemAutoUseModifierHotkey, value => Config.HeldItemAutoUseModifierHotkey = value, "config.held-item-auto-use-modifier-hotkey.name", "config.held-item-auto-use-modifier-hotkey.tooltip");
+            AddBool(GmcmApi, nameof(Config.AxeAutoUseEnabled), () => Config.AxeAutoUseEnabled, value => SetToolAutoUseEnabled(WalletToolKind.Axe, value), "config.auto-axe.name", "config.auto-axe.tooltip");
+            AddBool(GmcmApi, nameof(Config.PickaxeAutoUseEnabled), () => Config.PickaxeAutoUseEnabled, value => SetToolAutoUseEnabled(WalletToolKind.Pickaxe, value), "config.auto-pickaxe.name", "config.auto-pickaxe.tooltip");
+            AddBool(GmcmApi, nameof(Config.HoeAutoUseEnabled), () => Config.HoeAutoUseEnabled, value => SetToolAutoUseEnabled(WalletToolKind.Hoe, value), "config.auto-hoe.name", "config.auto-hoe.tooltip");
+            AddBool(GmcmApi, nameof(Config.WateringCanAutoUseEnabled), () => Config.WateringCanAutoUseEnabled, value => SetToolAutoUseEnabled(WalletToolKind.WateringCan, value), "config.auto-watering-can.name", "config.auto-watering-can.tooltip");
+            AddBool(GmcmApi, nameof(Config.PanAutoUseEnabled), () => Config.PanAutoUseEnabled, value => SetToolAutoUseEnabled(WalletToolKind.Pan, value), "config.auto-pan.name", "config.auto-pan.tooltip");
+            AddBool(GmcmApi, nameof(Config.MilkPailAutoUseEnabled), () => Config.MilkPailAutoUseEnabled, value => SetToolAutoUseEnabled(WalletToolKind.MilkPail, value), "config.auto-milk-pail.name", "config.auto-milk-pail.tooltip");
+            AddBool(GmcmApi, nameof(Config.ShearsAutoUseEnabled), () => Config.ShearsAutoUseEnabled, value => SetToolAutoUseEnabled(WalletToolKind.Shears, value), "config.auto-shears.name", "config.auto-shears.tooltip");
 
-            AddKeybind(GmcmApi, nameof(Config.UseAxeHotkey), () => Config.UseAxeHotkey, value => Config.UseAxeHotkey = value, "Use Axe", "Immediately use the wallet axe.");
-            AddKeybind(GmcmApi, nameof(Config.UsePickaxeHotkey), () => Config.UsePickaxeHotkey, value => Config.UsePickaxeHotkey = value, "Use Pickaxe", "Immediately use the wallet pickaxe.");
-            AddKeybind(GmcmApi, nameof(Config.UseHoeHotkey), () => Config.UseHoeHotkey, value => Config.UseHoeHotkey = value, "Use Hoe", "Immediately use the wallet hoe.");
-            AddKeybind(GmcmApi, nameof(Config.UseWateringCanHotkey), () => Config.UseWateringCanHotkey, value => Config.UseWateringCanHotkey = value, "Use Watering Can", "Immediately use the wallet watering can.");
-            AddKeybind(GmcmApi, nameof(Config.UsePanHotkey), () => Config.UsePanHotkey, value => Config.UsePanHotkey = value, "Use Pan", "Immediately use the wallet pan.");
-            AddKeybind(GmcmApi, nameof(Config.UseMilkPailHotkey), () => Config.UseMilkPailHotkey, value => Config.UseMilkPailHotkey = value, "Use Milk Pail", "Immediately use the wallet milk pail.");
-            AddKeybind(GmcmApi, nameof(Config.UseShearsHotkey), () => Config.UseShearsHotkey, value => Config.UseShearsHotkey = value, "Use Shears", "Immediately use the wallet shears.");
+            AddKeybind(GmcmApi, nameof(Config.UseAxeHotkey), () => Config.UseAxeHotkey, value => Config.UseAxeHotkey = value, "config.use-axe-hotkey.name", "config.use-axe-hotkey.tooltip");
+            AddKeybind(GmcmApi, nameof(Config.UsePickaxeHotkey), () => Config.UsePickaxeHotkey, value => Config.UsePickaxeHotkey = value, "config.use-pickaxe-hotkey.name", "config.use-pickaxe-hotkey.tooltip");
+            AddKeybind(GmcmApi, nameof(Config.UseHoeHotkey), () => Config.UseHoeHotkey, value => Config.UseHoeHotkey = value, "config.use-hoe-hotkey.name", "config.use-hoe-hotkey.tooltip");
+            AddKeybind(GmcmApi, nameof(Config.UseWateringCanHotkey), () => Config.UseWateringCanHotkey, value => Config.UseWateringCanHotkey = value, "config.use-watering-can-hotkey.name", "config.use-watering-can-hotkey.tooltip");
+            AddKeybind(GmcmApi, nameof(Config.UsePanHotkey), () => Config.UsePanHotkey, value => Config.UsePanHotkey = value, "config.use-pan-hotkey.name", "config.use-pan-hotkey.tooltip");
+            AddKeybind(GmcmApi, nameof(Config.UseMilkPailHotkey), () => Config.UseMilkPailHotkey, value => Config.UseMilkPailHotkey = value, "config.use-milk-pail-hotkey.name", "config.use-milk-pail-hotkey.tooltip");
+            AddKeybind(GmcmApi, nameof(Config.UseShearsHotkey), () => Config.UseShearsHotkey, value => Config.UseShearsHotkey = value, "config.use-shears-hotkey.name", "config.use-shears-hotkey.tooltip");
 
 
             GmcmRegistered = true;
@@ -560,6 +564,16 @@ public sealed class ModEntry : Mod
         }
     }
 
+
+    private string T(string key)
+    {
+        return Helper.Translation.Get(key).ToString();
+    }
+
+    private string T(string key, object tokens)
+    {
+        return Helper.Translation.Get(key, tokens).ToString();
+    }
 
     private void ApplyConfigVisibilityState()
     {
@@ -656,7 +670,7 @@ public sealed class ModEntry : Mod
         InvalidatePowers();
 
         if (returnedTool)
-            Game1.addHUDMessage(new HUDMessage($"{GetFallbackDisplayName(kind)} returned to inventory.", HUDMessage.newQuest_type));
+            Game1.addHUDMessage(new HUDMessage(T("hud.tool-returned", new { toolName = GetFallbackDisplayName(kind) }), HUDMessage.newQuest_type));
     }
 
     private bool MaterializeStoredToolToInventory(Farmer player, WalletToolKind kind, string reason)
@@ -746,7 +760,7 @@ public sealed class ModEntry : Mod
                 RestoreTemporaryTool(Game1.player);
 
             if (showMessage)
-                Game1.addHUDMessage(new HUDMessage(enabled ? "Wallet Tools auto use enabled." : "Wallet Tools auto use disabled.", HUDMessage.newQuest_type));
+                Game1.addHUDMessage(new HUDMessage(T(enabled ? "hud.auto-use-enabled" : "hud.auto-use-disabled"), HUDMessage.newQuest_type));
         }
 
         Helper.WriteConfig(Config);
@@ -830,7 +844,7 @@ public sealed class ModEntry : Mod
         InvalidatePowers();
 
         if (returnedTools)
-            Game1.addHUDMessage(new HUDMessage("Wallet tools returned to inventory.", HUDMessage.newQuest_type));
+            Game1.addHUDMessage(new HUDMessage(T("hud.all-tools-returned"), HUDMessage.newQuest_type));
     }
 
     private void ClearStoredWalletState()
@@ -852,14 +866,14 @@ public sealed class ModEntry : Mod
         InvalidatePowers();
     }
 
-    private void AddBool(IGenericModConfigMenuApi gmcm, string fieldId, Func<bool> getValue, Action<bool> setValue, string name, string tooltip)
+    private void AddBool(IGenericModConfigMenuApi gmcm, string fieldId, Func<bool> getValue, Action<bool> setValue, string nameKey, string tooltipKey)
     {
-        gmcm.AddBoolOption(ModManifest, getValue, setValue, () => name, () => tooltip, fieldId);
+        gmcm.AddBoolOption(ModManifest, getValue, setValue, () => T(nameKey), () => T(tooltipKey), fieldId);
     }
 
-    private void AddKeybind(IGenericModConfigMenuApi gmcm, string fieldId, Func<StardewModdingAPI.Utilities.KeybindList> getValue, Action<StardewModdingAPI.Utilities.KeybindList> setValue, string name, string tooltip)
+    private void AddKeybind(IGenericModConfigMenuApi gmcm, string fieldId, Func<KeybindList> getValue, Action<KeybindList> setValue, string nameKey, string tooltipKey)
     {
-        gmcm.AddKeybindList(ModManifest, getValue, setValue, () => name, () => tooltip, fieldId);
+        gmcm.AddKeybindList(ModManifest, getValue, setValue, () => T(nameKey), () => T(tooltipKey), fieldId);
     }
 
     private void OnSaveLoaded(object? sender, SaveLoadedEventArgs e)
@@ -2664,7 +2678,7 @@ public sealed class ModEntry : Mod
         {
             NormalizePlayerItemsAfterWalletCleanup(player);
             RefreshWalletStateAfterStoredToolChange(player);
-            Game1.addHUDMessage(new HUDMessage("Tool moved to wallet.", HUDMessage.newQuest_type));
+            Game1.addHUDMessage(new HUDMessage(T("hud.tool-moved-to-wallet"), HUDMessage.newQuest_type));
         }
     }
 
@@ -3013,19 +3027,19 @@ public sealed class ModEntry : Mod
         if (PendingToolUse is not null || !Config.ModEnabled || !Config.AutoUseEnabled || Game1.fadeToBlack || !Context.CanPlayerMove || IsToolUpgradeLocation(player.currentLocation))
             return false;
 
-        if (TryGetFallbackAnimalToolRequest(player, out Type animalToolType))
+        if (TryGetFallbackAnimalToolRequest(player, out Type? animalToolType))
             return TrySupplyRequestedWalletTool(player, animalToolType, false);
 
         if (IsExternalSwitchModLoaded())
             return false;
 
-        if (!TryGetFallbackToolRequest(player, out Type toolType, out bool anyTool))
+        if (!TryGetFallbackToolRequest(player, out Type? toolType, out bool anyTool))
             return false;
 
         return TrySupplyRequestedWalletTool(player, toolType, anyTool);
     }
 
-    private static bool TryGetFallbackAnimalToolRequest(Farmer player, out Type toolType)
+    private static bool TryGetFallbackAnimalToolRequest(Farmer player, [NotNullWhen(true)] out Type? toolType)
     {
         Vector2 position = !Game1.wasMouseVisibleThisFrame
             ? player.GetToolLocation(false)
@@ -3037,7 +3051,7 @@ public sealed class ModEntry : Mod
         return TryGetToolRequestForFarmAnimal(player.currentLocation, tile, player, out toolType);
     }
 
-    private bool TryGetFallbackToolRequest(Farmer player, out Type toolType, out bool anyTool)
+    private bool TryGetFallbackToolRequest(Farmer player, [NotNullWhen(true)] out Type? toolType, out bool anyTool)
     {
         Vector2 position = !Game1.wasMouseVisibleThisFrame
             ? player.GetToolLocation(false)
@@ -3087,6 +3101,13 @@ public sealed class ModEntry : Mod
             }
         }
 
+
+        if (ShouldPreserveWeaponUseForNearbyMonster(player, tile))
+        {
+            toolType = null;
+            anyTool = false;
+            return false;
+        }
         {
             int panX = player.currentLocation.orePanPoint.X;
             int panY = player.currentLocation.orePanPoint.Y;
@@ -3102,8 +3123,16 @@ public sealed class ModEntry : Mod
             }
         }
 
+
         if (TryNeedsWateringCan(player, tile))
         {
+            if (ShouldPreserveFishingRodWaterUse(player, tile))
+            {
+                toolType = null;
+                anyTool = false;
+                return false;
+            }
+
             toolType = typeof(WateringCan);
             anyTool = false;
             return true;
@@ -3116,16 +3145,16 @@ public sealed class ModEntry : Mod
             return true;
         }
 
-        toolType = typeof(Axe);
+        toolType = null;
         anyTool = false;
         return false;
     }
 
-    private static bool TryGetToolRequestForFarmAnimal(GameLocation location, Vector2 tile, Farmer player, out Type toolType)
+    private static bool TryGetToolRequestForFarmAnimal(GameLocation location, Vector2 tile, Farmer player, [NotNullWhen(true)] out Type? toolType)
     {
         if (location is not (Farm or AnimalHouse))
         {
-            toolType = typeof(Axe);
+            toolType = null;
             return false;
         }
 
@@ -3150,11 +3179,11 @@ public sealed class ModEntry : Mod
             }
         }
 
-        toolType = typeof(Axe);
+        toolType = null;
         return false;
     }
 
-    private static bool TryGetToolRequestForObject(Object obj, out Type toolType, out bool anyTool)
+    private static bool TryGetToolRequestForObject(Object obj, [NotNullWhen(true)] out Type? toolType, out bool anyTool)
     {
         anyTool = false;
 
@@ -3183,11 +3212,11 @@ public sealed class ModEntry : Mod
             return true;
         }
 
-        toolType = typeof(Axe);
+        toolType = null;
         return false;
     }
 
-    private bool TryGetToolRequestForTerrainFeature(TerrainFeature feature, out Type toolType, out bool anyTool)
+    private bool TryGetToolRequestForTerrainFeature(TerrainFeature feature, [NotNullWhen(true)] out Type? toolType, out bool anyTool)
     {
         anyTool = false;
 
@@ -3204,11 +3233,11 @@ public sealed class ModEntry : Mod
             return true;
         }
 
-        toolType = typeof(Axe);
+        toolType = null;
         return false;
     }
 
-    private static bool TryGetToolRequestForClump(ResourceClump clump, out Type toolType)
+    private static bool TryGetToolRequestForClump(ResourceClump clump, [NotNullWhen(true)] out Type? toolType)
     {
         if (clump.parentSheetIndex.Value == 600 || clump.parentSheetIndex.Value == 602)
         {
@@ -3222,7 +3251,7 @@ public sealed class ModEntry : Mod
             return true;
         }
 
-        toolType = typeof(Axe);
+        toolType = null;
         return false;
     }
 
@@ -3244,11 +3273,33 @@ public sealed class ModEntry : Mod
         int x = (int)tile.X;
         int y = (int)tile.Y;
 
-        if (location is VolcanoDungeon volcano && volcano.level.Value != 5 && location.isTileOnMap(tile) && location.waterTiles[x, y] && !volcano.cooledLavaTiles.ContainsKey(tile))
+        if (IsPetBowlTile(location, tile))
             return true;
 
-        if (location.isTileOnMap(tile) && location.CanRefillWateringCanOnTile(x, y))
+        if (!ShouldUseWateringCanForAutomateToolSwapLocation(location))
+            return false;
+
+        if (location is VolcanoDungeon volcano && volcano.level.Value != 5 && IsWaterTileOnMap(location, tile) && !volcano.cooledLavaTiles.ContainsKey(tile))
             return true;
+
+        if (IsWaterSourceTile(location, tile))
+            return true;
+
+        if (IsWaterTileForAutomateToolSwap(location, tile, player))
+            return true;
+
+        return location.isTileOnMap(tile) && location.CanRefillWateringCanOnTile(x, y);
+    }
+
+    private static bool ShouldUseWateringCanForAutomateToolSwapLocation(GameLocation location)
+    {
+        return location is Farm or VolcanoDungeon || location.InIslandContext() || location.isGreenhouse.Value;
+    }
+
+    private static bool IsPetBowlTile(GameLocation location, Vector2 tile)
+    {
+        int x = (int)tile.X;
+        int y = (int)tile.Y;
 
         if (location is Farm farm)
         {
@@ -3267,6 +3318,56 @@ public sealed class ModEntry : Mod
         return location.objects.TryGetValue(tile, out Object bowl) && bowl.Name.EndsWith("Pet Bowl", StringComparison.OrdinalIgnoreCase);
     }
 
+    private static bool ShouldPreserveFishingRodWaterUse(Farmer player, Vector2 tile)
+    {
+        if (player.CurrentItem is not FishingRod)
+            return false;
+
+        GameLocation location = player.currentLocation;
+        return IsWaterSourceTile(location, tile) || IsWaterTileOnMap(location, tile);
+    }
+
+    private static bool IsWaterSourceTile(GameLocation location, Vector2 tile)
+    {
+        int x = (int)tile.X;
+        int y = (int)tile.Y;
+
+        return location.isTileOnMap(tile) && location.doesTileHaveProperty(x, y, "WaterSource", "Back") is not null;
+    }
+
+    private static bool IsWaterTileForAutomateToolSwap(GameLocation location, Vector2 tile, Farmer player)
+    {
+        if (player.CurrentTool is WateringCan or Pan)
+            return false;
+
+        return IsWaterTileOnMap(location, tile);
+    }
+
+    private static bool IsWaterTileOnMap(GameLocation location, Vector2 tile)
+    {
+        int x = (int)tile.X;
+        int y = (int)tile.Y;
+
+        if (!location.isTileOnMap(tile))
+            return false;
+
+        return location.doesTileHaveProperty(x, y, "Water", "Back") is not null || location.waterTiles[x, y];
+    }
+
+    private static bool ShouldPreserveWeaponUseForNearbyMonster(Farmer player, Vector2 tile)
+    {
+        if (player.CurrentItem is not MeleeWeapon)
+            return false;
+
+        foreach (NPC character in player.currentLocation.characters)
+        {
+            if (character.IsMonster && Vector2.Distance(tile, character.Tile) < 3f)
+                return true;
+        }
+
+        return false;
+    }
+
     private bool TryMaterializeWalletToolForManualUse(Farmer player, WalletToolKind kind)
     {
         return TrySetTemporaryWalletTool(player, kind);
@@ -3274,12 +3375,40 @@ public sealed class ModEntry : Mod
 
     private bool ShouldBlockAutomaticWalletToolUseForHeldItem(Farmer player)
     {
-        return IsProtectedHeldItemForNormalUse(player.CurrentItem) && !IsLeftShiftHeld();
+        return Config.UseNewToolUseLogic
+            && IsProtectedHeldItemForNormalUse(player.CurrentItem)
+            && !IsHeldItemAutoUseModifierHeld();
     }
 
-    private bool IsLeftShiftHeld()
+    private bool IsHeldItemAutoUseModifierHeld()
     {
-        return Helper.Input.IsDown(SButton.LeftShift) || Helper.Input.IsSuppressed(SButton.LeftShift);
+        return Config.HeldItemAutoUseModifierHotkey.IsDown()
+            || IsSuppressedKeybindDown(Config.HeldItemAutoUseModifierHotkey);
+    }
+
+    private bool IsSuppressedKeybindDown(KeybindList keybindList)
+    {
+        foreach (Keybind keybind in keybindList.Keybinds)
+        {
+            bool hasButton = false;
+            bool allButtonsDownOrSuppressed = true;
+
+            foreach (SButton button in keybind.Buttons)
+            {
+                hasButton = true;
+
+                if (!Helper.Input.IsDown(button) && !Helper.Input.IsSuppressed(button))
+                {
+                    allButtonsDownOrSuppressed = false;
+                    break;
+                }
+            }
+
+            if (hasButton && allButtonsDownOrSuppressed)
+                return true;
+        }
+
+        return false;
     }
 
     private static bool IsProtectedHeldItemForNormalUse(Item? item)

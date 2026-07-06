@@ -24,8 +24,10 @@ internal sealed class ModConfig
     public bool ShearsAutoUseEnabled { get; set; } = true;
 
     public bool PlayToolSwapSound { get; set; } = true;
+    public bool UseNewToolUseLogic { get; set; } = false;
 
     public KeybindList ToggleAutoUseHotkey { get; set; } = new(new Keybind(SButton.LeftControl, SButton.D8));
+    public KeybindList HeldItemAutoUseModifierHotkey { get; set; } = new(new Keybind(SButton.LeftShift));
 
     public KeybindList UseAxeHotkey { get; set; } = new(new Keybind(SButton.LeftControl, SButton.D1));
     public KeybindList UsePickaxeHotkey { get; set; } = new(new Keybind(SButton.LeftControl, SButton.D2));
