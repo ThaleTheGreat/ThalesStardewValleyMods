@@ -1,0 +1,20 @@
+{
+  "Name": "[CP] Coin Collector Redux Example Coin Pack",
+  "Author": "ThaleTheGreat",
+  "Version": "1.0.0",
+  "Description": "A one-coin Content Patcher example pack for Coin Collector Redux.",
+  "UniqueID": "ThaleTheGreat.CoinCollectorReduxExampleCoinPack",
+  "ContentPackFor": {
+    "UniqueID": "Pathoschild.ContentPatcher",
+    "MinimumVersion": "2.0.0"
+  },
+  "UpdateKeys": [
+    "Nexus:0000"
+  ],
+  "Dependencies": [
+    {
+      "UniqueID": "ThaleTheGreat.CoinCollectorRedux",
+      "IsRequired": true
+    }
+  ]
+}

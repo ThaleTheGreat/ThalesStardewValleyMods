@@ -1,0 +1,12 @@
+{
+  "Name": "Coin Collector Redux",
+  "Author": "ThaleTheGreat",
+  "Version": "1.0.0",
+  "Description": "Adds metal detector coin hunting with built-in Yoba coins and Content Patcher support for coin packs.",
+  "UniqueID": "ThaleTheGreat.CoinCollectorRedux",
+  "EntryDll": "CoinCollectorRedux.dll",
+  "MinimumApiVersion": "4.0.0",
+  "UpdateKeys": [
+    "Nexus:48774"
+  ]
+}

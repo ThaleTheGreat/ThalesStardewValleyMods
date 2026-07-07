@@ -1,0 +1,36 @@
+{
+  "Format": "2.0.0",
+  "Changes": [
+    {
+      "Action": "Load",
+      "Target": "ThaleTheGreat.CoinCollectorReduxExampleCoinPack/CoinsTexture",
+      "FromFile": "assets/coins.png"
+    },
+    {
+      "Action": "EditData",
+      "Target": "ThaleTheGreat.CoinCollectorRedux/Coins",
+      "Entries": {
+        "TravelerCopperCoin": {
+          "Id": "ThaleTheGreat.CoinCollectorReduxExampleCoinPack_TravelerCopperCoin",
+          "Name": "TravelerCopperCoin",
+          "SetName": "Traveler",
+          "DisplayName": "Traveler Copper Coin",
+          "Description": "A worn copper coin carried by a traveler long ago.",
+          "TexturePath": "ThaleTheGreat.CoinCollectorReduxExampleCoinPack/CoinsTexture",
+          "SpriteIndex": 0,
+          "Locations": [],
+          "Rarity": 3.0,
+          "Price": 150,
+          "Type": "Minerals",
+          "Category": -2,
+          "CreateObject": true,
+          "ContextTags": [
+            "item_coin",
+            "coin_set_traveler",
+            "coin_material_copper"
+          ]
+        }
+      }
+    }
+  ]
+}
