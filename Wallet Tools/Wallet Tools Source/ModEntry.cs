@@ -41,6 +41,7 @@ public sealed class ModEntry : Mod
     private const string MenuVirtualToolKindMarker = "ThaleTheGreat.WalletTools/MenuVirtualToolKind";
     private const string MenuVirtualToolPurposeMarker = "ThaleTheGreat.WalletTools/MenuVirtualToolPurpose";
     private const string OwnerPlayerIdMarker = "ThaleTheGreat.WalletTools/OwnerPlayerId";
+    private const string ItemExtensionsClumpIdKey = "mistyspring.ItemExtensions/CustomClumpId";
 
     private static ModEntry? Instance;
 
@@ -1063,7 +1064,7 @@ public sealed class ModEntry : Mod
         if (!Context.IsWorldReady)
             return;
 
-        if (SuppressWeaponRepeatUseUntilRelease && IsVanillaUseToolButton(e.Button))
+        if (SuppressWeaponRepeatUseUntilRelease && IsVanillaUseToolButton(e.Button) && !IsVanillaUseToolInputHeld())
             SuppressWeaponRepeatUseUntilRelease = false;
 
         if (PendingManualUseHotkey != e.Button)
@@ -1129,33 +1130,36 @@ public sealed class ModEntry : Mod
 
     private bool IsVanillaUseToolInputHeld()
     {
+        foreach (SButton button in GetVanillaUseToolButtons())
+        {
+            if (Helper.Input.IsDown(button) || Helper.Input.IsSuppressed(button))
+                return true;
+        }
+
+        return false;
+    }
+
+    private static bool IsVanillaUseToolButton(SButton button)
+    {
+        return GetVanillaUseToolButtons().Contains(button);
+    }
+
+    private static IEnumerable<SButton> GetVanillaUseToolButtons()
+    {
+        HashSet<SButton> buttons = new();
         InputButton[]? keys = Game1.options?.useToolButton;
         if (keys is not null)
         {
             foreach (InputButton key in keys)
             {
                 SButton button = key.ToSButton();
-                if (Helper.Input.IsDown(button) || Helper.Input.IsSuppressed(button))
-                    return true;
+                if (buttons.Add(button))
+                    yield return button;
             }
         }
 
-        return Helper.Input.IsDown(SButton.ControllerX) || Helper.Input.IsSuppressed(SButton.ControllerX);
-    }
-
-    private static bool IsVanillaUseToolButton(SButton button)
-    {
-        InputButton[]? keys = Game1.options?.useToolButton;
-        if (keys is not null)
-        {
-            foreach (InputButton key in keys)
-            {
-                if (key.ToSButton() == button)
-                    return true;
-            }
-        }
-
-        return button == SButton.ControllerX;
+        if (buttons.Add(SButton.ControllerX))
+            yield return SButton.ControllerX;
     }
 
     private void ClearWeaponRepeatUseSuppressionIfReleased()
@@ -3082,7 +3086,12 @@ public sealed class ModEntry : Mod
         if (SuppressWeaponRepeatUseUntilRelease)
         {
             if (IsVanillaUseToolInputHeld())
+            {
+                if (TryPrepareWalletToolUse(player))
+                    return true;
+
                 return false;
+            }
 
             SuppressWeaponRepeatUseUntilRelease = false;
         }
@@ -3181,7 +3190,7 @@ public sealed class ModEntry : Mod
         bool currentItemCantBreak = currentItem is not (Pickaxe or Axe);
         bool currentItemIsNotForMine = currentItemIsNull || (!currentItemName.Contains("Bomb", StringComparison.OrdinalIgnoreCase) && !currentItemName.Contains("Staircase", StringComparison.OrdinalIgnoreCase));
 
-        ToolUseRuleResult moddedTool = TryGetItemExtensionsToolRequest(obj.ItemId, ItemExtensionsApi?.IsClump(obj.ItemId) == true, currentItemIsNotForMine, out toolType, out anyTool);
+        ToolUseRuleResult moddedTool = TryGetItemExtensionsObjectToolRequest(obj, currentItemIsNotForMine, out toolType, out anyTool);
         if (moddedTool != ToolUseRuleResult.NoMatch)
             return moddedTool;
 
@@ -3418,9 +3427,6 @@ public sealed class ModEntry : Mod
         if (!IsDiggableHoeTile(location, tile))
             return ToolUseRuleResult.NoMatch;
 
-        if (location is Mine or MineShaft or VolcanoDungeon)
-            return ToolUseRuleResult.NoMatch;
-
         bool isWeaponEquipped = player.CurrentItem is MeleeWeapon && player.CurrentItem?.category.Value == -98;
         if (isWeaponEquipped && Game1.spawnMonstersAtNight)
             return ToolUseRuleResult.NoMatch;
@@ -3445,21 +3451,68 @@ public sealed class ModEntry : Mod
         return ToolUseRuleResult.Handled;
     }
 
+    private ToolUseRuleResult TryGetItemExtensionsObjectToolRequest(Object obj, bool currentItemIsNotForMine, out Type? toolType, out bool anyTool)
+    {
+        toolType = null;
+        anyTool = false;
+
+        foreach (string itemId in GetItemExtensionsObjectIds(obj))
+        {
+            ToolUseRuleResult result = TryGetItemExtensionsToolRequest(itemId, false, currentItemIsNotForMine, out toolType, out anyTool);
+            if (result != ToolUseRuleResult.NoMatch)
+                return result;
+        }
+
+        return ToolUseRuleResult.NoMatch;
+    }
+
+    private static IEnumerable<string> GetItemExtensionsObjectIds(Object obj)
+    {
+        if (!string.IsNullOrWhiteSpace(obj.QualifiedItemId))
+            yield return obj.QualifiedItemId;
+
+        if (!string.IsNullOrWhiteSpace(obj.ItemId) && !string.Equals(obj.ItemId, obj.QualifiedItemId, StringComparison.OrdinalIgnoreCase))
+            yield return obj.ItemId;
+    }
+
     private ToolUseRuleResult TryGetItemExtensionsToolRequest(string itemId, bool isClump, bool currentItemIsNotForMine, out Type? toolType, out bool anyTool)
     {
         toolType = null;
         anyTool = false;
 
-        if (ItemExtensionsApi is null || string.IsNullOrWhiteSpace(itemId) || !ItemExtensionsApi.GetBreakingTool(itemId, isClump, out string tool))
+        if (ItemExtensionsApi is null || string.IsNullOrWhiteSpace(itemId) || !ItemExtensionsApi.GetBreakingTool(itemId, isClump, out string tool) || string.IsNullOrWhiteSpace(tool))
             return ToolUseRuleResult.NoMatch;
 
-        if (tool.Equals("Pickaxe", StringComparison.OrdinalIgnoreCase))
-            return currentItemIsNotForMine ? UseTool(typeof(Pickaxe), out toolType, out anyTool) : ToolUseRuleResult.Handled;
+        switch (NormalizeItemExtensionsToolName(tool))
+        {
+            case "Pickaxe":
+                return currentItemIsNotForMine ? UseTool(typeof(Pickaxe), out toolType, out anyTool) : ToolUseRuleResult.Handled;
 
-        if (tool.Equals("Axe", StringComparison.OrdinalIgnoreCase))
-            return UseTool(typeof(Axe), out toolType, out anyTool);
+            case "Axe":
+                return UseTool(typeof(Axe), out toolType, out anyTool);
 
-        return ToolUseRuleResult.Handled;
+            case "Hoe":
+                return UseTool(typeof(Hoe), out toolType, out anyTool);
+
+            case "WateringCan":
+                return UseTool(typeof(WateringCan), out toolType, out anyTool);
+
+            default:
+                return ToolUseRuleResult.Handled;
+        }
+    }
+
+    private static string NormalizeItemExtensionsToolName(string tool)
+    {
+        string normalized = tool.Trim().Replace(" ", string.Empty).Replace("_", string.Empty).Replace("-", string.Empty);
+        return normalized.ToLowerInvariant() switch
+        {
+            "pick" or "pickaxe" => "Pickaxe",
+            "axe" => "Axe",
+            "hoe" => "Hoe",
+            "wateringcan" => "WateringCan",
+            _ => tool.Trim()
+        };
     }
 
     private static ToolUseRuleResult UseTool(Type requestedToolType, out Type? toolType, out bool anyTool, bool allowAnyTool = false)
@@ -3471,9 +3524,12 @@ public sealed class ModEntry : Mod
 
     private static bool TryGetModdedClumpId(ResourceClump clump, out string itemId)
     {
+        if (clump.modData.TryGetValue(ItemExtensionsClumpIdKey, out itemId) && !string.IsNullOrWhiteSpace(itemId))
+            return true;
+
         foreach (var pair in clump.modDataForSerialization.Pairs)
         {
-            if (pair.Key.Contains("clumpid", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(pair.Key, ItemExtensionsClumpIdKey, StringComparison.OrdinalIgnoreCase))
             {
                 itemId = pair.Value;
                 return !string.IsNullOrWhiteSpace(itemId);
