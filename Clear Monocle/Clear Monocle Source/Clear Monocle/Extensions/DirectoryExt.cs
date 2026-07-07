@@ -1,0 +1,13 @@
+﻿using System;
+
+namespace SpriteMaster.Extensions;
+
+internal static class DirectoryExt {
+    internal static bool CompressDirectory(string path, bool force = false) {
+        if (OperatingSystem.IsWindows()) {
+            return DirectoryExtWindows.CompressDirectory(path, force);
+        }
+
+        return false;
+    }
+}
