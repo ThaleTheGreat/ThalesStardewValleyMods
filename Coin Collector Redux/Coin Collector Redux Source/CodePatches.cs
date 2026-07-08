@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
 using StardewValley.Projectiles;
+using StardewValley.Tools;
 using Object = StardewValley.Object;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
@@ -11,6 +12,18 @@ namespace ThaleTheGreat.CoinCollectorRedux
 {
     public partial class ModEntry
     {
+        [HarmonyPatch(typeof(MeleeWeapon), nameof(MeleeWeapon.doSwipe), new Type[] { typeof(int), typeof(Vector2), typeof(int), typeof(float), typeof(Farmer) })]
+        private static class MeleeWeaponDoSwipePatch
+        {
+            private static void Prefix(MeleeWeapon __instance, Farmer f)
+            {
+                if (!Config.ModEnabled || !Config.RequireMetalDetectorSwing || f != Game1.player || !IsMetalDetectorItem(__instance))
+                    return;
+
+                DoBlip();
+            }
+        }
+
         [HarmonyPatch(typeof(CraftingRecipe), nameof(CraftingRecipe.createItem))]
         private static class CraftingRecipeCreateItemPatch
         {

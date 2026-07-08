@@ -65,7 +65,6 @@ namespace ThaleTheGreat.CoinCollectorRedux
             Helper.Events.GameLoop.SaveLoaded += OnSaveLoaded;
             Helper.Events.GameLoop.DayStarted += OnDayStarted;
             Helper.Events.GameLoop.OneSecondUpdateTicked += OnOneSecondUpdateTicked;
-            Helper.Events.Input.ButtonPressed += OnButtonPressed;
         }
 
         private void OnAssetRequested(object? sender, AssetRequestedEventArgs e)
@@ -249,16 +248,6 @@ namespace ThaleTheGreat.CoinCollectorRedux
             DoBlip();
         }
 
-        private void OnButtonPressed(object? sender, ButtonPressedEventArgs e)
-        {
-            if (!Config.ModEnabled || !Config.RequireMetalDetectorSwing || !StardewModdingAPI.Context.IsPlayerFree || !IsMetalDetectorItem(Game1.player.CurrentItem))
-                return;
-            if (!e.Button.IsUseToolButton() && !e.Button.IsActionButton())
-                return;
-
-            Helper.Input.Suppress(e.Button);
-            DoBlip();
-        }
 
         private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
         {
@@ -292,14 +281,9 @@ namespace ThaleTheGreat.CoinCollectorRedux
 
             api.AddSectionTitle(ModManifest, () => "Metal Detector");
             api.AddBoolOption(ModManifest, () => Config.RequireMetalDetector, value => Config.RequireMetalDetector = value, () => "Require Metal Detector", () => "Only play detector blips while holding a recognized metal detector.");
-            api.AddTextOption(ModManifest, () => Config.MetalDetectorID, value => Config.MetalDetectorID = value, () => "Metal Detector ID", () => "Additional item ID/name accepted as a metal detector.");
             api.AddBoolOption(ModManifest, () => Config.RequireMetalDetectorSwing, value => Config.RequireMetalDetectorSwing = value, () => "Require Metal Detector Swing", () => "Only ping when using the held detector instead of polling automatically.");
-            api.AddTextOption(ModManifest, () => Config.CraftingRequirements, value => Config.CraftingRequirements = value, () => "Crafting Requirements", () => "Raw Stardew crafting requirement string for the Metal Detector recipe. Changing this requires a cache reload or restart.");
 
             api.AddSectionTitle(ModManifest, () => "Audio");
-            api.AddTextOption(ModManifest, () => Config.BlipAudioPath, value => Config.BlipAudioPath = value, () => "Center Blip Audio Path", () => "Relative path to the center blip sound file.");
-            api.AddTextOption(ModManifest, () => Config.BlipAudioPathLeft, value => Config.BlipAudioPathLeft = value, () => "Left Blip Audio Path", () => "Relative path to the left blip sound file.");
-            api.AddTextOption(ModManifest, () => Config.BlipAudioPathRight, value => Config.BlipAudioPathRight = value, () => "Right Blip Audio Path", () => "Relative path to the right blip sound file.");
             api.AddNumberOption(ModManifest, () => Config.BlipAudioVolume, value => Config.BlipAudioVolume = value, () => "Blip Audio Volume", () => "Maximum blip volume.", min: 0f, max: 1f, interval: 0.05f);
             api.AddBoolOption(ModManifest, () => Config.BlipAudioIncreasePitch, value => Config.BlipAudioIncreasePitch = value, () => "Increase Pitch Near Coins", () => "Increase blip pitch as the player gets closer to a coin.");
 
