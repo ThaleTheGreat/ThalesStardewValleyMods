@@ -10,7 +10,7 @@ namespace ThaleTheGreat.CoinCollectorRedux
         public float BlipAudioVolume { get; set; } = 1f;
         public bool BlipAudioIncreasePitch { get; set; } = true;
         public bool RequireMetalDetector { get; set; } = true;
-        public string MetalDetectorID { get; set; } = ModEntry.DetectorId;
+        public string MetalDetectorID { get; set; } = ModEntry.DetectorWeaponId;
         public bool RequireMetalDetectorSwing { get; set; } = false;
         public bool EnableIndicator { get; set; } = true;
         public int SecondsPerPoll { get; set; } = 1;

@@ -7,6 +7,8 @@ using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
 using StardewValley.GameData.Objects;
+using StardewValley.GameData.Shops;
+using StardewValley.GameData.Weapons;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -18,11 +20,15 @@ namespace ThaleTheGreat.CoinCollectorRedux
     {
         public const string DetectorId = "ThaleTheGreat.CoinCollectorRedux_MetalDetector";
         public const string DetectorQualifiedId = "(O)ThaleTheGreat.CoinCollectorRedux_MetalDetector";
+        public const string DetectorWeaponId = "ThaleTheGreat.CoinCollectorRedux_MetalDetectorWeapon";
+        public const string DetectorWeaponQualifiedId = "(W)ThaleTheGreat.CoinCollectorRedux_MetalDetectorWeapon";
 
         private const string NewDictionaryPath = "ThaleTheGreat.CoinCollectorRedux/Coins";
         private const string DetectorTexturePath = "ThaleTheGreat.CoinCollectorRedux/MetalDetector";
         private const string CoinTexturePath = "ThaleTheGreat.CoinCollectorRedux/CoinsTexture";
         private const string LocationCoinsModDataKey = "ThaleTheGreat.CoinCollectorRedux/Coins";
+        private const string DetectorModDataKey = "ThaleTheGreat.CoinCollectorRedux/MetalDetectorItem";
+        private const int DetectorShopPrice = 2500;
 
         public static IMonitor PMonitor = null!;
         public static IModHelper PHelper = null!;
@@ -37,6 +43,7 @@ namespace ThaleTheGreat.CoinCollectorRedux
         private static SoundEffect? blipEffectLeft;
         private static SoundEffect? blipEffectRight;
         private static bool coinDataLoaded;
+        private static Texture2D? detectorTexture;
 
         public override void Entry(IModHelper helper)
         {
@@ -46,6 +53,8 @@ namespace ThaleTheGreat.CoinCollectorRedux
             Config = Helper.ReadConfig<ModConfig>();
             CoinDataDict = GetDefaultCoinData();
 
+            Helper.Events.GameLoop.GameLaunched += OnGameLaunched;
+
             if (!Config.ModEnabled)
                 return;
 
@@ -53,7 +62,6 @@ namespace ThaleTheGreat.CoinCollectorRedux
 
             Helper.Events.Content.AssetRequested += OnAssetRequested;
             Helper.Events.Content.AssetReady += OnAssetReady;
-            Helper.Events.GameLoop.GameLaunched += OnGameLaunched;
             Helper.Events.GameLoop.SaveLoaded += OnSaveLoaded;
             Helper.Events.GameLoop.DayStarted += OnDayStarted;
             Helper.Events.GameLoop.OneSecondUpdateTicked += OnOneSecondUpdateTicked;
@@ -78,6 +86,14 @@ namespace ThaleTheGreat.CoinCollectorRedux
             {
                 e.Edit(EditObjects);
             }
+            else if (e.NameWithoutLocale.IsEquivalentTo("Data/Weapons"))
+            {
+                e.Edit(EditWeapons);
+            }
+            else if (e.NameWithoutLocale.IsEquivalentTo("Data/Shops"))
+            {
+                e.Edit(EditShops);
+            }
             else if (e.NameWithoutLocale.IsEquivalentTo("Data/CraftingRecipes"))
             {
                 e.Edit(EditCraftingRecipes);
@@ -86,6 +102,9 @@ namespace ThaleTheGreat.CoinCollectorRedux
 
         private void OnAssetReady(object? sender, AssetReadyEventArgs e)
         {
+            if (e.Name.IsEquivalentTo(DetectorTexturePath))
+                detectorTexture = null;
+
             if (!e.Name.IsEquivalentTo(NewDictionaryPath))
                 return;
 
@@ -139,6 +158,60 @@ namespace ThaleTheGreat.CoinCollectorRedux
             }
         }
 
+
+        private void EditWeapons(IAssetData asset)
+        {
+            IDictionary<string, WeaponData> data = asset.AsDictionary<string, WeaponData>().Data;
+
+            data[DetectorWeaponId] = new WeaponData
+            {
+                Name = "MetalDetector",
+                DisplayName = Helper.Translation.Get("name").ToString(),
+                Description = Helper.Translation.Get("description").ToString(),
+                Type = 2,
+                Texture = DetectorTexturePath,
+                SpriteIndex = 0,
+                MinDamage = 5,
+                MaxDamage = 15,
+                Knockback = 1.5f,
+                Speed = -16,
+                Precision = 0,
+                Defense = 0,
+                AreaOfEffect = 0,
+                CritChance = 0.02f,
+                CritMultiplier = 3f,
+                MineBaseLevel = -1,
+                MineMinLevel = -1,
+                CanBeLostOnDeath = false
+            };
+        }
+
+        private void EditShops(IAssetData asset)
+        {
+            IDictionary<string, ShopData> shops = asset.AsDictionary<string, ShopData>().Data;
+            if (!shops.TryGetValue("SeedShop", out ShopData? seedShop))
+                return;
+
+            seedShop.Items ??= new List<ShopItemData>();
+
+            seedShop.Items.RemoveAll(item =>
+                item.Id == DetectorId
+                || item.Id == DetectorWeaponId
+                || item.ItemId == DetectorQualifiedId
+                || item.ItemId == DetectorWeaponQualifiedId
+            );
+
+            seedShop.Items.Add(new ShopItemData
+            {
+                Id = DetectorWeaponId,
+                ItemId = DetectorWeaponQualifiedId,
+                Price = DetectorShopPrice,
+                AvailableStock = 1,
+                AvoidRepeat = true,
+                IsRecipe = false
+            });
+        }
+
         private void EditCraftingRecipes(IAssetData asset)
         {
             IDictionary<string, string> recipes = asset.AsDictionary<string, string>().Data;
@@ -151,8 +224,8 @@ namespace ThaleTheGreat.CoinCollectorRedux
             Helper.GameContent.InvalidateCache("Data/Objects");
             RefreshCoinLocationCache();
 
-            if (!Game1.player.craftingRecipes.ContainsKey("Metal Detector"))
-                Game1.player.craftingRecipes.Add("Metal Detector", 0);
+            EnsureMetalDetectorRecipeKnown();
+            ConvertKnownObjectDetectorsToWeapon();
         }
 
         private void OnDayStarted(object? sender, DayStartedEventArgs e)
@@ -189,9 +262,123 @@ namespace ThaleTheGreat.CoinCollectorRedux
 
         private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
         {
+            RegisterConfigMenu();
+            ReloadSounds();
+        }
+
+        private void RegisterConfigMenu()
+        {
+            IGenericModConfigMenuApi? api = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
+            if (api == null)
+                return;
+
+            api.Register(
+                ModManifest,
+                reset: () => Config = new ModConfig(),
+                save: () =>
+                {
+                    Helper.WriteConfig(Config);
+                    ReloadSounds();
+                    Helper.GameContent.InvalidateCache("Data/Objects");
+                    Helper.GameContent.InvalidateCache("Data/Weapons");
+                    Helper.GameContent.InvalidateCache("Data/Shops");
+                    Helper.GameContent.InvalidateCache("Data/CraftingRecipes");
+                }
+            );
+
+            api.AddSectionTitle(ModManifest, () => "General");
+            api.AddBoolOption(ModManifest, () => Config.ModEnabled, value => Config.ModEnabled = value, () => "Mod Enabled", () => "Enable Coin Collector Redux. Restart the game after changing this option.");
+            api.AddBoolOption(ModManifest, () => Config.DebugLogging, value => Config.DebugLogging = value, () => "Debug Logging", () => "Log extra diagnostic messages for troubleshooting.");
+
+            api.AddSectionTitle(ModManifest, () => "Metal Detector");
+            api.AddBoolOption(ModManifest, () => Config.RequireMetalDetector, value => Config.RequireMetalDetector = value, () => "Require Metal Detector", () => "Only play detector blips while holding a recognized metal detector.");
+            api.AddTextOption(ModManifest, () => Config.MetalDetectorID, value => Config.MetalDetectorID = value, () => "Metal Detector ID", () => "Additional item ID/name accepted as a metal detector.");
+            api.AddBoolOption(ModManifest, () => Config.RequireMetalDetectorSwing, value => Config.RequireMetalDetectorSwing = value, () => "Require Metal Detector Swing", () => "Only ping when using the held detector instead of polling automatically.");
+            api.AddTextOption(ModManifest, () => Config.CraftingRequirements, value => Config.CraftingRequirements = value, () => "Crafting Requirements", () => "Raw Stardew crafting requirement string for the Metal Detector recipe. Changing this requires a cache reload or restart.");
+
+            api.AddSectionTitle(ModManifest, () => "Audio");
+            api.AddTextOption(ModManifest, () => Config.BlipAudioPath, value => Config.BlipAudioPath = value, () => "Center Blip Audio Path", () => "Relative path to the center blip sound file.");
+            api.AddTextOption(ModManifest, () => Config.BlipAudioPathLeft, value => Config.BlipAudioPathLeft = value, () => "Left Blip Audio Path", () => "Relative path to the left blip sound file.");
+            api.AddTextOption(ModManifest, () => Config.BlipAudioPathRight, value => Config.BlipAudioPathRight = value, () => "Right Blip Audio Path", () => "Relative path to the right blip sound file.");
+            api.AddNumberOption(ModManifest, () => Config.BlipAudioVolume, value => Config.BlipAudioVolume = value, () => "Blip Audio Volume", () => "Maximum blip volume.", min: 0f, max: 1f, interval: 0.05f);
+            api.AddBoolOption(ModManifest, () => Config.BlipAudioIncreasePitch, value => Config.BlipAudioIncreasePitch = value, () => "Increase Pitch Near Coins", () => "Increase blip pitch as the player gets closer to a coin.");
+
+            api.AddSectionTitle(ModManifest, () => "Coin Spawns");
+            api.AddNumberOption(ModManifest, () => Config.SecondsPerPoll, value => Config.SecondsPerPoll = value, () => "Seconds Per Poll", () => "Seconds between automatic detector checks.", min: 1, interval: 1);
+            api.AddNumberOption(ModManifest, () => Config.MapHasCoinsChance, value => Config.MapHasCoinsChance = value, () => "Map Has Coins Chance", () => "Daily chance each outdoor map receives coin spots.", min: 0f, max: 1f, interval: 0.05f);
+            api.AddNumberOption(ModManifest, () => Config.MinCoinsPerMap, value => Config.MinCoinsPerMap = value, () => "Minimum Coins Per Map", () => "Minimum generated coin spots on a valid map.", min: 0, interval: 1);
+            api.AddNumberOption(ModManifest, () => Config.MaxCoinsPerMap, value => Config.MaxCoinsPerMap = value, () => "Maximum Coins Per Map", () => "Maximum generated coin spots on a valid map before luck bonus.", min: 0, interval: 1);
+            api.AddNumberOption(ModManifest, () => Config.LuckFactor, value => Config.LuckFactor = value, () => "Luck Factor", () => "How much player luck can increase maximum generated coins.", min: 0f, interval: 0.05f);
+            api.AddNumberOption(ModManifest, () => Config.MaxPixelPingDistance, value => Config.MaxPixelPingDistance = value, () => "Max Pixel Ping Distance", () => "Maximum pixel distance for detector pings. Use 0 for unlimited.", min: 0f, interval: 50f);
+
+            api.AddSectionTitle(ModManifest, () => "Indicator");
+            api.AddBoolOption(ModManifest, () => Config.EnableIndicator, value => Config.EnableIndicator = value, () => "Enable Indicator", () => "Show a directional projectile indicator toward the nearest coin.");
+            api.AddNumberOption(ModManifest, () => Config.IndicatorSprite, value => Config.IndicatorSprite = value, () => "Indicator Sprite", () => "Projectile sprite index used by the detector indicator.", min: 0, interval: 1);
+            api.AddNumberOption(ModManifest, () => Config.IndicatorLength, value => Config.IndicatorLength = value, () => "Indicator Length", () => "Maximum indicator travel distance in tiles.", min: 0f, interval: 0.25f);
+            api.AddNumberOption(ModManifest, () => Config.IndicatorSpeed, value => Config.IndicatorSpeed = value, () => "Indicator Speed", () => "Speed multiplier for the directional indicator.", min: 0f, interval: 0.5f);
+        }
+
+        private void ReloadSounds()
+        {
             blipEffectCenter = LoadSound(Config.BlipAudioPath);
             blipEffectLeft = LoadSound(Config.BlipAudioPathLeft) ?? blipEffectCenter;
             blipEffectRight = LoadSound(Config.BlipAudioPathRight) ?? blipEffectCenter;
+        }
+
+        private static void EnsureMetalDetectorRecipeKnown()
+        {
+            if (Game1.player != null && !Game1.player.craftingRecipes.ContainsKey("Metal Detector"))
+                Game1.player.craftingRecipes.Add("Metal Detector", 0);
+        }
+
+        private static void ConvertKnownObjectDetectorsToWeapon()
+        {
+            if (Game1.player == null)
+                return;
+
+            for (int i = 0; i < Game1.player.Items.Count; i++)
+            {
+                if (IsLegacyObjectDetector(Game1.player.Items[i]))
+                    Game1.player.Items[i] = CreateDetectorWeapon();
+            }
+        }
+
+        private static Item CreateDetectorWeapon()
+        {
+            Item item = ItemRegistry.Create(DetectorWeaponQualifiedId);
+            item.modData[DetectorModDataKey] = "true";
+            return item;
+        }
+
+        private static bool IsLegacyObjectDetector(Item? item)
+        {
+            if (item is not StardewValley.Object)
+                return false;
+
+            if (item.modData.ContainsKey(DetectorModDataKey))
+                return true;
+
+            return ItemRegistry.HasItemId(item, DetectorQualifiedId)
+                || ItemRegistry.HasItemId(item, DetectorId)
+                || item.ItemId.Equals(DetectorId, StringComparison.OrdinalIgnoreCase)
+                || item.Name.Equals("MetalDetector", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static Texture2D? GetDetectorTexture()
+        {
+            if (detectorTexture != null)
+                return detectorTexture;
+
+            try
+            {
+                detectorTexture = PHelper.GameContent.Load<Texture2D>(DetectorTexturePath);
+                return detectorTexture;
+            }
+            catch (Exception ex)
+            {
+                PMonitor.Log($"Failed loading metal detector texture: {ex}", LogLevel.Error);
+                return null;
+            }
         }
 
         private SoundEffect? LoadSound(string relativePath)
@@ -494,13 +681,19 @@ namespace ThaleTheGreat.CoinCollectorRedux
             if (item == null)
                 return false;
 
+            if (item.modData.ContainsKey(DetectorModDataKey))
+                return true;
+
             string configured = Config.MetalDetectorID?.Trim() ?? "";
+            if (ItemRegistry.HasItemId(item, DetectorWeaponQualifiedId) || ItemRegistry.HasItemId(item, DetectorWeaponId))
+                return true;
             if (ItemRegistry.HasItemId(item, DetectorQualifiedId) || ItemRegistry.HasItemId(item, DetectorId))
                 return true;
             if (!string.IsNullOrWhiteSpace(configured) && ItemRegistry.HasItemId(item, configured))
                 return true;
 
-            return item.ItemId.Equals(DetectorId, StringComparison.OrdinalIgnoreCase)
+            return item.ItemId.Equals(DetectorWeaponId, StringComparison.OrdinalIgnoreCase)
+                || item.ItemId.Equals(DetectorId, StringComparison.OrdinalIgnoreCase)
                 || item.Name.Equals("MetalDetector", StringComparison.OrdinalIgnoreCase)
                 || item.Name.Equals(configured, StringComparison.OrdinalIgnoreCase);
         }
