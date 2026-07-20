@@ -3,16 +3,23 @@ namespace ThaleTheGreat.ToolAndSprinklerUpgrades;
 internal static class Constants
 {
     public const int CobaltLevel = 5;
-    public const int PrismaticLevel = 6;
-    public const int RadioactiveLevel = 7;
+    public const int MiddleCustomLevel = 6;
+    public const int HighestCustomLevel = 7;
     public const int DeluxeScarecrowRadius = 17;
 
     public const string ModId = "ThaleTheGreat.ToolAndSprinklerUpgrades";
+    public const string TierOrderSaveKey = ModId + "/RadioactiveBeforePrismatic";
     public const string ImmersiveSprinklersAndScarecrowsModId = "aedenthorn.ImmersiveSprinklersAndScarecrows";
     public const string ImmersivePressureNozzleKey = "aedenthorn.ImmersiveSprinklersAndScarecrows/nozzle";
+    public const string NozzleAndEnricherModId = "aedenthorn.NozzleAndEnricher";
+    public const string NozzleAndEnricherNozzleKey = "aedenthorn.NozzleAndEnricher/nozzle";
+    public const string NozzleAndEnricherDictAsset = "aedenthorn.NozzleAndEnricher/dict";
     public const string CobaltTextureAsset = "Mods/ThaleTheGreat.ToolAndSprinklerUpgrades/Cobalt";
     public const string PrismaticTextureAsset = "Mods/ThaleTheGreat.ToolAndSprinklerUpgrades/Prismatic";
     public const string RadioactiveTextureAsset = "Mods/ThaleTheGreat.ToolAndSprinklerUpgrades/Radioactive";
+    public const string CobaltPanAnimationTextureAsset = "Mods/ThaleTheGreat.ToolAndSprinklerUpgrades/CobaltPanAnimation";
+    public const string PrismaticPanAnimationTextureAsset = "Mods/ThaleTheGreat.ToolAndSprinklerUpgrades/PrismaticPanAnimation";
+    public const string RadioactivePanAnimationTextureAsset = "Mods/ThaleTheGreat.ToolAndSprinklerUpgrades/RadioactivePanAnimation";
 
     public const int CobaltBarSpriteIndex = 18;
     public const int CobaltSprinklerSpriteIndex = 19;
@@ -20,6 +27,12 @@ internal static class Constants
     public const int PrismaticSprinklerSpriteIndex = 19;
     public const int RadioactiveSprinklerSpriteIndex = 19;
 
+    public const int PanAnimationFirstFrame = 123;
+    public const int PanAnimationLastFrame = 125;
+    public const int PanAnimationIridiumSourceX = 240;
+    public const int PanAnimationSourceY = 640;
+    public const int PanAnimationFrameWidth = 16;
+    public const int PanAnimationFrameHeight = 32;
 
     public const string CobaltBarId = "ThaleTheGreat.ToolAndSprinklerUpgrades_CobaltBar";
     public const string CobaltSprinklerId = "ThaleTheGreat.ToolAndSprinklerUpgrades_CobaltSprinkler";

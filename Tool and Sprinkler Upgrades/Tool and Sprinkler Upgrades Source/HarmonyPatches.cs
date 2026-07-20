@@ -1,11 +1,64 @@
+using System.Reflection;
 using HarmonyLib;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
 using StardewValley.Tools;
 using StardewValley.TerrainFeatures;
 using SObject = StardewValley.Object;
 
 namespace ThaleTheGreat.ToolAndSprinklerUpgrades;
+
+internal static class CustomPanAnimationPatch
+{
+    private static readonly FieldInfo? PositionOffsetField = AccessTools.Field(typeof(FarmerRenderer), "positionOffset");
+
+    public static void AfterFarmerRendererDraw(
+        SpriteBatch b,
+        FarmerSprite.AnimationFrame animationFrame,
+        int currentFrame,
+        Rectangle sourceRect,
+        Vector2 position,
+        Vector2 origin,
+        float layerDepth,
+        Color overrideColor,
+        float rotation,
+        float scale,
+        Farmer who,
+        FarmerRenderer __instance)
+    {
+        if (who?.UsingTool != true || who.CurrentTool is not Pan pan)
+            return;
+
+        if (!TryGetCustomPanSourceRect(currentFrame, out Rectangle panSourceRect))
+            return;
+
+        if (!ModEntry.TryGetCustomPanAnimationTexture(pan, out Texture2D? texture) || texture == null)
+            return;
+
+        Vector2 positionOffset = PositionOffsetField?.GetValue(__instance) is Vector2 offset ? offset : Vector2.Zero;
+        Vector2 drawPosition = position + origin + positionOffset + who.armOffset;
+        b.Draw(texture, drawPosition, panSourceRect, overrideColor, rotation, origin, 4f * scale, animationFrame.flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth + 5.0E-05f);
+    }
+
+    private static bool TryGetCustomPanSourceRect(int currentFrame, out Rectangle panSourceRect)
+    {
+        panSourceRect = Rectangle.Empty;
+
+        int frameOffset = currentFrame - Constants.PanAnimationFirstFrame;
+        int lastFrameOffset = Constants.PanAnimationLastFrame - Constants.PanAnimationFirstFrame;
+        if (frameOffset < 0 || frameOffset > lastFrameOffset)
+            return false;
+
+        panSourceRect = new Rectangle(
+            Constants.PanAnimationIridiumSourceX + frameOffset * Constants.PanAnimationFrameWidth,
+            Constants.PanAnimationSourceY,
+            Constants.PanAnimationFrameWidth,
+            Constants.PanAnimationFrameHeight
+        );
+        return true;
+    }
+}
 
 [HarmonyPatch(typeof(Tool), "tilesAffected")]
 internal static class ToolTilesAffectedPatch
@@ -15,7 +68,7 @@ internal static class ToolTilesAffectedPatch
         if (__instance is not Hoe and not WateringCan)
             return;
 
-        if (__instance.UpgradeLevel is < Constants.CobaltLevel or > Constants.RadioactiveLevel)
+        if (__instance.UpgradeLevel is < Constants.CobaltLevel or > Constants.HighestCustomLevel)
             return;
 
         if (power < 6)
@@ -79,7 +132,7 @@ internal static class ToolStaminaPatch
         if (!ToolTierUtility.IsCoreUpgradeableTool(tool))
             return;
 
-        if (tool.UpgradeLevel is < Constants.CobaltLevel or > Constants.RadioactiveLevel)
+        if (tool.UpgradeLevel is < Constants.CobaltLevel or > Constants.HighestCustomLevel)
             return;
 
         state = who.Stamina;
@@ -107,11 +160,11 @@ internal static class ToolStaminaPatch
 
 
 [HarmonyPatch(typeof(Tree), nameof(Tree.performToolAction))]
-internal static class RadioactiveAxeTreeOneHitPatch
+internal static class HighestTierAxeTreeOneHitPatch
 {
     public static void Prefix(Tree __instance, Tool t, int explosion)
     {
-        if (explosion > 0 || t is not Axe axe || axe.UpgradeLevel != Constants.RadioactiveLevel)
+        if (explosion > 0 || t is not Axe axe || axe.UpgradeLevel != Constants.HighestCustomLevel)
             return;
 
         if (__instance.tapped.Value)
@@ -122,11 +175,11 @@ internal static class RadioactiveAxeTreeOneHitPatch
 }
 
 [HarmonyPatch(typeof(FruitTree), nameof(FruitTree.performToolAction))]
-internal static class RadioactiveAxeFruitTreeOneHitPatch
+internal static class HighestTierAxeFruitTreeOneHitPatch
 {
     public static void Prefix(FruitTree __instance, Tool t, int explosion)
     {
-        if (explosion > 0 || t is not Axe axe || axe.UpgradeLevel != Constants.RadioactiveLevel)
+        if (explosion > 0 || t is not Axe axe || axe.UpgradeLevel != Constants.HighestCustomLevel)
             return;
 
         __instance.health.Value = 0f;
@@ -134,27 +187,27 @@ internal static class RadioactiveAxeFruitTreeOneHitPatch
 }
 
 [HarmonyPatch(typeof(ResourceClump), nameof(ResourceClump.performToolAction))]
-internal static class RadioactiveToolResourceClumpOneHitPatch
+internal static class HighestTierToolResourceClumpOneHitPatch
 {
     public static void Prefix(ResourceClump __instance, Tool t)
     {
-        if (t is Axe axe && axe.UpgradeLevel == Constants.RadioactiveLevel)
+        if (t is Axe axe && axe.UpgradeLevel == Constants.HighestCustomLevel)
         {
             __instance.health.Value = 0;
             return;
         }
 
-        if (t is Pickaxe pickaxe && pickaxe.UpgradeLevel == Constants.RadioactiveLevel)
+        if (t is Pickaxe pickaxe && pickaxe.UpgradeLevel == Constants.HighestCustomLevel)
             __instance.health.Value = 0;
     }
 }
 
 [HarmonyPatch(typeof(Pickaxe), nameof(Pickaxe.DoFunction))]
-internal static class RadioactivePickaxeOneHitPatch
+internal static class HighestTierPickaxeOneHitPatch
 {
     public static void Prefix(Pickaxe __instance, GameLocation location, int x, int y)
     {
-        if (__instance.UpgradeLevel != Constants.RadioactiveLevel)
+        if (__instance.UpgradeLevel != Constants.HighestCustomLevel)
             return;
 
         Vector2 tile = new(x / Game1.tileSize, y / Game1.tileSize);
@@ -212,21 +265,21 @@ internal static class FishingRodLevelBonusPatch
 
 
 [HarmonyPatch(typeof(SObject), nameof(SObject.IsScarecrow))]
-internal static class RadioactiveSprinklerScarecrowRecognitionPatch
+internal static class HighestTierSprinklerScarecrowRecognitionPatch
 {
     public static void Postfix(SObject __instance, ref bool __result)
     {
-        if (!__result && ModEntry.IsRadioactiveSprinklerScarecrow(__instance))
+        if (!__result && ModEntry.IsHighestTierSprinklerScarecrow(__instance))
             __result = true;
     }
 }
 
 [HarmonyPatch(typeof(SObject), nameof(SObject.GetRadiusForScarecrow))]
-internal static class RadioactiveSprinklerScarecrowRadiusPatch
+internal static class HighestTierSprinklerScarecrowRadiusPatch
 {
     public static void Postfix(SObject __instance, ref int __result)
     {
-        if (ModEntry.IsRadioactiveSprinklerScarecrow(__instance))
+        if (ModEntry.IsHighestTierSprinklerScarecrow(__instance))
             __result = ModEntry.GetSprinklerRange(__instance);
     }
 }
@@ -244,6 +297,7 @@ internal static class CustomSprinklerBaseRadiusPatch
 }
 
 [HarmonyPatch(typeof(SObject), nameof(SObject.GetModifiedRadiusForSprinkler))]
+[HarmonyAfter(Constants.NozzleAndEnricherModId)]
 internal static class CustomSprinklerModifiedRadiusPatch
 {
     public static void Postfix(SObject __instance, ref int __result)
