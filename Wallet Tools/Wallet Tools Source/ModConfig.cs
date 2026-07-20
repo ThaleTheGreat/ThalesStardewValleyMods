@@ -25,6 +25,8 @@ internal sealed class ModConfig
 
     public bool PlayToolSwapSound { get; set; } = true;
     public bool UseNewToolUseLogic { get; set; } = false;
+    public bool ItemExtensionsCompatibilityEnabled { get; set; } = true;
+    public bool ItemExtensionsDebugLogging { get; set; } = false;
 
     public KeybindList ToggleAutoUseHotkey { get; set; } = new(new Keybind(SButton.LeftControl, SButton.D8));
     public KeybindList HeldItemAutoUseModifierHotkey { get; set; } = new(new Keybind(SButton.LeftShift));

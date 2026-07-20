@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Newtonsoft.Json;
 using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -42,10 +43,37 @@ public sealed class ModEntry : Mod
     private const string MenuVirtualToolPurposeMarker = "ThaleTheGreat.WalletTools/MenuVirtualToolPurpose";
     private const string OwnerPlayerIdMarker = "ThaleTheGreat.WalletTools/OwnerPlayerId";
     private const string ItemExtensionsClumpIdKey = "mistyspring.ItemExtensions/CustomClumpId";
+    private const string LegacyNooksBridgeUniqueId = "ThaleTheGreat.WalletToolsForNooksAndCrannies";
+    private const string LegacyVariousCoalBridgeUniqueId = "ThaleTheGreat.WalletToolsForVariousCoalOresAndExtras";
+    private const string NooksResourcePrefix = "Wildflour.NooksCrannies_";
+    private const string VariousCoalResourcePrefix = "6135.VariousCoalOresExtras_";
+
+    private static readonly HashSet<string> LegacyNooksResourceIds = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Wildflour.NooksCrannies_WildMushStump",
+        "Wildflour.NooksCrannies_WildMushLog",
+        "Wildflour.NooksCrannies_HerbStump",
+        "Wildflour.NooksCrannies_OvergrownFruitStump",
+        "Wildflour.NooksCrannies_FlowerStump",
+        "Wildflour.NooksCrannies_MagicDeadStump",
+        "Wildflour.NooksCrannies_MagicOvergrownStump",
+        "Wildflour.NooksCrannies_MagicBloomingStump",
+        "Wildflour.NooksCrannies_Flower_Seed_Node",
+        "Wildflour.NooksCrannies_Herb_Seed_Node",
+        "Wildflour.NooksCrannies_Berry_Node",
+        "Wildflour.NooksCrannies_Mush_Node"
+    };
 
     private static ModEntry? Instance;
 
-    private ModConfig Config = new();
+    internal ModConfig Config { get; private set; } = new();
+    internal IModHelper ModHelper => Helper;
+    internal IMonitor ModMonitor => Monitor;
+    internal IManifest Manifest => ModManifest;
+
+    private readonly List<WalletModule> IntegratedModules = new();
+    private readonly Dictionary<string, UnifiedGmcmApiAdapter> GmcmAdapters = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, (Action Reset, Action Save)> ModuleConfigCallbacks = new(StringComparer.Ordinal);
     private readonly Dictionary<long, Dictionary<WalletToolKind, WalletToolState>> StoredToolsByPlayer = new();
     private Dictionary<WalletToolKind, WalletToolState> StoredTools => GetStoredTools(Game1.player);
     private readonly PerScreen<TemporaryToolUse?> PendingToolUseScreen = new();
@@ -96,6 +124,9 @@ public sealed class ModEntry : Mod
     private IMobilePhoneApi? MobilePhoneApi;
     private ISpecialPowerAPI? SpecialPowerApi;
     private IItemExtensionsApi? ItemExtensionsApi;
+    private WalletToolsApi? PublicApi;
+    private bool LegacyNooksBridgeInstalled;
+    private bool LegacyVariousCoalBridgeInstalled;
     private bool GmcmMissingLogged;
     private bool ToolSmartSwitchPatched;
     private bool ToolSmartSwitchPatchAttempted;
@@ -141,6 +172,138 @@ public sealed class ModEntry : Mod
         Harmony = new Harmony(ModManifest.UniqueID);
         PatchCoreGameMethods();
         PatchBlacksmithToolUpgradeFlow();
+        CreateIntegratedModules();
+    }
+
+    private void CreateIntegratedModules()
+    {
+        IntegratedModules.Add(new ThaleTheGreat.WalletAutoPetter.WalletAutoPetterModule(this));
+        IntegratedModules.Add(new ThaleTheGreat.WalletScepter.WalletScepterModule(this));
+        IntegratedModules.Add(new HorseFluteModule(this));
+        IntegratedModules.Add(new ThaleTheGreat.WalletToolsForFashionSense.FashionSenseMirrorModule(this));
+        IntegratedModules.Add(new ThaleTheGreat.WalletToolsForAnimalHusbandry.AnimalHusbandryModule(this));
+        IntegratedModules.Add(new ThaleTheGreat.WalletToolsForCoinCollectorRedux.CoinCollectorReduxModule(this));
+        IntegratedModules.Add(new ThaleTheGreat.WalletToolsForNatureInTheValley.NatureInTheValleyModule(this));
+        IntegratedModules.Add(new ThaleTheGreat.WalletToolsForSwordAndSorcery.SwordAndSorceryModule(this));
+        IntegratedModules.Add(new ThaleTheGreat.WalletToolsForToolUpgradeBundles.ToolUpgradeBundlesModule(this));
+        IntegratedModules.Add(new ThaleTheGreat.WalletToolsForTractorMod.TractorModModule(this));
+
+    }
+
+    private void ActivateIntegratedModules()
+    {
+        foreach (WalletModule module in IntegratedModules)
+            module.InitializeSafely();
+    }
+
+    private void LaunchIntegratedModules()
+    {
+        foreach (WalletModule module in IntegratedModules)
+            module.OnGameLaunchedSafely();
+    }
+
+    internal T ReadModuleConfig<T>(string moduleKey) where T : class, new()
+    {
+        return Helper.Data.ReadJsonFile<T>($"config/{moduleKey}.json") ?? new T();
+    }
+
+    internal void WriteModuleConfig<T>(string moduleKey, T config) where T : class
+    {
+        Helper.Data.WriteJsonFile($"config/{moduleKey}.json", config);
+    }
+
+    internal T? ReadSaveDataWithLegacy<T>(string key, string legacyUniqueId) where T : class
+    {
+        T? current = Helper.Data.ReadSaveData<T>(key);
+        if (current is not null || !Context.IsMainPlayer)
+            return current;
+
+        string markerKey = GetLegacyMigrationMarkerKey(legacyUniqueId, key);
+        if (Helper.Data.ReadSaveData<LegacyMigrationMarker>(markerKey)?.Completed == true)
+            return null;
+
+        string legacyKey = $"smapi/mod-data/{legacyUniqueId}/{key}".ToLowerInvariant();
+        string? rawValue = null;
+        if (!Game1.CustomData.TryGetValue(legacyKey, out rawValue) || string.IsNullOrWhiteSpace(rawValue))
+            SaveGame.loaded?.CustomData.TryGetValue(legacyKey, out rawValue);
+
+        if (string.IsNullOrWhiteSpace(rawValue))
+            return null;
+
+        try
+        {
+            T? migrated = JsonConvert.DeserializeObject<T>(rawValue);
+            if (migrated is null)
+                return null;
+
+            Helper.Data.WriteSaveData(key, migrated);
+            Helper.Data.WriteSaveData(markerKey, new LegacyMigrationMarker());
+            return migrated;
+        }
+        catch (Exception ex)
+        {
+            Monitor.Log($"Could not migrate legacy save data '{legacyUniqueId}/{key}': {ex}", LogLevel.Error);
+            return null;
+        }
+    }
+
+    private static string GetLegacyMigrationMarkerKey(string legacyUniqueId, string key)
+    {
+        string value = $"legacy-migrated-{legacyUniqueId}-{key}";
+        return new string(value.Select(character => char.IsLetterOrDigit(character) || character is '.' or '_' or '-' ? char.ToLowerInvariant(character) : '-').ToArray());
+    }
+
+    internal IGenericModConfigMenuApi? GetDirectModuleGmcmApi(string moduleKey)
+    {
+        return GmcmApi is not null && IntegratedModules.Any(module => module.IsActive && module.Key == moduleKey)
+            ? GmcmApi
+            : null;
+    }
+
+    internal T? GetGmcmAdapter<T>(string moduleKey) where T : class
+    {
+        if (GmcmApi is null)
+            return null;
+
+        WalletModule? module = IntegratedModules.FirstOrDefault(candidate => candidate.IsActive && candidate.Key == moduleKey);
+        if (module is null)
+            return null;
+
+        if (!GmcmAdapters.TryGetValue(moduleKey, out UnifiedGmcmApiAdapter? adapter))
+        {
+            adapter = new UnifiedGmcmApiAdapter(this, GmcmApi, module);
+            GmcmAdapters[moduleKey] = adapter;
+        }
+
+        return adapter as T;
+    }
+
+    internal void RegisterModuleConfigCallbacks(string moduleKey, Action reset, Action save)
+    {
+        ModuleConfigCallbacks[moduleKey] = (reset, save);
+    }
+
+    internal string GetModulePageId(string moduleKey)
+    {
+        return $"integrations.{moduleKey}";
+    }
+
+    private void ResetAllConfig()
+    {
+        Config = new ModConfig();
+        ApplyConfigVisibilityState();
+
+        foreach ((Action reset, _) in ModuleConfigCallbacks.Values)
+            reset();
+    }
+
+    private void SaveAllConfig()
+    {
+        ApplyConfigVisibilityState();
+        Helper.WriteConfig(Config);
+
+        foreach ((_, Action save) in ModuleConfigCallbacks.Values)
+            save();
     }
 
 
@@ -207,9 +370,14 @@ public sealed class ModEntry : Mod
         tool.modData.Remove(OwnerPlayerIdMarker);
     }
 
+    internal IWalletToolsApi GetWalletToolsApi()
+    {
+        return PublicApi ??= new WalletToolsApi(this);
+    }
+
     public override object GetApi()
     {
-        return new WalletToolsApi(this);
+        return GetWalletToolsApi();
     }
 
     private void OnAssetRequested(object? sender, AssetRequestedEventArgs e)
@@ -251,7 +419,8 @@ public sealed class ModEntry : Mod
             Description = state.GetDescription(),
             TexturePath = state.GetTexturePath(),
             TexturePosition = state.GetTexturePosition(),
-            UnlockedCondition = $"PLAYER_MOD_DATA Current {FlagPrefix}{kind} true"
+            UnlockedCondition = $"PLAYER_MOD_DATA Current {FlagPrefix}{kind} true",
+            CustomFields = GetWalletPowerCustomFields()
         };
     }
 
@@ -301,13 +470,36 @@ public sealed class ModEntry : Mod
 
     private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
     {
-        ItemExtensionsApi = Helper.ModRegistry.GetApi<IItemExtensionsApi>("mistyspring.ItemExtensions");
+        DetectLegacyItemExtensionsBridges();
+        RefreshItemExtensionsApi();
         RegisterGmcm();
+        ActivateIntegratedModules();
+        LaunchIntegratedModules();
+        RegisterIntegratedModulePageLinks();
         RegisterMobilePhoneApp();
         RegisterSpecialPowerUtilities();
         PatchToolSmartSwitch();
         PatchAutomateToolSwap();
-        WarnIfNoSwitchModLoaded();
+        InvalidatePowers();
+    }
+
+    private void RegisterIntegratedModulePageLinks()
+    {
+        if (GmcmApi is null)
+            return;
+
+        GmcmApi.AddPage(ModManifest, "");
+        GmcmApi.AddSectionTitle(ModManifest, () => "Integrated Wallets");
+
+        foreach (WalletModule module in IntegratedModules.Where(module => module.IsActive && module.HasConfigPage))
+        {
+            GmcmApi.AddPageLink(
+                ModManifest,
+                GetModulePageId(module.Key),
+                () => module.DisplayName,
+                () => $"Configure the integrated {module.DisplayName} wallet module."
+            );
+        }
     }
 
     private void PatchCoreGameMethods()
@@ -434,12 +626,6 @@ public sealed class ModEntry : Mod
         AutomateToolSwapPatched = true;
     }
 
-    private void WarnIfNoSwitchModLoaded()
-    {
-        if (ToolSmartSwitchPatched || AutomateToolSwapPatched)
-            return;
-
-    }
 
     private static void AutomateToolSwapSetToolPostfix(Farmer player, Type toolType, string aux = "", bool anyTool = false)
     {
@@ -524,7 +710,7 @@ public sealed class ModEntry : Mod
         {
             if (!GmcmMissingLogged)
             {
-                Monitor.Log("Generic Mod Config Menu was not detected. Wallet Tools settings remain available through config.json.", LogLevel.Warn);
+                Monitor.Log("Generic Mod Config Menu was not detected. Wallet Tools and integrated module settings remain available in the mod's JSON config files.", LogLevel.Warn);
                 GmcmMissingLogged = true;
             }
             return;
@@ -533,10 +719,12 @@ public sealed class ModEntry : Mod
         try
         {
             GmcmApi.Unregister(ModManifest);
-            GmcmApi.Register(ModManifest, reset: () => { Config = new ModConfig(); ApplyConfigVisibilityState(); }, save: () => { ApplyConfigVisibilityState(); Helper.WriteConfig(Config); });
+            GmcmApi.Register(ModManifest, reset: ResetAllConfig, save: SaveAllConfig);
 
             AddBool(GmcmApi, nameof(Config.ModEnabled), () => Config.ModEnabled, SetModEnabled, "config.mod-enabled.name", "config.mod-enabled.tooltip");
             AddBool(GmcmApi, nameof(Config.PlayToolSwapSound), () => Config.PlayToolSwapSound, value => Config.PlayToolSwapSound = value, "config.play-tool-swap-sound.name", "config.play-tool-swap-sound.tooltip");
+            AddBool(GmcmApi, nameof(Config.ItemExtensionsCompatibilityEnabled), () => Config.ItemExtensionsCompatibilityEnabled, SetItemExtensionsCompatibilityEnabled, "config.item-extensions-enabled.name", "config.item-extensions-enabled.tooltip");
+            AddBool(GmcmApi, nameof(Config.ItemExtensionsDebugLogging), () => Config.ItemExtensionsDebugLogging, value => Config.ItemExtensionsDebugLogging = value, "config.item-extensions-debug.name", "config.item-extensions-debug.tooltip");
             AddBool(GmcmApi, nameof(Config.AxeEnabled), () => Config.AxeEnabled, value => SetToolEnabled(WalletToolKind.Axe, value), "config.wallet-axe.name", "config.wallet-axe.tooltip");
             AddBool(GmcmApi, nameof(Config.PickaxeEnabled), () => Config.PickaxeEnabled, value => SetToolEnabled(WalletToolKind.Pickaxe, value), "config.wallet-pickaxe.name", "config.wallet-pickaxe.tooltip");
             AddBool(GmcmApi, nameof(Config.HoeEnabled), () => Config.HoeEnabled, value => SetToolEnabled(WalletToolKind.Hoe, value), "config.wallet-hoe.name", "config.wallet-hoe.tooltip");
@@ -574,6 +762,49 @@ public sealed class ModEntry : Mod
         }
     }
 
+
+    internal Dictionary<string, object> GetWalletPowerCustomFields()
+    {
+        return new Dictionary<string, object>
+        {
+            ["Spiderbuttons.SpecialPowerUtilities/Tab"] = ModManifest.UniqueID
+        };
+    }
+
+    private void SetItemExtensionsCompatibilityEnabled(bool value)
+    {
+        Config.ItemExtensionsCompatibilityEnabled = value;
+        RefreshItemExtensionsApi();
+    }
+
+    private void DetectLegacyItemExtensionsBridges()
+    {
+        LegacyNooksBridgeInstalled = Helper.ModRegistry.IsLoaded(LegacyNooksBridgeUniqueId);
+        LegacyVariousCoalBridgeInstalled = Helper.ModRegistry.IsLoaded(LegacyVariousCoalBridgeUniqueId);
+
+        if (LegacyNooksBridgeInstalled)
+        {
+            Monitor.Log($"The legacy standalone mod '{LegacyNooksBridgeUniqueId}' is installed. Wallet Tools will defer the exact Nooks and Crannies resources handled by that bridge to prevent duplicate tool-supply patches.", LogLevel.Warn);
+        }
+
+        if (LegacyVariousCoalBridgeInstalled)
+        {
+            Monitor.Log($"The legacy standalone mod '{LegacyVariousCoalBridgeUniqueId}' is installed. Wallet Tools will defer Various Coal Ores and Extras resources to that bridge to prevent duplicate tool-supply patches.", LogLevel.Warn);
+        }
+    }
+
+    private void RefreshItemExtensionsApi()
+    {
+        ItemExtensionsApi = Config.ItemExtensionsCompatibilityEnabled
+            ? Helper.ModRegistry.GetApi<IItemExtensionsApi>("mistyspring.ItemExtensions")
+            : null;
+    }
+
+    private void ItemExtensionsDebugLog(string message)
+    {
+        if (Config.ItemExtensionsDebugLogging)
+            Monitor.Log(message, LogLevel.Debug);
+    }
 
     private string T(string key)
     {
@@ -2718,7 +2949,16 @@ public sealed class ModEntry : Mod
         {
             for (int i = 0; i < player.Items.Count; i++)
             {
-                if (player.Items[i] is not Tool tool || IsRuntimeTool(tool) || IsOvernightExposure(tool, out _) || IsCurrentlySelectedTool(player, i, tool) || !TryGetWalletKindForStorage(tool, out WalletToolKind kind))
+                if (player.Items[i] is not Tool tool)
+                    continue;
+
+                if (TryCollectOrphanRuntimeTool(player, i, tool))
+                {
+                    changed = true;
+                    continue;
+                }
+
+                if (IsRuntimeTool(tool) || IsOvernightExposure(tool, out _) || IsCurrentlySelectedTool(player, i, tool) || !TryGetWalletKindForStorage(tool, out WalletToolKind kind))
                     continue;
 
                 if (TryReplaceStoredToolIfBetter(player, kind, tool))
@@ -2765,6 +3005,24 @@ public sealed class ModEntry : Mod
     private bool TryReplaceStoredToolIfBetter(WalletToolKind kind, Tool candidate)
     {
         return TryReplaceStoredToolIfBetter(Game1.player, kind, candidate);
+    }
+
+    private bool TryCollectOrphanRuntimeTool(Farmer player, int slot, Tool tool)
+    {
+        if (!IsRuntimeToolForPlayer(tool, player)
+            || !tool.modData.TryGetValue(RuntimeToolKindMarker, out string? rawKind)
+            || !Enum.TryParse(rawKind, out WalletToolKind kind)
+            || !IsWalletEnabled(kind)
+            || !ToolMatchesWalletKind(tool, kind))
+            return false;
+
+        WalletToolState candidateState = WalletToolState.FromTool(kind, tool);
+        if (candidateState.IsInvalidStoredTool())
+            return false;
+
+        TryReplaceStoredToolIfBetter(player, kind, tool);
+        player.Items[slot] = null;
+        return true;
     }
 
     private bool TryReplaceStoredToolIfBetter(Farmer player, WalletToolKind kind, Tool candidate)
@@ -2967,15 +3225,26 @@ public sealed class ModEntry : Mod
         if (currentItem is null)
             return false;
 
-        if (toolType.IsInstanceOfType(currentItem))
-            return true;
+        if (anyTool)
+            return currentItem is Axe or Pickaxe or Hoe;
 
-
-        return anyTool && currentItem is Axe or Pickaxe or Hoe;
+        return toolType.IsInstanceOfType(currentItem);
     }
 
     private bool TryGetWalletKindForRequestedType(Type toolType, bool anyTool, out WalletToolKind kind)
     {
+        if (anyTool)
+        {
+            foreach (WalletToolKind candidate in new[] { WalletToolKind.Axe, WalletToolKind.Pickaxe, WalletToolKind.Hoe })
+            {
+                if (TryFindStoredAutoUseToolForRequest(candidate, out kind))
+                    return true;
+            }
+
+            kind = WalletToolKind.Axe;
+            return false;
+        }
+
         if (toolType == typeof(Axe))
             return TryFindStoredAutoUseToolForRequest(WalletToolKind.Axe, out kind);
 
@@ -3010,15 +3279,6 @@ public sealed class ModEntry : Mod
         {
             kind = WalletToolKind.Shears;
             return HasStoredAutoUseTool(kind);
-        }
-
-        if (anyTool)
-        {
-            foreach (WalletToolKind candidate in new[] { WalletToolKind.Axe, WalletToolKind.Pickaxe, WalletToolKind.Hoe })
-            {
-                if (TryFindStoredAutoUseToolForRequest(candidate, out kind))
-                    return true;
-            }
         }
 
         kind = WalletToolKind.Axe;
@@ -3250,7 +3510,7 @@ public sealed class ModEntry : Mod
             if (!clump.occupiesTile((int)tile.X, (int)tile.Y))
                 continue;
 
-            if (TryGetModdedClumpId(clump, out string clumpId))
+            foreach (string clumpId in GetItemExtensionsClumpIds(clump))
             {
                 ToolUseRuleResult moddedTool = TryGetItemExtensionsToolRequest(clumpId, true, currentItemIsNotForMine, out toolType, out anyTool);
                 if (moddedTool != ToolUseRuleResult.NoMatch)
@@ -3456,11 +3716,27 @@ public sealed class ModEntry : Mod
         toolType = null;
         anyTool = false;
 
+        if (!Config.ItemExtensionsCompatibilityEnabled || ItemExtensionsApi is null)
+            return ToolUseRuleResult.NoMatch;
+
+        bool isVariousCoalResource = false;
         foreach (string itemId in GetItemExtensionsObjectIds(obj))
         {
+            string normalizedItemId = NormalizeItemExtensionsItemId(itemId);
+            if (normalizedItemId.StartsWith(VariousCoalResourcePrefix, StringComparison.OrdinalIgnoreCase))
+                isVariousCoalResource = true;
+
             ToolUseRuleResult result = TryGetItemExtensionsToolRequest(itemId, false, currentItemIsNotForMine, out toolType, out anyTool);
             if (result != ToolUseRuleResult.NoMatch)
                 return result;
+        }
+
+        if (isVariousCoalResource && !LegacyVariousCoalBridgeInstalled)
+        {
+            ItemExtensionsDebugLog($"Various Coal Ores and Extras resource '{obj.QualifiedItemId}' did not expose a breaking tool; preserving the former compatibility add-on's pickaxe fallback.");
+            return currentItemIsNotForMine
+                ? UseTool(typeof(Pickaxe), out toolType, out anyTool)
+                : ToolUseRuleResult.Handled;
         }
 
         return ToolUseRuleResult.NoMatch;
@@ -3471,8 +3747,44 @@ public sealed class ModEntry : Mod
         if (!string.IsNullOrWhiteSpace(obj.QualifiedItemId))
             yield return obj.QualifiedItemId;
 
-        if (!string.IsNullOrWhiteSpace(obj.ItemId) && !string.Equals(obj.ItemId, obj.QualifiedItemId, StringComparison.OrdinalIgnoreCase))
+        if (!string.IsNullOrWhiteSpace(obj.ItemId)
+            && !string.Equals(obj.ItemId, obj.QualifiedItemId, StringComparison.OrdinalIgnoreCase))
+        {
             yield return obj.ItemId;
+        }
+    }
+
+    private static IEnumerable<string> GetItemExtensionsClumpIds(ResourceClump clump)
+    {
+        if (clump.modData.TryGetValue(ItemExtensionsClumpIdKey, out string? itemId)
+            && !string.IsNullOrWhiteSpace(itemId))
+        {
+            yield return itemId;
+            yield break;
+        }
+
+        foreach (KeyValuePair<string, string> pair in clump.modDataForSerialization.Pairs)
+        {
+            if (string.Equals(pair.Key, ItemExtensionsClumpIdKey, StringComparison.OrdinalIgnoreCase)
+                && !string.IsNullOrWhiteSpace(pair.Value))
+            {
+                yield return pair.Value;
+                yield break;
+            }
+        }
+    }
+
+    private static string NormalizeItemExtensionsItemId(string itemId)
+    {
+        string normalized = itemId.Trim();
+        if (normalized.StartsWith("(O)", StringComparison.OrdinalIgnoreCase))
+            normalized = normalized[3..];
+
+        int slashIndex = normalized.LastIndexOf('/');
+        if (slashIndex >= 0 && slashIndex < normalized.Length - 1)
+            normalized = normalized[(slashIndex + 1)..];
+
+        return normalized.Trim();
     }
 
     private ToolUseRuleResult TryGetItemExtensionsToolRequest(string itemId, bool isClump, bool currentItemIsNotForMine, out Type? toolType, out bool anyTool)
@@ -3480,10 +3792,28 @@ public sealed class ModEntry : Mod
         toolType = null;
         anyTool = false;
 
-        if (ItemExtensionsApi is null || string.IsNullOrWhiteSpace(itemId) || !ItemExtensionsApi.GetBreakingTool(itemId, isClump, out string tool) || string.IsNullOrWhiteSpace(tool))
+        if (!Config.ItemExtensionsCompatibilityEnabled || ItemExtensionsApi is null || string.IsNullOrWhiteSpace(itemId))
             return ToolUseRuleResult.NoMatch;
 
-        switch (NormalizeItemExtensionsToolName(tool))
+        if (ShouldDeferItemExtensionsResourceToLegacyBridge(itemId))
+            return ToolUseRuleResult.NoMatch;
+
+        string tool;
+        try
+        {
+            if (!ItemExtensionsApi.GetBreakingTool(itemId, isClump, out tool) || string.IsNullOrWhiteSpace(tool))
+                return ToolUseRuleResult.NoMatch;
+        }
+        catch (Exception ex)
+        {
+            Monitor.Log($"Item Extensions rejected resource ID '{itemId}': {ex.Message}", LogLevel.Warn);
+            return ToolUseRuleResult.NoMatch;
+        }
+
+        string normalizedTool = NormalizeItemExtensionsToolName(tool);
+        ItemExtensionsDebugLog($"Item Extensions resource '{itemId}' requires '{tool}' (normalized as '{normalizedTool}').");
+
+        switch (normalizedTool)
         {
             case "Pickaxe":
                 return currentItemIsNotForMine ? UseTool(typeof(Pickaxe), out toolType, out anyTool) : ToolUseRuleResult.Handled;
@@ -3497,9 +3827,27 @@ public sealed class ModEntry : Mod
             case "WateringCan":
                 return UseTool(typeof(WateringCan), out toolType, out anyTool);
 
+            case "AnyTool":
+                return UseTool(typeof(Axe), out toolType, out anyTool, true);
+
             default:
+                ItemExtensionsDebugLog($"Wallet Tools does not store the Item Extensions breaking tool '{tool}', so no wallet tool was supplied for '{itemId}'.");
                 return ToolUseRuleResult.Handled;
         }
+    }
+
+    private bool ShouldDeferItemExtensionsResourceToLegacyBridge(string itemId)
+    {
+        string normalizedItemId = NormalizeItemExtensionsItemId(itemId);
+        if (LegacyNooksBridgeInstalled
+            && normalizedItemId.StartsWith(NooksResourcePrefix, StringComparison.OrdinalIgnoreCase)
+            && LegacyNooksResourceIds.Contains(normalizedItemId))
+        {
+            return true;
+        }
+
+        return LegacyVariousCoalBridgeInstalled
+            && normalizedItemId.StartsWith(VariousCoalResourcePrefix, StringComparison.OrdinalIgnoreCase);
     }
 
     private static string NormalizeItemExtensionsToolName(string tool)
@@ -3511,6 +3859,7 @@ public sealed class ModEntry : Mod
             "axe" => "Axe",
             "hoe" => "Hoe",
             "wateringcan" => "WateringCan",
+            "any" or "anytool" or "anyexceptwateringcan" => "AnyTool",
             _ => tool.Trim()
         };
     }
@@ -3520,24 +3869,6 @@ public sealed class ModEntry : Mod
         toolType = requestedToolType;
         anyTool = allowAnyTool;
         return ToolUseRuleResult.UseTool;
-    }
-
-    private static bool TryGetModdedClumpId(ResourceClump clump, out string itemId)
-    {
-        if (clump.modData.TryGetValue(ItemExtensionsClumpIdKey, out itemId) && !string.IsNullOrWhiteSpace(itemId))
-            return true;
-
-        foreach (var pair in clump.modDataForSerialization.Pairs)
-        {
-            if (string.Equals(pair.Key, ItemExtensionsClumpIdKey, StringComparison.OrdinalIgnoreCase))
-            {
-                itemId = pair.Value;
-                return !string.IsNullOrWhiteSpace(itemId);
-            }
-        }
-
-        itemId = string.Empty;
-        return false;
     }
 
     private static bool IsStumpOrLog(ResourceClump clump)
@@ -3877,6 +4208,9 @@ public sealed class ModEntry : Mod
 
             if (IsPendingRuntimeToolForPlayer(slotItem, player, pending.Kind))
                 return pending.Slot;
+
+            if (pending.PreviousItem is null && slotItem is Tool replacementTool && ToolMatchesWalletKind(replacementTool, pending.Kind))
+                return pending.Slot;
         }
 
         for (int i = 0; i < player.Items.Count; i++)
@@ -4104,10 +4438,9 @@ public sealed class ModEntry : Mod
     }
 }
 
-public interface IItemExtensionsApi
+internal sealed class LegacyMigrationMarker
 {
-    bool IsClump(string qualifiedItemId);
-    bool GetBreakingTool(string id, bool isClump, out string tool);
+    public bool Completed { get; set; } = true;
 }
 
 internal enum WalletToolKind

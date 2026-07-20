@@ -1,10 +1,13 @@
 {
   "app.name": "Wallet Tools",
-
   "config.mod-enabled.name": "Mod Enabled",
   "config.mod-enabled.tooltip": "Enables or disables Wallet Tools.",
   "config.play-tool-swap-sound.name": "Play Tool Swap Sound",
   "config.play-tool-swap-sound.tooltip": "Play the Wallet Tools tool swap sound when a wallet tool is readied for use.",
+  "config.item-extensions-enabled.name": "Item Extensions Compatibility",
+  "config.item-extensions-enabled.tooltip": "Use the optional Item Extensions API to select the correct stored wallet tool for custom objects and resource clumps added by other mods.",
+  "config.item-extensions-debug.name": "Item Extensions Debug Logging",
+  "config.item-extensions-debug.tooltip": "Log Item Extensions resource IDs and requested breaking tools for compatibility troubleshooting.",
   "config.wallet-axe.name": "Wallet Axe",
   "config.wallet-axe.tooltip": "Store and use the axe from the wallet.",
   "config.wallet-pickaxe.name": "Wallet Pickaxe",
@@ -19,7 +22,6 @@
   "config.wallet-milk-pail.tooltip": "Store and use the milk pail from the wallet.",
   "config.wallet-shears.name": "Wallet Shears",
   "config.wallet-shears.tooltip": "Store and use the shears from the wallet.",
-
   "config.auto-use-enabled.name": "Auto Use Enabled",
   "config.auto-use-enabled.tooltip": "Master toggle for automatic Wallet Tools logic. Manual wallet hotkeys still work.",
   "config.use-new-tool-use-logic.name": "Enable Hold Hotkey",
@@ -42,7 +44,6 @@
   "config.auto-milk-pail.tooltip": "Allows automatic milk pail supply. Manual milk pail hotkey still works when this is off.",
   "config.auto-shears.name": "Auto Shears",
   "config.auto-shears.tooltip": "Allows automatic shears supply. Manual shears hotkey still works when this is off.",
-
   "config.use-axe-hotkey.name": "Use Axe",
   "config.use-axe-hotkey.tooltip": "Immediately use the wallet axe.",
   "config.use-pickaxe-hotkey.name": "Use Pickaxe",
@@ -57,7 +58,6 @@
   "config.use-milk-pail-hotkey.tooltip": "Immediately use the wallet milk pail.",
   "config.use-shears-hotkey.name": "Use Shears",
   "config.use-shears-hotkey.tooltip": "Immediately use the wallet shears.",
-
   "hud.gmcm-missing": "Generic Mod Config Menu is not installed.",
   "hud.tool-returned": "{{toolName}} returned to inventory.",
   "hud.auto-use-enabled": "Wallet Tools auto use enabled.",
