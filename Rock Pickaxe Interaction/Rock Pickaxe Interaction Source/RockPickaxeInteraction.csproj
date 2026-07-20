@@ -6,13 +6,17 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>RockPickaxeInteraction</AssemblyName>
     <RootNamespace>ThaleTheGreat.RockPickaxeInteraction</RootNamespace>
-    <Version>2.1.0</Version>
+    <Version>2.1.1</Version>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <ModFolderName>Rock Pickaxe Interaction</ModFolderName>
-  </PropertyGroup>
+  
+    <AssemblyVersion>2.1.1.0</AssemblyVersion>
+    <FileVersion>2.1.1.0</FileVersion>
+    <InformationalVersion>2.1.1</InformationalVersion>
+</PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="4.3.0" PrivateAssets="all" />
+    <PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="4.4.0" PrivateAssets="all" />
     <PackageReference Include="Lib.Harmony" Version="2.3.6" PrivateAssets="all" />
   </ItemGroup>
 

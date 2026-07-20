@@ -4,11 +4,15 @@
     <EnableHarmony>true</EnableHarmony>
     <AssemblyName>ClearBuildSites</AssemblyName>
     <RootNamespace>ThaleTheGreat.ClearBuildSites</RootNamespace>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <Nullable>enable</Nullable>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <ModFolderName>Clear Build Sites</ModFolderName>
-  </PropertyGroup>
+  
+    <AssemblyVersion>1.0.1.0</AssemblyVersion>
+    <FileVersion>1.0.1.0</FileVersion>
+    <InformationalVersion>1.0.1</InformationalVersion>
+</PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="4.4.0" PrivateAssets="all" />

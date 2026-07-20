@@ -2283,7 +2283,7 @@ public sealed class ModEntry : Mod
         }
         catch (Exception ex)
         {
-            Monitor.Log($"Could not patch Better Crafting's dynamic Machinery rule exclusions: {ex.Message}", LogLevel.Trace);
+            DebugLog($"Could not patch Better Crafting's dynamic Machinery rule exclusions: {ex.Message}");
         }
     }
 

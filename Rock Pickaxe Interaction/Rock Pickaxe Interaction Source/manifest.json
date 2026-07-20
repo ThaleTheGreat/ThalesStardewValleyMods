@@ -1,7 +1,7 @@
 {
   "Name": "Rock Pickaxe Interaction",
   "Author": "ThaleTheGreat",
-  "Version": "2.1.0",
+  "Version": "2.1.1",
   "Description": "Lets the player interact with Rock using a pickaxe, with configurable friendship effects.",
   "UniqueID": "ThaleTheGreat.RockPickaxeInteraction",
   "EntryDll": "RockPickaxeInteraction.dll",

@@ -1,8 +1,8 @@
 {
   "Name": "Non Destructive NPCs Redux",
   "Author": "ThaleTheGreat",
-  "Version": "2.0.1",
-  "Description": "NPCs no longer destroy placed objects or planted trees in their paths.",
+  "Version": "2.2.1",
+  "Description": "NPCs no longer destroy placed objects in their paths.",
   "UniqueID": "ThaleTheGreat.NonDestructiveNPCsRedux",
   "EntryDll": "NonDestructiveNPCsRedux.dll",
   "MinimumApiVersion": "4.0.0",

@@ -7,7 +7,12 @@
     <RootNamespace>ThaleTheGreat.ItRubsTheMayoIn</RootNamespace>
     <ModFolderName>It Rubs The Mayo In</ModFolderName>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-  </PropertyGroup>
+  
+    <Version>1.1.1</Version>
+    <AssemblyVersion>1.1.1.0</AssemblyVersion>
+    <FileVersion>1.1.1.0</FileVersion>
+    <InformationalVersion>1.1.1</InformationalVersion>
+</PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="4.4.0" PrivateAssets="All" />

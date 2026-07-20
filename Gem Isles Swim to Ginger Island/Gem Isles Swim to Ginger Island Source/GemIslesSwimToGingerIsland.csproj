@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <TargetFramework>net6.0</TargetFramework>
     <AssemblyName>GemIslesSwimToGingerIsland</AssemblyName>
     <RootNamespace>ThaleTheGreat.GemIslesSwimToGingerIsland</RootNamespace>
@@ -9,7 +9,11 @@
     <Platforms>AnyCPU;x64</Platforms>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Nullable>enable</Nullable>
-  </PropertyGroup>
+  
+    <AssemblyVersion>1.0.1.0</AssemblyVersion>
+    <FileVersion>1.0.1.0</FileVersion>
+    <InformationalVersion>1.0.1</InformationalVersion>
+</PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="4.4.0" />

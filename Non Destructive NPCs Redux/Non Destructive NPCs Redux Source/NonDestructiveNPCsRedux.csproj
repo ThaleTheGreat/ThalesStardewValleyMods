@@ -1,23 +1,26 @@
 <Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <AssemblyName>NonDestructiveNPCsRedux</AssemblyName>
-    <RootNamespace>ThaleTheGreat.NonDestructiveNPCsRedux</RootNamespace>
-    <Version>2.0.1</Version>
+    <RootNamespace>NonDestructiveNPCsRedux</RootNamespace>
     <LangVersion>10.0</LangVersion>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Nullable>disable</Nullable>
+    <Version>2.2.1</Version>
+    <AssemblyVersion>2.2.1.0</AssemblyVersion>
+    <FileVersion>2.2.1.0</FileVersion>
+    <InformationalVersion>2.2.1</InformationalVersion>
     <ModFolderName>Non Destructive NPCs Redux</ModFolderName>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="4.3.0" PrivateAssets="all" />
-    <PackageReference Include="Lib.Harmony" Version="2.3.3" PrivateAssets="all" />
+    <PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="4.4.0" PrivateAssets="all" />
+    <PackageReference Include="Lib.Harmony" Version="2.3.6" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
     <None Include="manifest.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="LICENSE" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
+
 </Project>
