@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <AssemblyName>FippsiesJapaneseOnsenRedux</AssemblyName>
+    <RootNamespace>ThaleTheGreat.FippsiesJapaneseOnsenRedux</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <EnableModDeploy>true</EnableModDeploy>
+    <ModFolderName>Fippsie's Japanese Onsen Redux</ModFolderName>
+  
+    <Version>1.0.1</Version>
+    <AssemblyVersion>1.0.1.0</AssemblyVersion>
+    <FileVersion>1.0.1.0</FileVersion>
+    <InformationalVersion>1.0.1</InformationalVersion>
+</PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="4.4.0" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="manifest.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="LICENSE" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="assets\**\*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <Target Name="DeployToStardropSelectedMods" AfterTargets="Build" Condition="Exists('$(APPDATA)\Stardrop\Data\Selected Mods')">
+    <PropertyGroup>
+      <StardropModFolder>$(APPDATA)\Stardrop\Data\Selected Mods\$(ModFolderName)</StardropModFolder>
+    </PropertyGroup>
+    <ItemGroup>
+      <StardropDeployFiles Include="$(TargetDir)**\*.*" />
+    </ItemGroup>
+    <RemoveDir Directories="$(StardropModFolder)" />
+    <MakeDir Directories="$(StardropModFolder)" />
+    <Copy SourceFiles="@(StardropDeployFiles)" DestinationFiles="@(StardropDeployFiles->'$(StardropModFolder)\%(RecursiveDir)%(Filename)%(Extension)')" />
+  </Target>
+
+</Project>

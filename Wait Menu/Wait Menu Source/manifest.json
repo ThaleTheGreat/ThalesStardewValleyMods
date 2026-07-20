@@ -1,7 +1,7 @@
 {
   "Name": "Wait Menu",
   "Author": "ThaleTheGreat",
-  "Version": "1.3.0",
+  "Version": "1.3.1",
   "Description": "Adds a wait menu (30-minute steps up to 4 hours) opened with a configurable keybind (default Ctrl+W). Controller-friendly.",
   "UniqueID": "ThaleTheGreat.WaitMenu",
   "EntryDll": "WaitMenu.dll",

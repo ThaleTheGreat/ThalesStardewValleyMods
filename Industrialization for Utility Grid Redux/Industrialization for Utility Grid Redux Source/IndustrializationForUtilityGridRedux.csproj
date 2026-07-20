@@ -4,11 +4,15 @@
     <AssemblyName>IndustrializationForUtilityGridRedux</AssemblyName>
     <ModFolderName>Industrialization for Utility Grid Redux</ModFolderName>
     <RootNamespace>ThaleTheGreat.IndustrializationForUtilityGridRedux</RootNamespace>
-    <Version>1.1.0</Version>
+    <Version>1.2.0</Version>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-  </PropertyGroup>
+  
+    <AssemblyVersion>1.2.0.0</AssemblyVersion>
+    <FileVersion>1.2.0.0</FileVersion>
+    <InformationalVersion>1.2.0</InformationalVersion>
+</PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="4.4.0" PrivateAssets="all" />

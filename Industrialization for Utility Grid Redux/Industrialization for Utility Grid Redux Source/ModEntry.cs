@@ -125,9 +125,8 @@ public sealed class ModEntry : Mod
         {
             method.Invoke(null, new object?[] { recipeNames.ToArray() });
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            this.Monitor.Log($"Could not exclude Industrialization recipes from Better Crafting's machine rule: {ex.Message}", LogLevel.Trace);
         }
     }
 
