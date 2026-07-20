@@ -67,7 +67,7 @@ public class ModEntry : Mod
     this._registeredUpdate = false;
     this._goblinNoseTexture = this.LoadTexture("Mods/MouseyPounds.ShadowFestival/Goblin_Nose", "assets/Goblin_Nose.png");
     this._glowOrbTexture = this.LoadTexture("Mods/MouseyPounds.ShadowFestival/GlowOrb", "assets/GlowOrb.png");
-    HarmonyPatcher.Hook(new Harmony(this.ModManifest.UniqueID), this.Monitor);
+    HarmonyPatcher.Hook(new Harmony(this.ModManifest.UniqueID));
     helper.Events.Input.ButtonPressed += new EventHandler<ButtonPressedEventArgs>(this.Input_ButtonPressed);
     helper.Events.GameLoop.DayStarted += new EventHandler<DayStartedEventArgs>(this.GameLoop_DayStarted);
     helper.Events.GameLoop.SaveLoaded += new EventHandler<SaveLoadedEventArgs>(this.GameLoop_SaveLoaded);
@@ -83,9 +83,8 @@ public class ModEntry : Mod
       if (data != null)
         return data;
     }
-    catch (Exception ex)
+    catch (Exception)
     {
-      this.Monitor.Log($"Couldn't load CP-provided festival data; falling back to local data.json. Details: {ex.Message}", LogLevel.Trace);
     }
 
     return this.Helper.Data.ReadJsonFile<ModData>("data.json") ?? new ModData();
@@ -97,9 +96,8 @@ public class ModEntry : Mod
     {
       return this.Helper.GameContent.Load<Texture2D>(assetName);
     }
-    catch (Exception ex)
+    catch (Exception)
     {
-      this.Monitor.Log($"Couldn't load CP-provided asset '{assetName}'; falling back to '{fallbackPath}'. Details: {ex.Message}", LogLevel.Trace);
       return this.Helper.ModContent.Load<Texture2D>(fallbackPath);
     }
   }
@@ -139,9 +137,8 @@ public class ModEntry : Mod
         return Game1.activeClickableMenu != null;
       }
     }
-    catch (Exception ex)
+    catch (Exception)
     {
-      this.Monitor.Log($"Couldn't open shop '{shopId}' through Utility reflection. Details: {ex.Message}", LogLevel.Trace);
     }
 
     return false;
@@ -322,7 +319,6 @@ public class ModEntry : Mod
       }
     }
     this._lampFireflies.Clear();
-    this.Monitor.Log($"ShadowFestival: found {lampTiles.Count} lamp tiles for prismatic fireflies.", (LogLevel) 0);
     if (lampTiles.Count > 0)
       this.AddLampFireflies(e.NewLocation, lampTiles);
     Game1.changeMusicTrack("WizardSong", false, (MusicContext) 0);
@@ -1150,7 +1146,6 @@ public class ModEntry : Mod
 
     if (this.IsShadowFestivalTomorrow())
     {
-      this.Monitor.Log("It is the day before the shadow festival.", LogLevel.Trace);
       if (!((NetHashSet<string>) Game1.player.mailReceived).Contains("Wizard_ShadowFestival"))
         ((NetHashSet<string>) Game1.player.mailForTomorrow).Add("Wizard_ShadowFestival");
     }

@@ -1,6 +1,5 @@
 using HarmonyLib;
 using Netcode;
-using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Monsters;
 using StardewValley.Objects;
@@ -11,11 +10,8 @@ namespace ShadowFestival;
 
 internal static class HarmonyPatcher
 {
-  private static IMonitor Monitor;
-
-  public static void Hook(Harmony harmony, IMonitor monitor)
+  public static void Hook(Harmony harmony)
   {
-    HarmonyPatcher.Monitor = monitor;
     harmony.Patch(
       original: AccessTools.Method(typeof(Farmer), nameof(Farmer.takeDamage)),
       prefix: new HarmonyMethod(typeof(HarmonyPatcher), nameof(Prefix_takeDamage))
@@ -32,7 +28,6 @@ internal static class HarmonyPatcher
       return true;
     if (ModEntry.IsFestivalSewerActive() && ModEntry.IsSlimeMonster(damager))
     {
-      HarmonyPatcher.Monitor?.Log("Festival sewer slime damage will be nullified.", (LogLevel) 0);
       return false;
     }
 
@@ -54,7 +49,6 @@ internal static class HarmonyPatcher
     }
     if (num == 0)
       return true;
-    HarmonyPatcher.Monitor?.Log($"Farmer wearing hat '{name}' and shadow damage will be nullified.", (LogLevel) 0);
     return false;
   }
 }

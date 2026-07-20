@@ -7,6 +7,8 @@ $ReleaseParent = Join-Path $ReleaseRoot "Festival of the Mundane Redux"
 $ModOutputDir = Join-Path $ReleaseParent "Festival of the Mundane Redux"
 $CpSourceDir = Join-Path $SourceRoot "[CP] Festival of the Mundane Redux"
 $CpOutputDir = Join-Path $ReleaseParent "[CP] Festival of the Mundane Redux"
+$TmfSourceDir = Join-Path $SourceRoot "The Muttering Farmer - Festival of the Mundane Redux"
+$TmfOutputDir = Join-Path $ReleaseParent "The Muttering Farmer - Festival of the Mundane Redux"
 $BuildDir = Join-Path $ProjectDir "bin\Release\net6.0"
 
 Write-Host "Building ShadowFestival..."
@@ -43,7 +45,8 @@ if (Test-Path $i18nSource) {
 }
 
 Copy-Item $CpSourceDir $CpOutputDir -Recurse -Force
+Copy-Item $TmfSourceDir $TmfOutputDir -Recurse -Force
 
 Write-Host "Release folder created:"
 Write-Host "  $ReleaseParent"
-Write-Host "Install the two folders inside it together."
+Write-Host "Install the three folders inside it together."

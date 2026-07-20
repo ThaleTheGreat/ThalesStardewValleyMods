@@ -7,7 +7,7 @@
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <LangVersion>10.0</LangVersion>
-    <Version>3.2.1</Version>
+    <Version>3.3.0</Version>
     <ModFolderName>Festival of the Mundane Redux</ModFolderName>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
@@ -15,7 +15,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="4.3.0" PrivateAssets="all" />
+    <PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="4.4.0" PrivateAssets="all" />
     <PackageReference Include="Lib.Harmony" Version="2.3.3" PrivateAssets="all" />
   </ItemGroup>
 
