@@ -1,0 +1,18 @@
+{
+  "Name": "Instant Tool Upgrade Redux",
+  "Author": "ThaleTheGreat",
+  "Version": "1.0.1",
+  "Description": "Makes Clint's tool upgrades ready immediately, with configurable price and bar costs.",
+  "UniqueID": "ThaleTheGreat.InstantToolUpgradeRedux",
+  "EntryDll": "InstantToolUpgradeRedux.dll",
+  "MinimumApiVersion": "4.0.0",
+  "UpdateKeys": [
+    "Nexus:47685"
+  ],
+  "Dependencies": [
+    {
+      "UniqueID": "spacechase0.GenericModConfigMenu",
+      "IsRequired": false
+    }
+  ]
+}

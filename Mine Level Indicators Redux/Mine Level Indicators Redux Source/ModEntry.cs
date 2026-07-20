@@ -112,8 +112,7 @@ public sealed class ModEntry : Mod
 
         mobilePhoneLoaded = true;
 
-        bool success = phoneApi.AddApp(ModManifest.UniqueID, "Mine Levels", ShowMineLevelReport, GetIndicatorIconTexture());
-        Monitor.Log($"Mobile Phone app registration result: {success}", LogLevel.Trace);
+        phoneApi.AddApp(ModManifest.UniqueID, "Mine Levels", ShowMineLevelReport, GetIndicatorIconTexture());
     }
 
     private void ShowMineLevelReport()

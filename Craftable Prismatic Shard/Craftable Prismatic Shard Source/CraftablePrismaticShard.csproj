@@ -1,15 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
-    <LangVersion>10.0</LangVersion>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>disable</ImplicitUsings>
-    <AssemblyName>RoadKill</AssemblyName>
-    <RootNamespace>ThaleTheGreat.RoadKill</RootNamespace>
+    <AssemblyName>CraftablePrismaticShard</AssemblyName>
+    <RootNamespace>ThaleTheGreat.CraftablePrismaticShard</RootNamespace>
     <Version>1.0.1</Version>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <ModFolderName>Road Kill</ModFolderName>
-    <EnableHarmony>true</EnableHarmony>
+    <EnableHarmony>false</EnableHarmony>
+    <ModFolderName>Craftable Prismatic Shard</ModFolderName>
   
     <AssemblyVersion>1.0.1.0</AssemblyVersion>
     <FileVersion>1.0.1.0</FileVersion>

@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Version>1.0.1</Version>
+    <TargetFramework>net6.0</TargetFramework>
+    <LangVersion>Latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <AssemblyName>InstantToolUpgradeRedux</AssemblyName>
+    <RootNamespace>ThaleTheGreat.InstantToolUpgradeRedux</RootNamespace>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <ModFolderName>Instant Tool Upgrade Redux</ModFolderName>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <OutputPath>bin\$(Configuration)\net6.0\Instant Tool Upgrade Redux\</OutputPath>
+    <OutDir>$(MSBuildProjectDirectory)\bin\$(Configuration)\net6.0\Instant Tool Upgrade Redux\</OutDir>
+  
+    <AssemblyVersion>1.0.1.0</AssemblyVersion>
+    <FileVersion>1.0.1.0</FileVersion>
+    <InformationalVersion>1.0.1</InformationalVersion>
+</PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="4.4.0" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="manifest.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="LICENSE" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="i18n\**\*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>
