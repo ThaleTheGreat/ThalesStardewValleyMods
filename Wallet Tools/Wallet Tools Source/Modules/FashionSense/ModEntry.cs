@@ -48,7 +48,6 @@ internal sealed class FashionSenseMirrorModule : WalletModule
         gmcm.AddBoolOption(ModManifest, () => Config.Enabled, SetEnabled, () => "Enabled", () => "Stores the Fashion Sense Hand Mirror in the wallet and lets you use it with a hotkey.", $"{ModuleKey}.Enabled");
         gmcm.AddBoolOption(ModManifest, () => Config.AutoStoreFromInventory, SetAutoStoreFromInventory, () => "Auto Store From Inventory", () => "Moves a Fashion Sense Hand Mirror into the wallet when it enters your inventory.", $"{ModuleKey}.AutoStoreFromInventory");
         gmcm.AddKeybindList(ModManifest, () => Config.UseHandMirrorKey, value => Config.UseHandMirrorKey = value, () => "Use Hand Mirror", () => "Uses the real Fashion Sense Hand Mirror from the wallet.", $"{ModuleKey}.UseHandMirrorKey");
-        gmcm.AddKeybindList(ModManifest, () => Config.ReturnToInventoryKey, value => Config.ReturnToInventoryKey = value, () => "Return To Inventory", () => "Returns the wallet Hand Mirror to your inventory.", $"{ModuleKey}.ReturnToInventoryKey");
     }
 
     private void OnAssetRequested(object? sender, AssetRequestedEventArgs e)
@@ -101,13 +100,6 @@ internal sealed class FashionSenseMirrorModule : WalletModule
     {
         if (!Context.IsWorldReady || !Config.Enabled || Game1.activeClickableMenu is not null)
             return;
-
-        if (Config.ReturnToInventoryKey.JustPressed())
-        {
-            Helper.Input.Suppress(e.Button);
-            ReturnMirrorToInventory(Game1.player, showMessage: true);
-            return;
-        }
 
         if (!Config.UseHandMirrorKey.JustPressed())
             return;
@@ -253,5 +245,4 @@ internal sealed class FashionSenseMirrorConfig
     public bool Enabled { get; set; } = true;
     public bool AutoStoreFromInventory { get; set; } = true;
     public KeybindList UseHandMirrorKey { get; set; } = KeybindList.Parse("LeftControl + F");
-    public KeybindList ReturnToInventoryKey { get; set; } = KeybindList.Parse("LeftShift + MouseRight");
 }

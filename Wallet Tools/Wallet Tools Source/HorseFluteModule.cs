@@ -56,7 +56,6 @@ internal sealed class HorseFluteModule : WalletModule
             gmcm.AddBoolOption(ModManifest, () => Config.Enabled, value => SetEnabled(value), () => "Enabled", () => "Stores the vanilla Horse Flute in the wallet and lets you use it with a hotkey.", $"{ModuleKey}.Enabled");
             gmcm.AddBoolOption(ModManifest, () => Config.AutoStoreFromInventory, SetAutoStoreFromInventory, () => "Auto Store From Inventory", () => "Moves a vanilla Horse Flute into the wallet when it enters your inventory.", $"{ModuleKey}.AutoStoreFromInventory");
             gmcm.AddKeybindList(ModManifest, () => Config.UseHorseFluteKey, value => Config.UseHorseFluteKey = value, () => "Use Horse Flute", () => "Uses the real vanilla Horse Flute from the wallet.", $"{ModuleKey}.UseHorseFluteKey");
-            gmcm.AddKeybindList(ModManifest, () => Config.ReturnToInventoryKey, value => Config.ReturnToInventoryKey = value, () => "Return To Inventory", () => "Returns the wallet Horse Flute to your inventory.", $"{ModuleKey}.ReturnToInventoryKey");
         }
     }
 
@@ -117,13 +116,6 @@ internal sealed class HorseFluteModule : WalletModule
     {
         if (!Context.IsWorldReady || !Config.Enabled || Game1.activeClickableMenu is not null)
             return;
-
-        if (Config.ReturnToInventoryKey.JustPressed())
-        {
-            Helper.Input.Suppress(e.Button);
-            ReturnFluteToInventory(Game1.player, showMessage: true);
-            return;
-        }
 
         if (!Config.UseHorseFluteKey.JustPressed())
             return;
@@ -305,5 +297,4 @@ internal sealed class HorseFluteConfig
     public bool Enabled { get; set; } = true;
     public bool AutoStoreFromInventory { get; set; } = true;
     public KeybindList UseHorseFluteKey { get; set; } = KeybindList.Parse("LeftControl + H");
-    public KeybindList ReturnToInventoryKey { get; set; } = KeybindList.Parse("LeftShift + MouseRight");
 }

@@ -48,7 +48,6 @@ internal sealed class WalletAutoPetterModule : WalletModule
         helper.Events.GameLoop.Saving += OnSaving;
         helper.Events.GameLoop.ReturnedToTitle += OnReturnedToTitle;
         helper.Events.Player.InventoryChanged += OnInventoryChanged;
-        helper.Events.Input.ButtonPressed += OnButtonPressed;
         helper.Events.Display.RenderedActiveMenu += OnRenderedActiveMenu;
     }
 
@@ -149,18 +148,6 @@ internal sealed class WalletAutoPetterModule : WalletModule
         CollectAutoPetterFromInventory(showNotice: Config.ShowStoredMessage);
     }
 
-    private void OnButtonPressed(object? sender, ButtonPressedEventArgs e)
-    {
-        if (!Context.IsWorldReady || !Context.IsMainPlayer || !Config.Enabled || !HasStoredAutoPetter() || !Config.ReturnToInventoryKey.JustPressed())
-            return;
-
-        if (!IsInventoryPageOpen())
-            return;
-
-        Helper.Input.Suppress(e.Button);
-        ReturnAutoPetterToInventory(showNotice: true);
-    }
-
     private void OnRenderedActiveMenu(object? sender, RenderedActiveMenuEventArgs e)
     {
         if (!Context.IsWorldReady || !Context.IsMainPlayer || !Config.Enabled || !Config.ShowWalletIcon || !HasStoredAutoPetter() || !IsInventoryPageOpen())
@@ -219,7 +206,7 @@ internal sealed class WalletAutoPetterModule : WalletModule
         SuppressNextStoreNotice = false;
     }
 
-    private void ReturnAutoPetterToInventory(bool showNotice)
+    private void ReturnAutoPetterToInventory()
     {
         if (!Context.IsMainPlayer || !HasStoredAutoPetter())
             return;
@@ -235,21 +222,15 @@ internal sealed class WalletAutoPetterModule : WalletModule
 
         if (!Game1.player.addItemToInventoryBool(item))
             Game1.player.addItemByMenuIfNecessary(item);
-
-        if (showNotice)
-            Game1.addHUDMessage(new HUDMessage($"{GetAutoPetterDisplayName()} returned to inventory.", HUDMessage.newQuest_type));
     }
 
-    private void ReturnAllAutoPettersToInventory(bool showNotice)
+    private void ReturnAllAutoPettersToInventory()
     {
         if (!Context.IsMainPlayer)
             return;
 
         while (HasStoredAutoPetter())
-            ReturnAutoPetterToInventory(showNotice: false);
-
-        if (showNotice)
-            Game1.addHUDMessage(new HUDMessage($"Stored {GetAutoPetterDisplayName()}s returned to inventory.", HUDMessage.newQuest_type));
+            ReturnAutoPetterToInventory();
     }
 
     private void ApplyAutoPetterEffect()
@@ -369,7 +350,7 @@ internal sealed class WalletAutoPetterModule : WalletModule
         {
             IClickableMenu.drawHoverText(
                 b,
-                item.DisplayName + "\n" + item.getDescription() + GetStoredCountTooltipLine() + "\nShift + right-click to return one to your inventory.",
+                item.DisplayName + "\n" + item.getDescription() + GetStoredCountTooltipLine(),
                 Game1.smallFont
             );
         }
@@ -383,7 +364,7 @@ internal sealed class WalletAutoPetterModule : WalletModule
         Config.Enabled = value;
 
         if (wasEnabled && !value && Context.IsWorldReady && HasStoredAutoPetter())
-            ReturnAllAutoPettersToInventory(showNotice: false);
+            ReturnAllAutoPettersToInventory();
 
         InvalidatePowers();
     }
@@ -554,7 +535,6 @@ internal sealed class WalletAutoPetterModule : WalletModule
         gmcm.AddBoolOption(ModManifest, () => Config.AutoStoreFromInventory, value => Config.AutoStoreFromInventory = value, () => "Auto-store from inventory", () => "Automatically move the first Auto-Petter you obtain into the wallet.");
         gmcm.AddBoolOption(ModManifest, () => Config.ShowWalletIcon, value => Config.ShowWalletIcon = value, () => "Show wallet icon", () => "Draw the stored Auto-Petter in the inventory wallet area.");
         gmcm.AddBoolOption(ModManifest, () => Config.ShowStoredMessage, value => Config.ShowStoredMessage = value, () => "Show stored message", () => "Show a HUD message when an Auto-Petter is moved to the wallet.");
-        gmcm.AddKeybindList(ModManifest, () => Config.ReturnToInventoryKey, value => Config.ReturnToInventoryKey = value, () => "Return to inventory key", () => "While the inventory page is open, press this keybind to return the wallet Auto-Petter to your inventory.");
 
         gmcm.AddSectionTitle(ModManifest, () => "Animal Effect");
         gmcm.AddBoolOption(ModManifest, () => Config.ApplyFriendshipGain, value => Config.ApplyFriendshipGain = value, () => "Apply friendship gain", () => "Apply a small daily friendship increase when the wallet Auto-Petter pets animals.");

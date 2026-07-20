@@ -1,7 +1,7 @@
 {
   "Name": "Wallet Tools",
   "Author": "ThaleTheGreat",
-  "Version": "3.0.0",
+  "Version": "3.1.0",
   "Description": "Stores vanilla and supported modded tools, the Fashion Sense Hand Mirror, Auto-Petter, Return Scepter, and Horse Flute in one multiplayer-aware wallet system.",
   "UniqueID": "ThaleTheGreat.WalletTools",
   "EntryDll": "WalletTools.dll",
@@ -72,14 +72,6 @@
     },
     {
       "UniqueID": "Pathoschild.TractorMod",
-      "IsRequired": false
-    },
-    {
-      "UniqueID": "Wildflour.NooksCrannies",
-      "IsRequired": false
-    },
-    {
-      "UniqueID": "6135.VariousCoalOresExtras",
       "IsRequired": false
     }
   ]

@@ -1,5 +1,3 @@
-using StardewModdingAPI.Utilities;
-
 namespace ThaleTheGreat.WalletAutoPetter;
 
 internal sealed class ModConfig
@@ -10,5 +8,4 @@ internal sealed class ModConfig
     public int FriendshipPointsPerDay { get; set; } = 7;
     public bool ShowStoredMessage { get; set; } = true;
     public bool ShowWalletIcon { get; set; } = true;
-    public KeybindList ReturnToInventoryKey { get; set; } = KeybindList.Parse("LeftShift + MouseRight");
 }

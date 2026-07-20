@@ -3365,6 +3365,9 @@ public sealed class ModEntry : Mod
         if (PendingToolUse is not null || !Config.ModEnabled || !Config.AutoUseEnabled || Game1.fadeToBlack || !Context.CanPlayerMove || IsToolUpgradeLocation(player.currentLocation))
             return false;
 
+        if (!IsWeaponHoldSatisfied(player))
+            return false;
+
         if (TryGetFallbackAnimalToolRequest(player, out Type? animalToolType))
             return TrySupplyRequestedWalletTool(player, animalToolType, false);
 
@@ -3375,6 +3378,25 @@ public sealed class ModEntry : Mod
             return false;
 
         return TrySupplyRequestedWalletTool(player, toolType, anyTool);
+    }
+
+    private bool IsWeaponHoldSatisfied(Farmer player)
+    {
+        return !Config.UseNewToolUseLogic
+            || !IsWeaponHoldItem(player.CurrentItem)
+            || Config.HeldItemAutoUseModifierHotkey.IsDown();
+    }
+
+    private bool IsWeaponHoldOverrideActive(Farmer player)
+    {
+        return Config.UseNewToolUseLogic
+            && IsWeaponHoldItem(player.CurrentItem)
+            && Config.HeldItemAutoUseModifierHotkey.IsDown();
+    }
+
+    private static bool IsWeaponHoldItem(Item? item)
+    {
+        return item is MeleeWeapon or FishingRod;
     }
 
     private enum ToolUseRuleResult
@@ -3637,7 +3659,7 @@ public sealed class ModEntry : Mod
         bool shouldUseWateringCan = ShouldUseWateringCanForAutomateToolSwapLocation(location);
         if ((IsWaterSourceTile(location, tile) || IsWaterTileForAutomateToolSwap(location, tile, player)) && shouldUseWateringCan)
         {
-            if (player.CurrentItem is not FishingRod)
+            if (player.CurrentItem is not FishingRod || IsWeaponHoldOverrideActive(player))
                 return UseTool(typeof(WateringCan), out toolType, out anyTool);
 
             return ToolUseRuleResult.Handled;
@@ -3679,7 +3701,7 @@ public sealed class ModEntry : Mod
             && player.mount?.Name?.Contains("tractor", StringComparison.OrdinalIgnoreCase) == true;
     }
 
-    private static ToolUseRuleResult TryGetSoilToolRequest(GameLocation location, Vector2 tile, Farmer player, out Type? toolType, out bool anyTool)
+    private ToolUseRuleResult TryGetSoilToolRequest(GameLocation location, Vector2 tile, Farmer player, out Type? toolType, out bool anyTool)
     {
         toolType = null;
         anyTool = false;
@@ -3687,11 +3709,12 @@ public sealed class ModEntry : Mod
         if (!IsDiggableHoeTile(location, tile))
             return ToolUseRuleResult.NoMatch;
 
+        bool weaponHoldOverrideActive = IsWeaponHoldOverrideActive(player);
         bool isWeaponEquipped = player.CurrentItem is MeleeWeapon && player.CurrentItem?.category.Value == -98;
-        if (isWeaponEquipped && Game1.spawnMonstersAtNight)
+        if (isWeaponEquipped && Game1.spawnMonstersAtNight && !weaponHoldOverrideActive)
             return ToolUseRuleResult.NoMatch;
 
-        if (player.CurrentItem is FishingRod or GenericTool or Wand)
+        if ((player.CurrentItem is FishingRod && !weaponHoldOverrideActive) || player.CurrentItem is GenericTool or Wand)
             return ToolUseRuleResult.NoMatch;
 
         bool isPathTile = location.isPath(tile);
@@ -3975,7 +3998,8 @@ public sealed class ModEntry : Mod
 
     private bool TryMaterializeWalletToolForAutomaticUse(Farmer player, WalletToolKind kind)
     {
-        return IsAutoUseEnabled(kind)
+        return IsWeaponHoldSatisfied(player)
+            && IsAutoUseEnabled(kind)
             && TrySetTemporaryWalletTool(player, kind);
     }
 
