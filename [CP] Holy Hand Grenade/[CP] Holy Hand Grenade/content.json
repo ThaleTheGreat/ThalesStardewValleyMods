@@ -9,7 +9,7 @@
         {
             "Action": "Load",
             "Target": "Mods/ThaleTheGreat.CaerbannogRabbitTrinket/rabbit",
-            "FromFile": "assets/rabbit.png"
+            "FromFile": "assets/Rabbit.png"
         },
         {
             "Action": "Load",
