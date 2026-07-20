@@ -33,7 +33,7 @@ internal sealed class ModEntry : Mod
   private readonly Dictionary<string, string> _loadMap = new Dictionary<string, string>((IEqualityComparer<string>) StringComparer.OrdinalIgnoreCase);
   private readonly Dictionary<string, List<ModEntry.EditOp>> _editOpsByTarget = new Dictionary<string, List<ModEntry.EditOp>>((IEqualityComparer<string>) StringComparer.OrdinalIgnoreCase);
   private ModConfig _config = new ModConfig();
-  private bool _enableLogging = true;
+  private bool _enableLogging = false;
   private bool _easyMode = false;
   private List<string> _cachedAllDrinkQids;
   private Texture2D _cachedCustomBuffIcon;
@@ -79,7 +79,7 @@ internal sealed class ModEntry : Mod
       return;
     api.Register(this.ModManifest, (Action) (() =>
     {
-      this._enableLogging = true;
+      this._enableLogging = false;
       this._easyMode = false;
     }), (Action) (() =>
     {
@@ -87,7 +87,7 @@ internal sealed class ModEntry : Mod
       this._config.EasyMode = this._easyMode;
       helper.WriteConfig<ModConfig>(this._config);
     }));
-    api.AddBoolOption(this.ModManifest, (Func<bool>) (() => this._enableLogging), (Action<bool>) (value => this._enableLogging = value), (Func<string>) (() => "Enable logging"), (Func<string>) (() => "When disabled, Star Bull will only log errors (recommended once everything is stable)."));
+    api.AddBoolOption(this.ModManifest, (Func<bool>) (() => this._enableLogging), (Action<bool>) (value => this._enableLogging = value), (Func<string>) (() => "Debug Logging"), (Func<string>) (() => "Log routine asset, shop, and vending-machine diagnostics. Errors are always logged."));
     api.AddBoolOption(this.ModManifest, (Func<bool>) (() => this._easyMode), (Action<bool>) (value => this._easyMode = value), (Func<string>) (() => "Easy Mode"), (Func<string>) (() => "When enabled: (1) the vending machine is sold at Robin's Carpentry Shop, and (2) all Star Bull editions are sold at Pierre's and JojaMart."));
   }
 
