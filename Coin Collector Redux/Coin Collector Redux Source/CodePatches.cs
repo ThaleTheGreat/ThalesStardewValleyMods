@@ -24,6 +24,36 @@ namespace ThaleTheGreat.CoinCollectorRedux
             }
         }
 
+        [HarmonyPatch(typeof(Object), MethodType.Constructor, new Type[] { typeof(string), typeof(int), typeof(bool), typeof(int), typeof(int) })]
+        private static class ObjectConstructorPatch
+        {
+            private static void Postfix(Object __instance)
+            {
+                if (Config.ModEnabled)
+                    ApplyConfiguredCoinPrice(__instance);
+            }
+        }
+
+        [HarmonyPatch(typeof(Object), nameof(Object.sellToStorePrice), new Type[] { typeof(long) })]
+        private static class ObjectSellToStorePricePatch
+        {
+            private static void Prefix(Object __instance)
+            {
+                if (Config.ModEnabled)
+                    ApplyConfiguredCoinPrice(__instance);
+            }
+        }
+
+        [HarmonyPatch(typeof(Object), nameof(Object.salePrice), new Type[] { typeof(bool) })]
+        private static class ObjectSalePricePatch
+        {
+            private static void Prefix(Object __instance)
+            {
+                if (Config.ModEnabled)
+                    ApplyConfiguredCoinPrice(__instance);
+            }
+        }
+
         [HarmonyPatch(typeof(CraftingRecipe), nameof(CraftingRecipe.createItem))]
         private static class CraftingRecipeCreateItemPatch
         {

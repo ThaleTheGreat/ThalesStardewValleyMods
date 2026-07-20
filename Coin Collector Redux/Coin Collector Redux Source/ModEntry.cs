@@ -11,6 +11,7 @@ using StardewValley.GameData.Shops;
 using StardewValley.GameData.Weapons;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 
@@ -38,6 +39,8 @@ namespace ThaleTheGreat.CoinCollectorRedux
         public static Dictionary<string, CoinData> CoinDataDict = new(StringComparer.OrdinalIgnoreCase);
         public static Dictionary<string, Dictionary<Vector2, string>> CoinLocationDict = new(StringComparer.OrdinalIgnoreCase);
 
+        private static Dictionary<string, CoinData> CoinDataByObjectId = new(StringComparer.OrdinalIgnoreCase);
+
         private static int deltaTime;
         private static SoundEffect? blipEffectCenter;
         private static SoundEffect? blipEffectLeft;
@@ -51,7 +54,9 @@ namespace ThaleTheGreat.CoinCollectorRedux
             PMonitor = Monitor;
             PHelper = helper;
             Config = Helper.ReadConfig<ModConfig>();
+            NormalizeConfig();
             CoinDataDict = GetDefaultCoinData();
+            RebuildCoinObjectLookup();
 
             Helper.Events.GameLoop.GameLaunched += OnGameLaunched;
 
@@ -83,7 +88,7 @@ namespace ThaleTheGreat.CoinCollectorRedux
             }
             else if (e.NameWithoutLocale.IsEquivalentTo("Data/Objects"))
             {
-                e.Edit(EditObjects);
+                e.Edit(EditObjects, AssetEditPriority.Late);
             }
             else if (e.NameWithoutLocale.IsEquivalentTo("Data/Weapons"))
             {
@@ -110,7 +115,10 @@ namespace ThaleTheGreat.CoinCollectorRedux
             ReloadCoinData();
             Helper.GameContent.InvalidateCache("Data/Objects");
             if (StardewModdingAPI.Context.IsWorldReady)
+            {
+                ApplyConfiguredPricesToWorldItems();
                 RefreshCoinLocationCache();
+            }
         }
 
         private void EditObjects(IAssetData asset)
@@ -148,7 +156,7 @@ namespace ThaleTheGreat.CoinCollectorRedux
                     Description = coin.Description,
                     Type = string.IsNullOrWhiteSpace(coin.Type) ? "Minerals" : coin.Type,
                     Category = coin.Category,
-                    Price = coin.Price,
+                    Price = GetConfiguredCoinPrice(coin),
                     Edibility = -300,
                     Texture = coin.TexturePath,
                     SpriteIndex = coin.SpriteIndex,
@@ -221,6 +229,7 @@ namespace ThaleTheGreat.CoinCollectorRedux
         {
             ReloadCoinData();
             Helper.GameContent.InvalidateCache("Data/Objects");
+            ApplyConfiguredPricesToWorldItems();
             RefreshCoinLocationCache();
 
             EnsureMetalDetectorRecipeKnown();
@@ -261,14 +270,19 @@ namespace ThaleTheGreat.CoinCollectorRedux
             if (api == null)
                 return;
 
+            if (Config.ModEnabled)
+                EnsureCoinDataLoaded();
+
             api.Register(
                 ModManifest,
                 reset: () => Config = new ModConfig(),
                 save: () =>
                 {
+                    NormalizeConfig();
                     Helper.WriteConfig(Config);
                     ReloadSounds();
                     Helper.GameContent.InvalidateCache("Data/Objects");
+                    ApplyConfiguredPricesToWorldItems();
                     Helper.GameContent.InvalidateCache("Data/Weapons");
                     Helper.GameContent.InvalidateCache("Data/Shops");
                     Helper.GameContent.InvalidateCache("Data/CraftingRecipes");
@@ -294,6 +308,23 @@ namespace ThaleTheGreat.CoinCollectorRedux
             api.AddNumberOption(ModManifest, () => Config.MaxCoinsPerMap, value => Config.MaxCoinsPerMap = value, () => "Maximum Coins Per Map", () => "Maximum generated coin spots on a valid map before luck bonus.", min: 0, interval: 1);
             api.AddNumberOption(ModManifest, () => Config.LuckFactor, value => Config.LuckFactor = value, () => "Luck Factor", () => "How much player luck can increase maximum generated coins.", min: 0f, interval: 0.05f);
             api.AddNumberOption(ModManifest, () => Config.MaxPixelPingDistance, value => Config.MaxPixelPingDistance = value, () => "Max Pixel Ping Distance", () => "Maximum pixel distance for detector pings. Use 0 for unlimited.", min: 0f, interval: 50f);
+
+            api.AddSectionTitle(ModManifest, () => "Coin Prices");
+            foreach (CoinData coin in CoinDataDict.Values.Where(coin => coin.CreateObject).OrderBy(coin => coin.DisplayName, StringComparer.OrdinalIgnoreCase))
+            {
+                string coinId = coin.UnqualifiedObjectId();
+                string coinName = string.IsNullOrWhiteSpace(coin.DisplayName) ? coin.Name : coin.DisplayName;
+                int defaultPrice = Math.Max(0, coin.Price);
+
+                api.AddTextOption(
+                    ModManifest,
+                    () => GetConfiguredCoinPrice(coinId, defaultPrice).ToString(CultureInfo.InvariantCulture),
+                    value => SetConfiguredCoinPrice(coinId, defaultPrice, value),
+                    () => $"{coinName} Price",
+                    () => $"Sell price in gold for {coinName}. Enter a whole number of 0 or higher.",
+                    fieldId: $"CoinPrice.{coinId}"
+                );
+            }
 
             api.AddSectionTitle(ModManifest, () => "Indicator");
             api.AddBoolOption(ModManifest, () => Config.EnableIndicator, value => Config.EnableIndicator = value, () => "Enable Indicator", () => "Show a directional projectile indicator toward the nearest coin.");
@@ -403,8 +434,21 @@ namespace ThaleTheGreat.CoinCollectorRedux
             }
 
             CoinDataDict = merged;
+            RebuildCoinObjectLookup();
             coinDataLoaded = true;
             DebugLog($"Loaded {CoinDataDict.Count} coin entries.");
+        }
+
+        private static void RebuildCoinObjectLookup()
+        {
+            Dictionary<string, CoinData> lookup = new(StringComparer.OrdinalIgnoreCase);
+            foreach (CoinData coin in CoinDataDict.Values)
+            {
+                if (coin.CreateObject && !string.IsNullOrWhiteSpace(coin.Id))
+                    lookup[coin.UnqualifiedObjectId()] = coin;
+            }
+
+            CoinDataByObjectId = lookup;
         }
 
         private Dictionary<string, CoinData> SafeLoadCoinData(string assetName)
@@ -544,6 +588,7 @@ namespace ThaleTheGreat.CoinCollectorRedux
             try
             {
                 Item item = ItemRegistry.Create(coin.QualifiedItemId());
+                ApplyConfiguredCoinPrice(item);
                 Game1.createItemDebris(item, tileLocation * Game1.tileSize, -1, location);
                 locationCoins.Remove(tileLocation);
                 SaveLocationCoins(location, locationCoins);
@@ -680,6 +725,77 @@ namespace ThaleTheGreat.CoinCollectorRedux
                 || item.ItemId.Equals(DetectorId, StringComparison.OrdinalIgnoreCase)
                 || item.Name.Equals("MetalDetector", StringComparison.OrdinalIgnoreCase)
                 || item.Name.Equals(configured, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static void NormalizeConfig()
+        {
+            Dictionary<string, int> normalized = new(StringComparer.OrdinalIgnoreCase);
+            if (Config.CoinPriceOverrides != null)
+            {
+                foreach ((string coinId, int price) in Config.CoinPriceOverrides)
+                {
+                    if (!string.IsNullOrWhiteSpace(coinId) && price >= 0)
+                        normalized[coinId.Trim()] = price;
+                }
+            }
+
+            Config.CoinPriceOverrides = normalized;
+        }
+
+        private static int GetConfiguredCoinPrice(CoinData coin)
+        {
+            return GetConfiguredCoinPrice(coin.UnqualifiedObjectId(), coin.Price);
+        }
+
+        private static bool ApplyConfiguredCoinPrice(Item? item)
+        {
+            if (item is not StardewValley.Object obj || obj.bigCraftable.Value)
+                return false;
+
+            string itemId = obj.ItemId.StartsWith("(O)", StringComparison.OrdinalIgnoreCase)
+                ? obj.ItemId[3..]
+                : obj.ItemId;
+
+            if (!CoinDataByObjectId.TryGetValue(itemId, out CoinData coin))
+                return false;
+
+            int configuredPrice = GetConfiguredCoinPrice(coin);
+            if (obj.Price != configuredPrice)
+                obj.Price = configuredPrice;
+
+            return true;
+        }
+
+        private static void ApplyConfiguredPricesToWorldItems()
+        {
+            if (!StardewModdingAPI.Context.IsWorldReady)
+                return;
+
+            Utility.ForEachItem(item =>
+            {
+                ApplyConfiguredCoinPrice(item);
+                return true;
+            });
+        }
+
+        private static int GetConfiguredCoinPrice(string coinId, int defaultPrice)
+        {
+            if (Config.CoinPriceOverrides.TryGetValue(coinId, out int configuredPrice))
+                return Math.Max(0, configuredPrice);
+
+            return Math.Max(0, defaultPrice);
+        }
+
+        private static void SetConfiguredCoinPrice(string coinId, int defaultPrice, string value)
+        {
+            const NumberStyles styles = NumberStyles.Integer | NumberStyles.AllowThousands;
+            if (!int.TryParse(value?.Trim(), styles, CultureInfo.InvariantCulture, out int price) || price < 0)
+                return;
+
+            if (price == Math.Max(0, defaultPrice))
+                Config.CoinPriceOverrides.Remove(coinId);
+            else
+                Config.CoinPriceOverrides[coinId] = price;
         }
 
         private static List<string> BuildCoinContextTags(CoinData coin)

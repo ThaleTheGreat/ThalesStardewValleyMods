@@ -1,7 +1,7 @@
 {
   "Name": "[CP] Coin Collector Redux Example Coin Pack",
   "Author": "ThaleTheGreat",
-  "Version": "1.0.0",
+  "Version": "1.0.1",
   "Description": "A one-coin Content Patcher example pack for Coin Collector Redux.",
   "UniqueID": "ThaleTheGreat.CoinCollectorReduxExampleCoinPack",
   "ContentPackFor": {

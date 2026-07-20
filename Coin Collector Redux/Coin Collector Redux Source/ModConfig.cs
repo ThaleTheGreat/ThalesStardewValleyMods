@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace ThaleTheGreat.CoinCollectorRedux
 {
     public class ModConfig
@@ -23,5 +25,6 @@ namespace ThaleTheGreat.CoinCollectorRedux
         public float LuckFactor { get; set; } = 0.1f;
         public float MaxPixelPingDistance { get; set; } = 800;
         public string CraftingRequirements { get; set; } = "709 4 337 1 335 1 338 1 92 10";
+        public Dictionary<string, int> CoinPriceOverrides { get; set; } = new();
     }
 }
