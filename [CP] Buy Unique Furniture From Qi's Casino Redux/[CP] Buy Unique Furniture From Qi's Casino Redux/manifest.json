@@ -1,7 +1,7 @@
 {
-  "Name": "[CP] Buy Unique Furniture From Qi's Casino Redux",
+  "Name": "[CP] (TTG) Buy Unique Furniture From Qi's Casino Redux",
   "Author": "ThaleTheGreat",
-  "Version": "1.1.1",
+  "Version": "1.2.1",
   "Description": "Adds unique furniture, museum rewards, paintings, spouse and roommate decor, and Desert Festival decor to the Casino shop.",
   "UniqueID": "ThaleTheGreat.BuyUniqueFurnitureFromCasinoRedux",
   "MinimumApiVersion": "4.0.0",
