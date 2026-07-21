@@ -1,7 +1,7 @@
-(TTG) GEM ISLES SWIM TO GINGER ISLAND LICENSE
-=============================================
+(TTG) GATHERERS LICENSE
+=======================
 
-This license applies to (TTG) Gem Isles Swim to Ginger Island v1.1.0.
+This license applies to (TTG) Gatherers v1.0.0.
 
 PRIMARY LICENSE
 ---------------
@@ -33,6 +33,15 @@ MODS AND PROJECTS USED OR REFERENCED
 ------------------------------------
 
 This mod uses, supports, or references the following mods and projects.
+
+- Automate — MIT License
+  https://github.com/Pathoschild/StardewMods
+
+- Generic Mod Config Menu — MIT License
+  https://github.com/spacechase0/GenericModConfigMenu
+
+- Harmony — MIT License
+  https://github.com/pardeike/Harmony
 
 - Stardew Modding API (SMAPI) — LGPL-3.0 License
   https://github.com/Pathoschild/SMAPI

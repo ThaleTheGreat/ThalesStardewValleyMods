@@ -72,7 +72,7 @@ public sealed class ModEntry : Mod
         }
 
         Gmcm.Register(ModManifest, ResetConfig, SaveConfig);
-        Gmcm.AddSectionTitle(ModManifest, () => "GMCM Advanced Search", () => "Search inside GMCM authors, mod names, UniqueIDs, Nexus IDs, option labels, tooltips, field IDs, and config keys.");
+        Gmcm.AddSectionTitle(ModManifest, () => "(TTG) GMCM Advanced Search", () => "Search inside GMCM authors, mod names, UniqueIDs, Nexus IDs, option labels, tooltips, field IDs, and config keys.");
         Gmcm.AddKeybindList(ModManifest, () => Config.OpenSearchMenuKey, v => Config.OpenSearchMenuKey = v, () => "Open search menu", () => "Hotkey to open the GMCM Advanced Search menu.");
         Gmcm.AddBoolOption(ModManifest, () => Config.ShowResultDetails, v => Config.ShowResultDetails = v, () => "Show Advanced Details", () => "Show extra metadata under each search result, including section/page, tooltip text, field ID, config key path, and option type.");
         Gmcm.AddBoolOption(ModManifest, () => Config.ShowModTooltips, v => Config.ShowModTooltips = v, () => "Show Mod Tooltips", () => "Show GMCM-style hover tooltips with the result mod name and description.");
@@ -240,7 +240,7 @@ public sealed class ModEntry : Mod
 
     private void OpenMenu()
     {
-        Game1.activeClickableMenu = new SearchMenu("GMCM Advanced Search", Config.ShowResultDetails, Config.ShowModTooltips, IndexedOptions, TryOpenMod);
+        Game1.activeClickableMenu = new SearchMenu("(TTG) GMCM Advanced Search", Config.ShowResultDetails, Config.ShowModTooltips, IndexedOptions, TryOpenMod);
     }
 
     private bool TryOpenMod(IManifest manifest)

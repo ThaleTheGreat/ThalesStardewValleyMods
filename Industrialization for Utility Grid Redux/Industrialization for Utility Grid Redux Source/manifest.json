@@ -1,7 +1,7 @@
 {
-  "Name": "Industrialization for Utility Grid Redux",
+  "Name": "(TTG) Industrialization for Utility Grid Redux",
   "Author": "ThaleTheGreat",
-  "Version": "1.2.0",
+  "Version": "1.2.1",
   "Description": "Adds Industrialization Machines to Utility Grid Redux.",
   "UniqueID": "ThaleTheGreat.IndustrializationForUtilityGridRedux",
   "EntryDll": "IndustrializationForUtilityGridRedux.dll",
