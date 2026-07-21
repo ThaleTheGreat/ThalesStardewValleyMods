@@ -1,7 +1,7 @@
 {
-  "Name": "Instant Tool Upgrade Redux",
+  "Name": "(TTG) Instant Tool Upgrade Redux",
   "Author": "ThaleTheGreat",
-  "Version": "1.0.1",
+  "Version": "1.1.0",
   "Description": "Makes Clint's tool upgrades ready immediately, with configurable price and bar costs.",
   "UniqueID": "ThaleTheGreat.InstantToolUpgradeRedux",
   "EntryDll": "InstantToolUpgradeRedux.dll",

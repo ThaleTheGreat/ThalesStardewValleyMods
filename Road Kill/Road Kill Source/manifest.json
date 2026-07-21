@@ -1,7 +1,7 @@
 {
-  "Name": "Road Kill",
+  "Name": "(TTG) Road Kill",
   "Author": "ThaleTheGreat",
-  "Version": "1.0.1",
+  "Version": "1.1.0",
   "Description": "Adds Animal Husbandry to Tractor Mod, with optional Wallet Tools support.",
   "UniqueID": "ThaleTheGreat.RoadKill",
   "EntryDll": "RoadKill.dll",

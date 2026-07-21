@@ -1,7 +1,7 @@
 {
-  "Name": "It Rubs The Mayo In",
+  "Name": "(TTG) It Rubs The Mayo In",
   "Author": "ThaleTheGreat",
-  "Version": "1.1.1",
+  "Version": "1.2.0",
   "Description": "Throw Mayonnaise and Books into the Well for strange dialogue.",
   "UniqueID": "ThaleTheGreat.ItRubsTheMayoIn",
   "EntryDll": "ItRubsTheMayoIn.dll",

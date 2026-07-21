@@ -1,6 +1,14 @@
+(TTG) POCKETS AUTO TOOL PATCHES LICENSE
+=======================================
+
+This license applies to (TTG) Pockets Auto Tool Patches v1.1.0.
+
+PRIMARY LICENSE
+---------------
+
 MIT License
 
-Copyright (c) 2026 Thale
+Copyright (c) 2026 ThaleTheGreat
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -19,3 +27,24 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+
+MODS AND PROJECTS USED OR REFERENCED
+------------------------------------
+
+This mod uses, supports, or references the following mods and projects.
+
+- Automate Tool Swap
+  https://www.nexusmods.com/stardewvalley/mods/21050
+
+- Harmony — MIT License
+  https://github.com/pardeike/Harmony
+
+- Pockets — GPL-3.0 License
+  https://github.com/aedenthorn/StardewValleyMods
+
+- Stardew Modding API (SMAPI) — LGPL-3.0 License
+  https://github.com/Pathoschild/SMAPI
+
+- Tool Smart Switch — GPL-3.0 License
+  https://github.com/aedenthorn/StardewValleyMods

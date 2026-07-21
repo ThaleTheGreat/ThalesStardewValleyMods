@@ -1,6 +1,14 @@
+(TTG) ROAD KILL LICENSE
+=======================
+
+This license applies to (TTG) Road Kill v1.1.0.
+
+PRIMARY LICENSE
+---------------
+
 MIT License
 
-Copyright (c) 2026 Thale
+Copyright (c) 2026 ThaleTheGreat
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -19,3 +27,30 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+
+MODS AND PROJECTS USED OR REFERENCED
+------------------------------------
+
+This mod uses, supports, or references the following mods and projects.
+
+- (TTG) Wallet Tools — MIT License
+  https://github.com/ThaleTheGreat/ThalesStardewValleyMods
+
+- (TTG) Wallet Tools for Animal Husbandry — MIT License
+  https://github.com/ThaleTheGreat/ThalesStardewValleyMods
+
+- (TTG) Wallet Tools for Tractor Mod — MIT License
+  https://github.com/ThaleTheGreat/ThalesStardewValleyMods
+
+- Animal Husbandry Mod — GPL-3.0 License
+  https://github.com/Digus/StardewValleyMods
+
+- Harmony — MIT License
+  https://github.com/pardeike/Harmony
+
+- Stardew Modding API (SMAPI) — LGPL-3.0 License
+  https://github.com/Pathoschild/SMAPI
+
+- Tractor Mod — MIT License
+  https://github.com/Pathoschild/StardewMods
