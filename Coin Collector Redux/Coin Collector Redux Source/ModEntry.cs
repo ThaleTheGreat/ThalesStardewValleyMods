@@ -756,7 +756,7 @@ namespace ThaleTheGreat.CoinCollectorRedux
                 ? obj.ItemId[3..]
                 : obj.ItemId;
 
-            if (!CoinDataByObjectId.TryGetValue(itemId, out CoinData coin))
+            if (!CoinDataByObjectId.TryGetValue(itemId, out CoinData? coin))
                 return false;
 
             int configuredPrice = GetConfiguredCoinPrice(coin);
