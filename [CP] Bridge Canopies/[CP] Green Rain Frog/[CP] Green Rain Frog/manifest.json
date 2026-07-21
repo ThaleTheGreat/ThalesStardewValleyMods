@@ -1,0 +1,14 @@
+{
+  "Name": "[CP] Green Rain Frog",
+  "Author": "ThaleTheGreat",
+  "Version": "1.0.1",
+  "Description": "Replaces the frog during green rain.",
+  "UniqueID": "ThaleTheGreat.GreenRainFrog",
+  "UpdateKeys": [
+    "Nexus:47418"
+  ],
+  "ContentPackFor": {
+    "UniqueID": "Pathoschild.ContentPatcher",
+    "MinimumVersion": "2.0.0"
+  }
+}

@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Version>1.1.0</Version>
+    <Version>1.0.1</Version>
     <TargetFramework>net6.0</TargetFramework>
     <LangVersion>Latest</LangVersion>
     <Nullable>enable</Nullable>
@@ -12,9 +12,9 @@
     <OutputPath>bin\$(Configuration)\net6.0\Instant Tool Upgrade Redux\</OutputPath>
     <OutDir>$(MSBuildProjectDirectory)\bin\$(Configuration)\net6.0\Instant Tool Upgrade Redux\</OutDir>
   
-    <AssemblyVersion>1.1.0.0</AssemblyVersion>
-    <FileVersion>1.1.0.0</FileVersion>
-    <InformationalVersion>1.1.0</InformationalVersion>
+    <AssemblyVersion>1.0.1.0</AssemblyVersion>
+    <FileVersion>1.0.1.0</FileVersion>
+    <InformationalVersion>1.0.1</InformationalVersion>
 </PropertyGroup>
 
   <ItemGroup>

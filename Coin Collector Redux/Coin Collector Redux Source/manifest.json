@@ -1,7 +1,7 @@
 {
   "Name": "(TTG) Coin Collector Redux",
   "Author": "ThaleTheGreat",
-  "Version": "1.2.1",
+  "Version": "1.1.2",
   "Description": "Adds metal detector coin hunting with built-in Yoba coins and Content Patcher support for coin packs.",
   "UniqueID": "ThaleTheGreat.CoinCollectorRedux",
   "EntryDll": "CoinCollectorRedux.dll",

@@ -1,0 +1,22 @@
+{
+  "Name": "Utility Grid Redux",
+  "Author": "ThaleTheGreat",
+  "Version": "1.1.2",
+  "Description": "Adds one cohesive Utility Grid mod.",
+  "UniqueID": "ThaleTheGreat.UtilityGridRedux",
+  "EntryDll": "UtilityGridRedux.dll",
+  "MinimumApiVersion": "4.0.0",
+  "UpdateKeys": [
+    "Nexus:47689"
+  ],
+  "Dependencies": [
+    {
+      "UniqueID": "spacechase0.GenericModConfigMenu",
+      "IsRequired": false
+    },
+    {
+      "UniqueID": "leclair.bettercrafting",
+      "IsRequired": false
+    }
+  ]
+}

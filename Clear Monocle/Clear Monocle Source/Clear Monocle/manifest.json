@@ -1,7 +1,7 @@
 {
   "Name": "(TTG) Clear Monocle",
   "Author": "ThaleTheGreat",
-  "Version": "1.1.0",
+  "Version": "1.0.1",
   "Description": "Performance-optimized xBRZ-only sprite resampling for Stardew Valley.",
   "UniqueID": "ThaleTheGreat.ClearMonocle",
   "EntryDll": "ClearMonocle.dll",

@@ -4,14 +4,14 @@
     <EnableHarmony>true</EnableHarmony>
     <AssemblyName>ClearBuildSites</AssemblyName>
     <RootNamespace>ThaleTheGreat.ClearBuildSites</RootNamespace>
-    <Version>1.1.0</Version>
+    <Version>1.0.1</Version>
     <Nullable>enable</Nullable>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <ModFolderName>Clear Build Sites</ModFolderName>
   
-    <AssemblyVersion>1.1.0.0</AssemblyVersion>
-    <FileVersion>1.1.0.0</FileVersion>
-    <InformationalVersion>1.1.0</InformationalVersion>
+    <AssemblyVersion>1.0.1.0</AssemblyVersion>
+    <FileVersion>1.0.1.0</FileVersion>
+    <InformationalVersion>1.0.1</InformationalVersion>
 </PropertyGroup>
 
   <ItemGroup>

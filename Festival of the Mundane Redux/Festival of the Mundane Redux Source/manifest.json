@@ -1,7 +1,7 @@
 {
   "Name": "(TTG) Festival of the Mundane Redux",
   "Author": "Originally by MouseyPounds and Mr. Podunkian with Redux by ThaleTheGreat",
-  "Version": "3.4.0",
+  "Version": "3.3.1",
   "Description": "The Shadows have their own Spirit's Eve festival in the sewers. Come visit. Now selling Dinosaur Shirts and Boots!",
   "UniqueID": "MouseyPounds.ShadowFestival",
   "EntryDll": "ShadowFestival.dll",

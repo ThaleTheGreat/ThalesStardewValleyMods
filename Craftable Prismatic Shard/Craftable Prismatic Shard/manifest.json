@@ -1,7 +1,7 @@
 {
   "Name": "Craftable Prismatic Shard",
   "Author": "ThaleTheGreat",
-  "Version": "1.0.0",
+  "Version": "1.0.1",
   "Description": "Adds a crafting recipe for Prismatic Shards.",
   "UniqueID": "ThaleTheGreat.CraftablePrismaticShard",
   "EntryDll": "CraftablePrismaticShard.dll",

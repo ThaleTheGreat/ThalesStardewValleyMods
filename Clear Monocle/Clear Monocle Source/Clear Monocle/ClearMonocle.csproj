@@ -36,10 +36,10 @@
 	<PropertyGroup>
 		<AssemblyName>ClearMonocle</AssemblyName>
 		<PackageId>ClearMonocle</PackageId>
-		<Version>1.1.0</Version>
-		<AssemblyVersion>1.1.0.0</AssemblyVersion>
-		<FileVersion>1.1.0.0</FileVersion>
-		<InformationalVersion>1.1.0</InformationalVersion>
+		<Version>1.0.1</Version>
+		<AssemblyVersion>1.0.1.0</AssemblyVersion>
+		<FileVersion>1.0.1.0</FileVersion>
+		<InformationalVersion>1.0.1</InformationalVersion>
 		<PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>
 		<ProjectGuid>C270B7AD-DA11-4176-83B9-8998FE58A601</ProjectGuid>
 		<EnableHarmony>true</EnableHarmony>

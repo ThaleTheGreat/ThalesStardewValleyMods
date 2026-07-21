@@ -1,7 +1,7 @@
 {
   "Name": "(TTG) Pockets Auto Tool Patches",
   "Author": "ThaleTheGreat",
-  "Version": "1.1.0",
+  "Version": "1.0.1",
   "Description": "Lets supported auto-tool mods use tools stored in Pockets.",
   "UniqueID": "ThaleTheGreat.PocketsAutoToolPatches",
   "EntryDll": "PocketsAutoToolPatches.dll",

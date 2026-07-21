@@ -6,11 +6,11 @@
     <RootNamespace>NonDestructiveNPCsRedux</RootNamespace>
     <LangVersion>10.0</LangVersion>
     <Nullable>disable</Nullable>
-    <Version>2.3.0</Version>
+    <Version>2.2.1</Version>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <AssemblyVersion>2.3.0.0</AssemblyVersion>
-    <FileVersion>2.3.0.0</FileVersion>
-    <InformationalVersion>2.3.0</InformationalVersion>
+    <AssemblyVersion>2.2.1.0</AssemblyVersion>
+    <FileVersion>2.2.1.0</FileVersion>
+    <InformationalVersion>2.2.1</InformationalVersion>
     <ModFolderName>Non Destructive NPCs Redux</ModFolderName>
   </PropertyGroup>
 

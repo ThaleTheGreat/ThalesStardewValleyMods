@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Version>1.1.0</Version>
+    <Version>1.0.1</Version>
     <TargetFramework>net6.0</TargetFramework>
     <AssemblyName>GemIslesSwimToGingerIsland</AssemblyName>
     <RootNamespace>ThaleTheGreat.GemIslesSwimToGingerIsland</RootNamespace>
@@ -10,9 +10,9 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Nullable>enable</Nullable>
   
-    <AssemblyVersion>1.1.0.0</AssemblyVersion>
-    <FileVersion>1.1.0.0</FileVersion>
-    <InformationalVersion>1.1.0</InformationalVersion>
+    <AssemblyVersion>1.0.1.0</AssemblyVersion>
+    <FileVersion>1.0.1.0</FileVersion>
+    <InformationalVersion>1.0.1</InformationalVersion>
 </PropertyGroup>
 
   <ItemGroup>

@@ -1,0 +1,22 @@
+{
+  "Name": "Mine Level Indicators Redux",
+  "Author": "ThaleTheGreat",
+  "Version": "1.4.2",
+  "Description": "Shows optional infested, mushroom, and dino mine level indicators in the HUD and Mobile Phone.",
+  "UniqueID": "ThaleTheGreat.MineLevelIndicators",
+  "EntryDll": "MineLevelIndicators.dll",
+  "MinimumApiVersion": "4.0.0",
+  "UpdateKeys": [
+    "Nexus:42554"
+  ],
+  "Dependencies": [
+    {
+      "UniqueID": "spacechase0.GenericModConfigMenu",
+      "IsRequired": false
+    },
+    {
+      "UniqueID": "aedenthorn.MobilePhone",
+      "IsRequired": false
+    }
+  ]
+}
