@@ -1,7 +1,7 @@
 {
-  "Name": "Date Change",
+  "Name": "(TTG) Date Change",
   "Author": "ThaleTheGreat",
-  "Version": "1.2.1",
+  "Version": "1.3.0",
   "Description": "In-game menu to change day, season, and year, plus freeze time. Defaults to queuing date changes for the next morning; optional GMCM setting enables immediate apply.",
   "UniqueID": "ThaleTheGreat.DateChange",
   "EntryDll": "DateChange.dll",

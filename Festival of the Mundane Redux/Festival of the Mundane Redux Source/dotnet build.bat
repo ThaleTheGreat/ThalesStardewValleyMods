@@ -1,7 +1,7 @@
 @echo off
 setlocal
 pushd "%~dp0" >nul
-dotnet build "ShadowFestival.csproj"
+powershell -NoProfile -ExecutionPolicy Bypass -File "package-release.ps1"
 set "exitCode=%ERRORLEVEL%"
 popd >nul
 if not "%exitCode%"=="0" (

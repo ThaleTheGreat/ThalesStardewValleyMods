@@ -400,7 +400,7 @@ public class DateChangeMenu : IClickableMenu
 
     SpriteText.drawStringHorizontallyCenteredAt(
       b,
-      "Date Change",
+      "(TTG) Date Change",
       this.xPositionOnScreen + this.width / 2,
       this.yPositionOnScreen + 28,
       999999,

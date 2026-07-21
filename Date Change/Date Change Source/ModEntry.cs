@@ -95,7 +95,7 @@ public class ModEntry : Mod
     try
     {
       Texture2D appIcon = this.Helper.ModContent.Load<Texture2D>(Path.Combine("assets", "MobilePhone.png"));
-      bool success = this.MobilePhoneApi.AddApp(this.ModManifest.UniqueID, "Date Change", this.OpenFromMobilePhone, appIcon);
+      bool success = this.MobilePhoneApi.AddApp(this.ModManifest.UniqueID, "(TTG) Date Change", this.OpenFromMobilePhone, appIcon);
       this.DebugLog($"Mobile Phone app registration success: {success}.");
     }
     catch (Exception ex)

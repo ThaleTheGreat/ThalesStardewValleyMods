@@ -1,7 +1,7 @@
-[CP] (TTG) COIN COLLECTOR REDUX EXAMPLE COIN PACK LICENSE
-=========================================================
+(TTG) THE MUTTERING FARMER - FESTIVAL OF THE MUNDANE REDUX LICENSE
+==================================================================
 
-This license applies to [CP] (TTG) Coin Collector Redux Example Coin Pack v1.0.2.
+This license applies to [CP] (TTG) The Muttering Farmer - Festival of the Mundane Redux v3.4.0.
 
 PRIMARY LICENSE
 ---------------
@@ -34,8 +34,11 @@ MODS AND PROJECTS USED OR REFERENCED
 
 This mod uses, supports, or references the following mods and projects.
 
-- (TTG) Coin Collector Redux — MIT License
+- (TTG) Festival of the Mundane Redux — MIT License
   https://github.com/ThaleTheGreat/ThalesStardewValleyMods
 
-- Content Patcher — MIT License
-  https://github.com/Pathoschild/StardewMods
+- [CP] (TTG) Festival of the Mundane Redux Content — MIT License
+  https://github.com/ThaleTheGreat/ThalesStardewValleyMods
+
+- The Muttering Farmer
+  https://www.nexusmods.com/stardewvalley/mods/35779
