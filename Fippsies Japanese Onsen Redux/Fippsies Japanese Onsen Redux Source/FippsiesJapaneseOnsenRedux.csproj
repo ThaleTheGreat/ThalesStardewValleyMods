@@ -8,8 +8,8 @@
     <LangVersion>latest</LangVersion>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <EnableModDeploy>true</EnableModDeploy>
-    <ModFolderName>Fippsie's Japanese Onsen Redux</ModFolderName>
-  
+    <ModFolderName>Fippsies Japanese Onsen Redux</ModFolderName>
+
     <Version>1.1.0</Version>
     <AssemblyVersion>1.1.0.0</AssemblyVersion>
     <FileVersion>1.1.0.0</FileVersion>
@@ -27,7 +27,7 @@
     <None Include="assets\**\*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
-  <Target Name="DeployToStardropSelectedMods" AfterTargets="Build" Condition="Exists('$(APPDATA)\Stardrop\Data\Selected Mods')">
+  <Target Name="DeployToStardropSelectedMods" AfterTargets="Build" Condition="Exists(&apos;$(APPDATA)\Stardrop\Data\Selected Mods&apos;)">
     <PropertyGroup>
       <StardropModFolder>$(APPDATA)\Stardrop\Data\Selected Mods\$(ModFolderName)</StardropModFolder>
     </PropertyGroup>
@@ -36,7 +36,7 @@
     </ItemGroup>
     <RemoveDir Directories="$(StardropModFolder)" />
     <MakeDir Directories="$(StardropModFolder)" />
-    <Copy SourceFiles="@(StardropDeployFiles)" DestinationFiles="@(StardropDeployFiles->'$(StardropModFolder)\%(RecursiveDir)%(Filename)%(Extension)')" />
+    <Copy SourceFiles="@(StardropDeployFiles)" DestinationFolder="$(StardropModFolder)\%(StardropDeployFiles.RecursiveDir)" />
   </Target>
 
 </Project>

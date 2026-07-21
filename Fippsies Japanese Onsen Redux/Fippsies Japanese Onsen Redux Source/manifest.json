@@ -1,8 +1,8 @@
 {
-  "Name": "(TTG) Fippsie's Japanese Onsen Redux",
+  "Name": "(TTG) Fippsies Japanese Onsen Redux",
   "Author": "ThaleTheGreat",
   "Version": "1.1.0",
-  "Description": "Fippsie's Japanese Onsen Redux.",
+  "Description": "Fippsies Japanese Onsen Redux.",
   "UniqueID": "ThaleTheGreat.FippsiesJapaneseOnsenRedux",
   "EntryDll": "FippsiesJapaneseOnsenRedux.dll",
   "MinimumApiVersion": "4.0.0",
