@@ -1,0 +1,25 @@
+{
+  "Name": "[CP] (TTG) The Muttering Farmer - Star Bull",
+  "Author": "ThaleTheGreat",
+  "Version": "1.6.0",
+  "Description": "Adds Star Bull specific mutters for The Muttering Farmer.",
+  "UniqueID": "ThaleTheGreat.TMFStarBull",
+  "MinimumApiVersion": "4.0.0",
+  "UpdateKeys": [
+    "Nexus:42059"
+  ],
+  "ContentPackFor": {
+    "UniqueID": "YunHikari.TheMutteringFarmer",
+    "MinimumVersion": "1.0.9"
+  },
+  "Dependencies": [
+    {
+      "UniqueID": "YunHikari.TheMutteringFarmer",
+      "IsRequired": true
+    },
+    {
+      "UniqueID": "ThaleTheGreat.StarBull",
+      "IsRequired": true
+    }
+  ]
+}

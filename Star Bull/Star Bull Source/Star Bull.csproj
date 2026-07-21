@@ -1,8 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <EnableModDeploy>false</EnableModDeploy>
+    <EnableModZip>false</EnableModZip>
     <TargetFramework>net6.0</TargetFramework>
-    <Version>1.5.0</Version>
+    <Version>1.6.0</Version>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <AssemblyName>StarBull</AssemblyName>
     <RootNamespace>ThaleTheGreat.StarBull</RootNamespace>
     <LangVersion>10.0</LangVersion>
@@ -29,4 +32,10 @@
     <None Include="LICENSE" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
+
+  <Target Name="WriteGameModsPath">
+    <Error Condition="'$(GameModsPath)' == ''" Text="The Stardew Valley Mods folder could not be detected." />
+    <Error Condition="'$(GameModsPathOutputFile)' == ''" Text="GameModsPathOutputFile was not provided." />
+    <WriteLinesToFile File="$(GameModsPathOutputFile)" Lines="$(GameModsPath)" Overwrite="true" />
+  </Target>
 </Project>

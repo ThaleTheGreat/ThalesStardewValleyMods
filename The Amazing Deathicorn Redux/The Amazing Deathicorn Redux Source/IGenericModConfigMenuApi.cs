@@ -1,9 +1,3 @@
-﻿// Decompiled with JetBrains decompiler
-// Type: TheAmazingDeathicornRedux.IGenericModConfigMenuApi
-// Assembly: TheAmazingDeathicornRedux, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: D6C3522D-3198-4403-9719-55CB68169A5E
-// Assembly location: C:\Users\Thale\Downloads\The Amazing Deathicorn Redux\TheAmazingDeathicornRedux.dll
-
 using StardewModdingAPI;
 using System;
 

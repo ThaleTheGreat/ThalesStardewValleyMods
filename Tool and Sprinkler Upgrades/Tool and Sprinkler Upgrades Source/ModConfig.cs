@@ -2,6 +2,7 @@ namespace ThaleTheGreat.ToolAndSprinklerUpgrades;
 
 internal sealed class ModConfig
 {
+    public bool RadioactiveBeforePrismatic { get; set; } = false;
     public int CobaltUpgradeCost { get; set; } = 75000;
     public int PrismaticUpgradeCost { get; set; } = 150000;
     public int RadioactiveUpgradeCost { get; set; } = 250000;

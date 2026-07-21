@@ -125,17 +125,17 @@ function Assert-MatchingTrees {
 $ProjectDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $SourceRoot = Split-Path -Parent $ProjectDir
 $ReleaseRoot = Join-Path $SourceRoot "Release"
-$ReleaseParent = Join-Path $ReleaseRoot "Star Bull"
-$ModOutputDir = Join-Path $ReleaseParent "Star Bull"
-$TmfSourceDir = Join-Path $SourceRoot "[CP] The Muttering Farmer - Star Bull"
-$TmfOutputDir = Join-Path $ReleaseParent "[CP] The Muttering Farmer - Star Bull"
-$ProjectFile = Join-Path $ProjectDir "Star Bull.csproj"
+$ReleaseParent = Join-Path $ReleaseRoot "The Amazing Deathicorn Redux"
+$ModOutputDir = Join-Path $ReleaseParent "The Amazing Deathicorn Redux"
+$CpSourceDir = Join-Path $SourceRoot "[CP] The Amazing Deathicorn Redux"
+$CpOutputDir = Join-Path $ReleaseParent "[CP] The Amazing Deathicorn Redux"
+$ProjectFile = Join-Path $ProjectDir "TheAmazingDeathicornRedux.csproj"
 $BuildDir = Join-Path $ProjectDir "bin\Release\net6.0"
 $MainManifest = Join-Path $ProjectDir "manifest.json"
 
-Require-Path $TmfSourceDir
+Require-Path $CpSourceDir
 Require-MatchingVersion -MainManifest $MainManifest -PackManifests @(
-    (Join-Path $TmfSourceDir "manifest.json")
+    (Join-Path $CpSourceDir "manifest.json")
 )
 
 foreach ($path in @((Join-Path $ProjectDir "bin"), (Join-Path $ProjectDir "obj"), $ReleaseRoot)) {
@@ -144,22 +144,26 @@ foreach ($path in @((Join-Path $ProjectDir "bin"), (Join-Path $ProjectDir "obj")
     }
 }
 
-Write-Host "Building Star Bull..."
+Write-Host "Building The Amazing Deathicorn Redux..."
 Invoke-DotNetBuild $ProjectFile
 
 New-Item -ItemType Directory -Path $ModOutputDir -Force | Out-Null
 
-foreach ($file in @("manifest.json", "StarBull.dll", "LICENSE")) {
+foreach ($file in @("manifest.json", "TheAmazingDeathicornRedux.dll", "LICENSE", "config.json")) {
     Copy-RequiredFile (Join-Path $BuildDir $file) $ModOutputDir
 }
 
-$pdb = Join-Path $BuildDir "StarBull.pdb"
+$pdb = Join-Path $BuildDir "TheAmazingDeathicornRedux.pdb"
 if (Test-Path -LiteralPath $pdb) {
     Copy-Item -LiteralPath $pdb -Destination $ModOutputDir -Force
 }
 
-Copy-Item -LiteralPath $TmfSourceDir -Destination $TmfOutputDir -Recurse -Force
-Assert-MatchingTrees $TmfSourceDir $TmfOutputDir
+$assetsSource = Join-Path $BuildDir "assets"
+Require-Path $assetsSource
+Copy-Item -LiteralPath $assetsSource -Destination (Join-Path $ModOutputDir "assets") -Recurse -Force
+
+Copy-Item -LiteralPath $CpSourceDir -Destination $CpOutputDir -Recurse -Force
+Assert-MatchingTrees $CpSourceDir $CpOutputDir
 
 Write-Host "Verified release folder created:"
 Write-Host "  $ReleaseParent"

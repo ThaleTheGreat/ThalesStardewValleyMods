@@ -4,6 +4,13 @@ using StardewValley.Tools;
 
 namespace ThaleTheGreat.ToolAndSprinklerUpgrades;
 
+internal enum UpgradeIdentity
+{
+    Cobalt,
+    Prismatic,
+    Radioactive
+}
+
 internal static class ToolTierUtility
 {
     public static bool IsCoreUpgradeableTool(Tool tool)
@@ -11,15 +18,89 @@ internal static class ToolTierUtility
         return tool is Axe or Pickaxe or Hoe or WateringCan;
     }
 
-    public static string GetTierName(int level)
+    public static UpgradeIdentity GetIdentity(int level)
+    {
+        return GetIdentity(level, ModEntry.Config.RadioactiveBeforePrismatic);
+    }
+
+    public static UpgradeIdentity GetIdentity(int level, bool radioactiveBeforePrismatic)
     {
         return level switch
         {
-            Constants.CobaltLevel => "Cobalt",
-            Constants.PrismaticLevel => "Prismatic",
-            Constants.RadioactiveLevel => "Radioactive",
+            Constants.CobaltLevel => UpgradeIdentity.Cobalt,
+            Constants.MiddleCustomLevel => radioactiveBeforePrismatic ? UpgradeIdentity.Radioactive : UpgradeIdentity.Prismatic,
+            Constants.HighestCustomLevel => radioactiveBeforePrismatic ? UpgradeIdentity.Prismatic : UpgradeIdentity.Radioactive,
+            _ => throw new ArgumentOutOfRangeException(nameof(level), level, "Unsupported custom tool level.")
+        };
+    }
+
+    public static int GetLevel(UpgradeIdentity identity)
+    {
+        return identity switch
+        {
+            UpgradeIdentity.Cobalt => Constants.CobaltLevel,
+            UpgradeIdentity.Prismatic => ModEntry.Config.RadioactiveBeforePrismatic ? Constants.HighestCustomLevel : Constants.MiddleCustomLevel,
+            UpgradeIdentity.Radioactive => ModEntry.Config.RadioactiveBeforePrismatic ? Constants.MiddleCustomLevel : Constants.HighestCustomLevel,
+            _ => 0
+        };
+    }
+
+    public static string GetTierName(int level)
+    {
+        return GetTierName(level, ModEntry.Config.RadioactiveBeforePrismatic);
+    }
+
+    public static string GetTierName(int level, bool radioactiveBeforePrismatic)
+    {
+        return level is >= Constants.CobaltLevel and <= Constants.HighestCustomLevel
+            ? GetIdentity(level, radioactiveBeforePrismatic).ToString()
+            : string.Empty;
+    }
+
+    public static string GetTierKey(int level)
+    {
+        return GetIdentity(level).ToString().ToLowerInvariant();
+    }
+
+    public static string GetTextureAsset(int level)
+    {
+        if (level is < Constants.CobaltLevel or > Constants.HighestCustomLevel)
+            return string.Empty;
+
+        return GetIdentity(level) switch
+        {
+            UpgradeIdentity.Cobalt => Constants.CobaltTextureAsset,
+            UpgradeIdentity.Prismatic => Constants.PrismaticTextureAsset,
+            UpgradeIdentity.Radioactive => Constants.RadioactiveTextureAsset,
             _ => string.Empty
         };
+    }
+
+    public static string GetPanAnimationTextureAsset(int level)
+    {
+        if (level is < Constants.CobaltLevel or > Constants.HighestCustomLevel)
+            return string.Empty;
+
+        return GetIdentity(level) switch
+        {
+            UpgradeIdentity.Cobalt => Constants.CobaltPanAnimationTextureAsset,
+            UpgradeIdentity.Prismatic => Constants.PrismaticPanAnimationTextureAsset,
+            UpgradeIdentity.Radioactive => Constants.RadioactivePanAnimationTextureAsset,
+            _ => string.Empty
+        };
+    }
+
+    public static string GetSprinklerRecipeName(int level)
+    {
+        return GetTierName(level) + " Sprinkler";
+    }
+
+    public static string? GetBarRecipeName(int level)
+    {
+        if (level is < Constants.CobaltLevel or > Constants.HighestCustomLevel)
+            return null;
+
+        return GetIdentity(level) == UpgradeIdentity.Prismatic ? "Prismatic Bar" : null;
     }
 
     public static float GetStaminaRefundRatio(int level)
@@ -27,8 +108,8 @@ internal static class ToolTierUtility
         return level switch
         {
             Constants.CobaltLevel => 0.10f,
-            Constants.PrismaticLevel => 0.20f,
-            Constants.RadioactiveLevel => 0.40f,
+            Constants.MiddleCustomLevel => 0.20f,
+            Constants.HighestCustomLevel => 0.40f,
             _ => 0f
         };
     }
@@ -38,8 +119,8 @@ internal static class ToolTierUtility
         return level switch
         {
             Constants.CobaltLevel => 1,
-            Constants.PrismaticLevel => 2,
-            Constants.RadioactiveLevel => 3,
+            Constants.MiddleCustomLevel => 2,
+            Constants.HighestCustomLevel => 3,
             _ => 0
         };
     }
@@ -49,8 +130,8 @@ internal static class ToolTierUtility
         return level switch
         {
             Constants.CobaltLevel => ModEntry.Config.CobaltUpgradeCost,
-            Constants.PrismaticLevel => ModEntry.Config.PrismaticUpgradeCost,
-            Constants.RadioactiveLevel => ModEntry.Config.RadioactiveUpgradeCost,
+            Constants.MiddleCustomLevel => ModEntry.Config.PrismaticUpgradeCost,
+            Constants.HighestCustomLevel => ModEntry.Config.RadioactiveUpgradeCost,
             _ => 0
         };
     }
@@ -60,30 +141,36 @@ internal static class ToolTierUtility
         return level switch
         {
             Constants.CobaltLevel => ModEntry.Config.CobaltBarsRequired,
-            Constants.PrismaticLevel => ModEntry.Config.PrismaticBarsRequired,
-            Constants.RadioactiveLevel => ModEntry.Config.RadioactiveBarsRequired,
+            Constants.MiddleCustomLevel => ModEntry.Config.PrismaticBarsRequired,
+            Constants.HighestCustomLevel => ModEntry.Config.RadioactiveBarsRequired,
             _ => 0
         };
     }
 
     public static string GetRequiredBarId(int level)
     {
-        return level switch
+        if (level is < Constants.CobaltLevel or > Constants.HighestCustomLevel)
+            return string.Empty;
+
+        return GetIdentity(level) switch
         {
-            Constants.CobaltLevel => Constants.CobaltBarId,
-            Constants.PrismaticLevel => Constants.PrismaticBarId,
-            Constants.RadioactiveLevel => Constants.VanillaRadioactiveBarId,
+            UpgradeIdentity.Cobalt => Constants.CobaltBarId,
+            UpgradeIdentity.Prismatic => Constants.PrismaticBarId,
+            UpgradeIdentity.Radioactive => Constants.VanillaRadioactiveBarId,
             _ => string.Empty
         };
     }
 
     public static string GetRequiredBarName(int level)
     {
-        return level switch
+        if (level is < Constants.CobaltLevel or > Constants.HighestCustomLevel)
+            return "bars";
+
+        return GetIdentity(level) switch
         {
-            Constants.CobaltLevel => "Cobalt Bars",
-            Constants.PrismaticLevel => "Prismatic Bars",
-            Constants.RadioactiveLevel => "Radioactive Bars",
+            UpgradeIdentity.Cobalt => "Cobalt Bars",
+            UpgradeIdentity.Prismatic => "Prismatic Bars",
+            UpgradeIdentity.Radioactive => "Radioactive Bars",
             _ => "bars"
         };
     }
@@ -114,11 +201,11 @@ internal static class ToolTierUtility
                 length = ModEntry.Config.CobaltToolLength;
                 width = ModEntry.Config.CobaltToolWidth;
                 break;
-            case Constants.PrismaticLevel:
+            case Constants.MiddleCustomLevel:
                 length = ModEntry.Config.PrismaticToolLength;
                 width = ModEntry.Config.PrismaticToolWidth;
                 break;
-            case Constants.RadioactiveLevel:
+            case Constants.HighestCustomLevel:
                 length = ModEntry.Config.RadioactiveToolLength;
                 width = ModEntry.Config.RadioactiveToolWidth;
                 break;

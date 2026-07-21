@@ -1,12 +1,18 @@
 {
-  "Name": "The Amazing Deathicorn Redux",
+  "Name": "(TTG) The Amazing Deathicorn Redux",
   "Author": "ThaleTheGreat",
-  "Version": "2.0.1",
+  "Version": "2.1.1",
   "Description": "Have you ever wanted a Deathicorn!? What? No? Oh. Well this is awkward...",
   "UniqueID": "ThaleTheGreat.TheAmazingDeathicornRedux",
   "EntryDll": "TheAmazingDeathicornRedux.dll",
   "MinimumApiVersion": "4.0.0",
   "UpdateKeys": [
     "Nexus:42786"
+  ],
+  "Dependencies": [
+    {
+      "UniqueID": "spacechase0.GenericModConfigMenu",
+      "IsRequired": false
+    }
   ]
 }

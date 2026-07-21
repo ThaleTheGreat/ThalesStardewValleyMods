@@ -28,15 +28,11 @@ public sealed class ModEntry : Mod
   private Texture2D? ImpactAtlas;
   private Texture2D? BoltTexture;
   private ModConfig Config = new ModConfig();
-  private LaserColor? LastLoggedGlowColor;
   private LightSource? DeathicornLight;
   private string DeathicornLightKey = "";
-  private string? LastGlowLocationName;
   private int DeathicornLightNumericId;
-  private bool LoggedLightSourceCtor;
   private bool LoggedLightSourceCtorFailure;
   private int? GlowLightTextureIndex;
-  private bool LoggedGlowTextureIndex;
   private readonly List<ModEntry.Beam> ActiveBeams = new List<ModEntry.Beam>();
   private readonly List<ModEntry.Impact> ActiveImpacts = new List<ModEntry.Impact>();
 
@@ -270,13 +266,6 @@ public sealed class ModEntry : Mod
             desired = new Color((int) byte.MaxValue, 105, 180);
           }
           Color lightSourceTint = ModEntry.ToLightSourceTint(desired);
-          LaserColor? lastLoggedGlowColor = this.LastLoggedGlowColor;
-          LaserColor glowColor = this.Config.GlowColor;
-          if (!(lastLoggedGlowColor.GetValueOrDefault() == glowColor & lastLoggedGlowColor.HasValue))
-          {
-            this.Monitor.Log($"Deathicorn glow: option={this.Config.GlowColor} desired={$"#{desired.R:X2}{desired.G:X2}{desired.B:X2}"} light={$"#{lightSourceTint.R:X2}{lightSourceTint.G:X2}{lightSourceTint.B:X2}"}.", (LogLevel) 1);
-            this.LastLoggedGlowColor = new LaserColor?(this.Config.GlowColor);
-          }
           float radius = MathHelper.Clamp(this.Config.GlowRadius, 0.5f, 15f);
           if ((double) this.Config.GlowRadius <= 3.5)
             radius = MathHelper.Clamp(radius * 4f, 0.5f, 15f);
@@ -376,11 +365,6 @@ public sealed class ModEntry : Mod
     {
       int num = ModEntry.TryGetLightSourceIntField("lantern", "Lantern") ?? 1;
       this.GlowLightTextureIndex = new int?(num);
-      if (!this.LoggedGlowTextureIndex)
-      {
-        this.Monitor.Log($"Deathicorn glow: using LightSource texture Lantern = {num}.", (LogLevel) 1);
-        this.LoggedGlowTextureIndex = true;
-      }
     }
     return this.GlowLightTextureIndex.Value;
   }
@@ -486,11 +470,6 @@ public sealed class ModEntry : Mod
         {
           if (constructorInfo.Invoke(objArray1) is LightSource lightSource)
           {
-            if (!this.LoggedLightSourceCtor)
-            {
-              this.Monitor.Log($"Deathicorn glow: using LightSource ctor ({string.Join(", ", ((IEnumerable<ParameterInfo>) parameters).Select<ParameterInfo, string>((Func<ParameterInfo, string>) (p => p.ParameterType.Name)))}).", (LogLevel) 0);
-              this.LoggedLightSourceCtor = true;
-            }
             return lightSource;
           }
         }
@@ -522,19 +501,6 @@ public sealed class ModEntry : Mod
     if (!string.IsNullOrWhiteSpace(str1))
       Game1.currentLightSources[str1] = this.DeathicornLight;
     this.TrySetLocationLight(loc, str1, this.DeathicornLight);
-    try
-    {
-      string str2 = loc?.NameOrUniqueName ?? "<null>";
-      if (this.LastGlowLocationName != str2)
-      {
-        this.LastGlowLocationName = str2;
-        Vector2 vector2 = ((NetFieldBase<Vector2, NetVector2>) this.DeathicornLight.position).Value;
-        this.Monitor.Log($"Deathicorn glow registered: id={str1}, loc={str2}, pos=({vector2.X:0},{vector2.Y:0}), radius={((NetFieldBase<float, NetFloat>) this.DeathicornLight.radius).Value:0.00}, color={((NetFieldBase<Color, NetColor>) this.DeathicornLight.color).Value}.", (LogLevel) 0);
-      }
-    }
-    catch
-    {
-    }
     if (this.TryRepositionLocationLight(loc, str1, position))
       return;
     try

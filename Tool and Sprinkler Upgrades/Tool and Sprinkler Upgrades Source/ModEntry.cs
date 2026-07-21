@@ -21,14 +21,26 @@ public sealed class ModEntry : Mod
     internal static ModConfig Config { get; private set; } = null!;
 
     private bool suppressExistingSaveSpriteRefresh;
+    private bool enableSwordAndSorceryIntegration;
+    private bool lastAppliedRadioactiveBeforePrismatic;
+
+    internal static string Translate(string key)
+    {
+        return Instance.Helper.Translation.Get(key).ToString();
+    }
+
 
     public override void Entry(IModHelper helper)
     {
         Instance = this;
         Config = helper.ReadConfig<ModConfig>();
         NormalizeConfig(helper);
+        lastAppliedRadioactiveBeforePrismatic = Config.RadioactiveBeforePrismatic;
+        enableSwordAndSorceryIntegration = ShouldEnableSwordAndSorceryIntegration();
 
         helper.Events.Content.AssetRequested += OnAssetRequested;
+        if (enableSwordAndSorceryIntegration)
+            helper.Events.Content.AssetReady += OnAssetReady;
         helper.Events.GameLoop.GameLaunched += OnGameLaunched;
         helper.Events.GameLoop.SaveLoaded += OnSaveLoaded;
         helper.Events.GameLoop.DayStarted += OnDayStarted;
@@ -42,6 +54,7 @@ public sealed class ModEntry : Mod
         Harmony harmony = new(ModManifest.UniqueID);
         harmony.PatchAll(Assembly.GetExecutingAssembly());
         PatchToolStaminaUse(harmony);
+        PatchCustomPanAnimation(harmony);
         PatchCustomSprinklerRecognition(harmony);
         PatchImmersiveSprinklersAndScarecrows(harmony);
     }
@@ -56,19 +69,25 @@ public sealed class ModEntry : Mod
         gmcm.Register(
             ModManifest,
             () => Config = new ModConfig(),
-            () =>
-            {
-                NormalizeConfig(Helper);
-                Helper.WriteConfig(Config);
-            }
+            ApplyConfigChanges
+        );
+
+        gmcm.AddBoolOption(
+            ModManifest,
+            () => Config.RadioactiveBeforePrismatic,
+            value => Config.RadioactiveBeforePrismatic = value,
+            () => Translate("config.radioactive-before-prismatic.name"),
+            () => Translate("config.radioactive-before-prismatic.tooltip"),
+            "RadioactiveBeforePrismatic"
         );
 
         gmcm.AddBoolOption(
             ModManifest,
             () => Config.RadioactiveSprinklerActsAsScarecrow,
             value => Config.RadioactiveSprinklerActsAsScarecrow = value,
-            () => "Radioactive Sprinkler Scarecrow",
-            () => "Treat placed Radioactive Sprinklers like a Scarecrow."
+            () => Translate("config.highest-tier-sprinkler-acts-as-scarecrow.name"),
+            () => Translate("config.highest-tier-sprinkler-acts-as-scarecrow.tooltip"),
+            "HighestTierSprinklerScarecrow"
         );
     }
 
@@ -97,6 +116,64 @@ public sealed class ModEntry : Mod
 
         if (changed)
             helper.WriteConfig(Config);
+    }
+
+    private void ApplyConfigChanges()
+    {
+        NormalizeConfig(Helper);
+        Helper.WriteConfig(Config);
+
+        if (lastAppliedRadioactiveBeforePrismatic == Config.RadioactiveBeforePrismatic)
+            return;
+
+        bool previousRadioactiveBeforePrismatic = lastAppliedRadioactiveBeforePrismatic;
+        lastAppliedRadioactiveBeforePrismatic = Config.RadioactiveBeforePrismatic;
+        Helper.GameContent.InvalidateCache("Data/Objects");
+        Helper.GameContent.InvalidateCache("Data/Tools");
+        Helper.GameContent.InvalidateCache("Data/Shops");
+        Helper.GameContent.InvalidateCache("Data/CraftingRecipes");
+        Helper.GameContent.InvalidateCache("Data/Powers");
+
+        if (!Context.IsWorldReady)
+            return;
+
+        MigrateKnownTierRecipeNames(previousRadioactiveBeforePrismatic, Config.RadioactiveBeforePrismatic);
+        Game1.player.modData[Constants.TierOrderSaveKey] = Config.RadioactiveBeforePrismatic.ToString();
+        RefreshExistingCustomToolSprites();
+        MarkKnownRodPurchases();
+        UnlockKnownRecipes();
+    }
+
+    private void PatchCustomPanAnimation(Harmony harmony)
+    {
+        MethodInfo? draw = AccessTools.Method(
+            typeof(FarmerRenderer),
+            "draw",
+            new[]
+            {
+                typeof(SpriteBatch),
+                typeof(FarmerSprite.AnimationFrame),
+                typeof(int),
+                typeof(Rectangle),
+                typeof(Vector2),
+                typeof(Vector2),
+                typeof(float),
+                typeof(int),
+                typeof(Color),
+                typeof(float),
+                typeof(float),
+                typeof(Farmer)
+            }
+        );
+        MethodInfo? postfix = AccessTools.Method(typeof(CustomPanAnimationPatch), nameof(CustomPanAnimationPatch.AfterFarmerRendererDraw));
+
+        if (draw == null || postfix == null)
+        {
+            Monitor.Log("Custom pan animation patch was skipped because the expected Stardew Valley 1.6 FarmerRenderer.draw method was not found.", LogLevel.Warn);
+            return;
+        }
+
+        harmony.Patch(draw, postfix: new HarmonyMethod(postfix));
     }
 
     private void PatchCustomSprinklerRecognition(Harmony harmony)
@@ -184,16 +261,34 @@ public sealed class ModEntry : Mod
             return;
         }
 
+        if (e.NameWithoutLocale.IsEquivalentTo(Constants.CobaltPanAnimationTextureAsset))
+        {
+            e.LoadFromModFile<Texture2D>("assets/cobaltpan.png", AssetLoadPriority.Exclusive);
+            return;
+        }
+
+        if (e.NameWithoutLocale.IsEquivalentTo(Constants.PrismaticPanAnimationTextureAsset))
+        {
+            e.LoadFromModFile<Texture2D>("assets/prismaticpan.png", AssetLoadPriority.Exclusive);
+            return;
+        }
+
+        if (e.NameWithoutLocale.IsEquivalentTo(Constants.RadioactivePanAnimationTextureAsset))
+        {
+            e.LoadFromModFile<Texture2D>("assets/radioactivepan.png", AssetLoadPriority.Exclusive);
+            return;
+        }
+
         if (e.NameWithoutLocale.IsEquivalentTo("Data/Objects"))
         {
             e.Edit(asset =>
             {
                 IDictionary<string, ObjectData> data = asset.AsDictionary<string, ObjectData>().Data;
-                data[Constants.CobaltBarId] = CreateObjectData("Cobalt Bar", "A bar of refined cobalt.", "Basic", -15, 500, Constants.CobaltTextureAsset, Constants.CobaltBarSpriteIndex);
-                data[Constants.CobaltSprinklerId] = CreateObjectData("Cobalt Sprinkler", "Waters the 48 surrounding tiles every morning.", "Crafting", -9, 500, Constants.CobaltTextureAsset, Constants.CobaltSprinklerSpriteIndex, new List<string> { "sprinkler" });
-                data[Constants.PrismaticBarId] = CreateObjectData("Prismatic Bar", "A bar pulsing with prismatic energy.", "Basic", -15, 1000, Constants.PrismaticTextureAsset, Constants.PrismaticBarSpriteIndex);
-                data[Constants.PrismaticSprinklerId] = CreateObjectData("Prismatic Sprinkler", "Waters the 120 surrounding tiles every morning.", "Crafting", -9, 1000, Constants.PrismaticTextureAsset, Constants.PrismaticSprinklerSpriteIndex, new List<string> { "sprinkler" });
-                data[Constants.RadioactiveSprinklerId] = CreateObjectData("Radioactive Sprinkler", "Waters the 224 surrounding tiles every morning. It can also protect crops like a  Scarecrow.", "Crafting", -9, 2500, Constants.RadioactiveTextureAsset, Constants.RadioactiveSprinklerSpriteIndex, new List<string> { "sprinkler" });
+                data[Constants.CobaltBarId] = CreateObjectData("Cobalt Bar", Translate("objects.cobalt-bar.name"), Translate("objects.cobalt-bar.description"), "Basic", -15, 500, Constants.CobaltTextureAsset, Constants.CobaltBarSpriteIndex);
+                data[Constants.CobaltSprinklerId] = CreateObjectData("Cobalt Sprinkler", Translate("objects.cobalt-sprinkler.name"), Translate("objects.cobalt-sprinkler.description"), "Crafting", -9, 500, Constants.CobaltTextureAsset, Constants.CobaltSprinklerSpriteIndex, new List<string> { "sprinkler" });
+                data[Constants.PrismaticBarId] = CreateObjectData("Prismatic Bar", Translate("objects.prismatic-bar.name"), Translate("objects.prismatic-bar.description"), "Basic", -15, 1000, Constants.PrismaticTextureAsset, Constants.PrismaticBarSpriteIndex);
+                AddSprinklerObject(data, Constants.PrismaticSprinklerId, Constants.MiddleCustomLevel, 1000, Constants.PrismaticSprinklerSpriteIndex, "objects.middle-tier-sprinkler.description");
+                AddSprinklerObject(data, Constants.RadioactiveSprinklerId, Constants.HighestCustomLevel, 2500, Constants.RadioactiveSprinklerSpriteIndex, "objects.highest-tier-sprinkler.description");
             });
             return;
         }
@@ -205,6 +300,15 @@ public sealed class ModEntry : Mod
                 IDictionary<string, ToolData> data = asset.AsDictionary<string, ToolData>().Data;
                 AddToolTierData(data);
             });
+
+            if (enableSwordAndSorceryIntegration)
+            {
+                e.Edit(
+                    asset => SwordAndSorceryIntegration.Apply(asset.AsDictionary<string, ToolData>().Data),
+                    (AssetEditPriority)SwordAndSorceryIntegration.AssetEditPriority
+                );
+            }
+
             return;
         }
 
@@ -224,20 +328,42 @@ public sealed class ModEntry : Mod
             {
                 IDictionary<string, string> data = asset.AsDictionary<string, string>().Data;
                 data["Cobalt Bar"] = $"337 2 338 5 382 5/Home/{Constants.CobaltBarId} 1/false/null";
-                data["Prismatic Bar"] = $"{Constants.CobaltBarId} 2 74 1/Home/{Constants.PrismaticBarId} 1/false/null";
+                data["Prismatic Bar"] = Config.RadioactiveBeforePrismatic
+                    ? $"{Constants.VanillaRadioactiveBarId} 1 74 1/Home/{Constants.PrismaticBarId} 1/false/null"
+                    : $"{Constants.CobaltBarId} 2 74 1/Home/{Constants.PrismaticBarId} 1/false/null";
                 data["Cobalt Sprinkler"] = $"{Constants.CobaltBarId} 1 645 1/Home/{Constants.CobaltSprinklerId} 1/false/null";
-                data["Prismatic Sprinkler"] = $"{Constants.PrismaticBarId} 1 {Constants.CobaltSprinklerId} 1/Home/{Constants.PrismaticSprinklerId} 1/false/null";
-                data["Radioactive Sprinkler"] = $"{Constants.VanillaRadioactiveBarId} 1 {Constants.PrismaticSprinklerId} 1/Home/{Constants.RadioactiveSprinklerId} 1/false/null";
+                data[ToolTierUtility.GetSprinklerRecipeName(Constants.MiddleCustomLevel)] = $"{ToolTierUtility.GetRequiredBarId(Constants.MiddleCustomLevel)} 1 {Constants.CobaltSprinklerId} 1/Home/{Constants.PrismaticSprinklerId} 1/false/null";
+                data[ToolTierUtility.GetSprinklerRecipeName(Constants.HighestCustomLevel)] = $"{ToolTierUtility.GetRequiredBarId(Constants.HighestCustomLevel)} 1 {Constants.PrismaticSprinklerId} 1/Home/{Constants.RadioactiveSprinklerId} 1/false/null";
             });
         }
     }
 
-    private static ObjectData CreateObjectData(string name, string description, string type, int category, int price, string textureAsset, int spriteIndex, List<string>? contextTags = null)
+    private bool ShouldEnableSwordAndSorceryIntegration()
+    {
+        if (Helper.ModRegistry.IsLoaded(SwordAndSorceryIntegration.LegacyAddonModId))
+        {
+            DebugLog("The standalone Sword and Sorcery add-on is installed, so the integrated compatibility bridge is disabled to prevent duplicate edits.");
+            return false;
+        }
+
+        return Helper.ModRegistry.IsLoaded(SwordAndSorceryIntegration.ContentModId)
+            && Helper.ModRegistry.IsLoaded(SwordAndSorceryIntegration.CodeModId);
+    }
+
+    private void OnAssetReady(object? sender, AssetReadyEventArgs e)
+    {
+        if (!e.NameWithoutLocale.IsEquivalentTo("Data/Tools"))
+            return;
+
+        SwordAndSorceryIntegration.Apply(Helper.GameContent.Load<Dictionary<string, ToolData>>("Data/Tools"));
+    }
+
+    private static ObjectData CreateObjectData(string name, string displayName, string description, string type, int category, int price, string textureAsset, int spriteIndex, List<string>? contextTags = null)
     {
         return new ObjectData
         {
             Name = name,
-            DisplayName = name,
+            DisplayName = displayName,
             Description = description,
             Type = type,
             Category = category,
@@ -248,31 +374,92 @@ public sealed class ModEntry : Mod
         };
     }
 
-    private static void AddToolTierData(IDictionary<string, ToolData> data)
+    private static void AddSprinklerObject(IDictionary<string, ObjectData> data, string itemId, int level, int price, int spriteIndex, string descriptionKey)
     {
-        AddTool(data, "IridiumAxe", Constants.CobaltAxeId, "Cobalt Axe", "Used to chop wood.", Constants.CobaltLevel, "(T)IridiumAxe", Constants.CobaltBarId, Constants.CobaltTextureAsset, ModEntry.Config.CobaltUpgradeCost, ModEntry.Config.CobaltBarsRequired);
-        AddTool(data, "IridiumPickaxe", Constants.CobaltPickaxeId, "Cobalt Pickaxe", "Used to break stones.", Constants.CobaltLevel, "(T)IridiumPickaxe", Constants.CobaltBarId, Constants.CobaltTextureAsset, ModEntry.Config.CobaltUpgradeCost, ModEntry.Config.CobaltBarsRequired);
-        AddTool(data, "IridiumHoe", Constants.CobaltHoeId, "Cobalt Hoe", "Used to dig and till soil.", Constants.CobaltLevel, "(T)IridiumHoe", Constants.CobaltBarId, Constants.CobaltTextureAsset, ModEntry.Config.CobaltUpgradeCost, ModEntry.Config.CobaltBarsRequired);
-        AddTool(data, "IridiumWateringCan", Constants.CobaltWateringCanId, "Cobalt Watering Can", "Used to water crops. It can be refilled at any water source.", Constants.CobaltLevel, "(T)IridiumWateringCan", Constants.CobaltBarId, Constants.CobaltTextureAsset, ModEntry.Config.CobaltUpgradeCost, ModEntry.Config.CobaltBarsRequired);
-
-        AddTool(data, "IridiumAxe", Constants.PrismaticAxeId, "Prismatic Axe", "Used to chop wood.", Constants.PrismaticLevel, "(T)" + Constants.CobaltAxeId, Constants.PrismaticBarId, Constants.PrismaticTextureAsset, ModEntry.Config.PrismaticUpgradeCost, ModEntry.Config.PrismaticBarsRequired);
-        AddTool(data, "IridiumPickaxe", Constants.PrismaticPickaxeId, "Prismatic Pickaxe", "Used to break stones.", Constants.PrismaticLevel, "(T)" + Constants.CobaltPickaxeId, Constants.PrismaticBarId, Constants.PrismaticTextureAsset, ModEntry.Config.PrismaticUpgradeCost, ModEntry.Config.PrismaticBarsRequired);
-        AddTool(data, "IridiumHoe", Constants.PrismaticHoeId, "Prismatic Hoe", "Used to dig and till soil.", Constants.PrismaticLevel, "(T)" + Constants.CobaltHoeId, Constants.PrismaticBarId, Constants.PrismaticTextureAsset, ModEntry.Config.PrismaticUpgradeCost, ModEntry.Config.PrismaticBarsRequired);
-        AddTool(data, "IridiumWateringCan", Constants.PrismaticWateringCanId, "Prismatic Watering Can", "Used to water crops. It can be refilled at any water source.", Constants.PrismaticLevel, "(T)" + Constants.CobaltWateringCanId, Constants.PrismaticBarId, Constants.PrismaticTextureAsset, ModEntry.Config.PrismaticUpgradeCost, ModEntry.Config.PrismaticBarsRequired);
-
-        AddTool(data, "IridiumAxe", Constants.RadioactiveAxeId, "Radioactive Axe", "Used to chop wood.", Constants.RadioactiveLevel, "(T)" + Constants.PrismaticAxeId, Constants.VanillaRadioactiveBarId, Constants.RadioactiveTextureAsset, ModEntry.Config.RadioactiveUpgradeCost, ModEntry.Config.RadioactiveBarsRequired);
-        AddTool(data, "IridiumPickaxe", Constants.RadioactivePickaxeId, "Radioactive Pickaxe", "Used to break stones.", Constants.RadioactiveLevel, "(T)" + Constants.PrismaticPickaxeId, Constants.VanillaRadioactiveBarId, Constants.RadioactiveTextureAsset, ModEntry.Config.RadioactiveUpgradeCost, ModEntry.Config.RadioactiveBarsRequired);
-        AddTool(data, "IridiumHoe", Constants.RadioactiveHoeId, "Radioactive Hoe", "Used to dig and till soil.", Constants.RadioactiveLevel, "(T)" + Constants.PrismaticHoeId, Constants.VanillaRadioactiveBarId, Constants.RadioactiveTextureAsset, ModEntry.Config.RadioactiveUpgradeCost, ModEntry.Config.RadioactiveBarsRequired);
-        AddTool(data, "IridiumWateringCan", Constants.RadioactiveWateringCanId, "Radioactive Watering Can", "Used to water crops. It can be refilled at any water source.", Constants.RadioactiveLevel, "(T)" + Constants.PrismaticWateringCanId, Constants.VanillaRadioactiveBarId, Constants.RadioactiveTextureAsset, ModEntry.Config.RadioactiveUpgradeCost, ModEntry.Config.RadioactiveBarsRequired);
-        AddTool(data, "IridiumPan", Constants.CobaltPanId, "Cobalt Pan", "Use this to gather ore from streams.", Constants.CobaltLevel, "(T)IridiumPan", Constants.CobaltBarId, Constants.CobaltTextureAsset, ModEntry.Config.CobaltUpgradeCost, ModEntry.Config.CobaltBarsRequired);
-        AddTool(data, "IridiumPan", Constants.PrismaticPanId, "Prismatic Pan", "Use this to gather ore from streams.", Constants.PrismaticLevel, "(T)" + Constants.CobaltPanId, Constants.PrismaticBarId, Constants.PrismaticTextureAsset, ModEntry.Config.PrismaticUpgradeCost, ModEntry.Config.PrismaticBarsRequired);
-        AddTool(data, "IridiumPan", Constants.RadioactivePanId, "Radioactive Pan", "Use this to gather ore from streams.", Constants.RadioactiveLevel, "(T)" + Constants.PrismaticPanId, Constants.VanillaRadioactiveBarId, Constants.RadioactiveTextureAsset, ModEntry.Config.RadioactiveUpgradeCost, ModEntry.Config.RadioactiveBarsRequired);
-
-        AddShopTool(data, Constants.AdvancedIridiumRodId, Constants.CobaltFishingRodId, "Cobalt Rod", "Use in the water to catch fish.", Constants.CobaltLevel, Constants.CobaltTextureAsset);
-        AddShopTool(data, Constants.AdvancedIridiumRodId, Constants.PrismaticFishingRodId, "Prismatic Rod", "Use in the water to catch fish.", Constants.PrismaticLevel, Constants.PrismaticTextureAsset);
-        AddShopTool(data, Constants.AdvancedIridiumRodId, Constants.RadioactiveFishingRodId, "Radioactive Rod", "Use in the water to catch fish.", Constants.RadioactiveLevel, Constants.RadioactiveTextureAsset);
+        string tierKey = ToolTierUtility.GetTierKey(level);
+        string tierName = ToolTierUtility.GetTierName(level);
+        data[itemId] = CreateObjectData(
+            tierName + " Sprinkler",
+            Translate($"objects.{tierKey}-sprinkler.name"),
+            Translate(descriptionKey),
+            "Crafting",
+            -9,
+            price,
+            ToolTierUtility.GetTextureAsset(level),
+            spriteIndex,
+            new List<string> { "sprinkler" }
+        );
     }
 
+    private static void AddToolTierData(IDictionary<string, ToolData> data)
+    {
+        AddCoreToolTier(data, Constants.CobaltLevel, Constants.CobaltAxeId, Constants.CobaltPickaxeId, Constants.CobaltHoeId, Constants.CobaltWateringCanId, "(T)IridiumAxe", "(T)IridiumPickaxe", "(T)IridiumHoe", "(T)IridiumWateringCan");
+        AddCoreToolTier(data, Constants.MiddleCustomLevel, Constants.PrismaticAxeId, Constants.PrismaticPickaxeId, Constants.PrismaticHoeId, Constants.PrismaticWateringCanId, "(T)" + Constants.CobaltAxeId, "(T)" + Constants.CobaltPickaxeId, "(T)" + Constants.CobaltHoeId, "(T)" + Constants.CobaltWateringCanId);
+        AddCoreToolTier(data, Constants.HighestCustomLevel, Constants.RadioactiveAxeId, Constants.RadioactivePickaxeId, Constants.RadioactiveHoeId, Constants.RadioactiveWateringCanId, "(T)" + Constants.PrismaticAxeId, "(T)" + Constants.PrismaticPickaxeId, "(T)" + Constants.PrismaticHoeId, "(T)" + Constants.PrismaticWateringCanId);
+
+        AddTierTool(data, "IridiumPan", Constants.CobaltPanId, "pan", "Pan", Constants.CobaltLevel, "(T)IridiumPan");
+        AddTierTool(data, "IridiumPan", Constants.PrismaticPanId, "pan", "Pan", Constants.MiddleCustomLevel, "(T)" + Constants.CobaltPanId);
+        AddTierTool(data, "IridiumPan", Constants.RadioactivePanId, "pan", "Pan", Constants.HighestCustomLevel, "(T)" + Constants.PrismaticPanId);
+
+        AddTierShopTool(data, Constants.CobaltFishingRodId, "rod", "Rod", Constants.CobaltLevel);
+        AddTierShopTool(data, Constants.PrismaticFishingRodId, "rod", "Rod", Constants.MiddleCustomLevel);
+        AddTierShopTool(data, Constants.RadioactiveFishingRodId, "rod", "Rod", Constants.HighestCustomLevel);
+    }
+
+    private static void AddCoreToolTier(
+        IDictionary<string, ToolData> data,
+        int level,
+        string axeId,
+        string pickaxeId,
+        string hoeId,
+        string wateringCanId,
+        string requireAxeId,
+        string requirePickaxeId,
+        string requireHoeId,
+        string requireWateringCanId
+    )
+    {
+        AddTierTool(data, "IridiumAxe", axeId, "axe", "Axe", level, requireAxeId);
+        AddTierTool(data, "IridiumPickaxe", pickaxeId, "pickaxe", "Pickaxe", level, requirePickaxeId);
+        AddTierTool(data, "IridiumHoe", hoeId, "hoe", "Hoe", level, requireHoeId);
+        AddTierTool(data, "IridiumWateringCan", wateringCanId, "watering-can", "Watering Can", level, requireWateringCanId);
+    }
+
+    private static void AddTierTool(IDictionary<string, ToolData> data, string templateId, string itemId, string translationSuffix, string nameSuffix, int level, string requireToolId)
+    {
+        string tierKey = ToolTierUtility.GetTierKey(level);
+        string tierName = ToolTierUtility.GetTierName(level);
+        AddTool(
+            data,
+            templateId,
+            itemId,
+            tierName + " " + nameSuffix,
+            Translate($"tools.{tierKey}-{translationSuffix}.name"),
+            Translate("tools.description." + translationSuffix),
+            level,
+            requireToolId,
+            ToolTierUtility.GetRequiredBarId(level),
+            ToolTierUtility.GetTextureAsset(level),
+            ToolTierUtility.GetUpgradeCost(level),
+            ToolTierUtility.GetRequiredBars(level)
+        );
+    }
+
+    private static void AddTierShopTool(IDictionary<string, ToolData> data, string itemId, string translationSuffix, string nameSuffix, int level)
+    {
+        string tierKey = ToolTierUtility.GetTierKey(level);
+        string tierName = ToolTierUtility.GetTierName(level);
+        AddShopTool(
+            data,
+            Constants.AdvancedIridiumRodId,
+            itemId,
+            tierName + " " + nameSuffix,
+            Translate($"tools.{tierKey}-{translationSuffix}.name"),
+            Translate("tools.description.fishing-rod"),
+            level,
+            ToolTierUtility.GetTextureAsset(level)
+        );
+    }
 
     private static void AddWillyFishingRodShopItems(IDictionary<string, ShopData> shops)
     {
@@ -284,9 +471,9 @@ public sealed class ModEntry : Mod
         AddPurchaseMailAction(fishShop.Items, Constants.AdvancedIridiumRodId, Constants.IridiumRodPurchasedMailId);
 
         string masteryCondition = GetVanillaAdvancedIridiumRodCondition(fishShop.Items);
-        AddFishingRodShopItem(fishShop.Items, Constants.CobaltFishingRodId, ModEntry.Config.CobaltUpgradeCost, GetCobaltFishingRodCondition(masteryCondition), Constants.CobaltFishingRodPurchasedMailId);
-        AddFishingRodShopItem(fishShop.Items, Constants.PrismaticFishingRodId, ModEntry.Config.PrismaticUpgradeCost, GetPrismaticFishingRodCondition(masteryCondition), Constants.PrismaticFishingRodPurchasedMailId);
-        AddFishingRodShopItem(fishShop.Items, Constants.RadioactiveFishingRodId, ModEntry.Config.RadioactiveUpgradeCost, GetRadioactiveFishingRodCondition(masteryCondition), Constants.RadioactiveFishingRodPurchasedMailId);
+        AddFishingRodShopItem(fishShop.Items, Constants.CobaltFishingRodId, ToolTierUtility.GetUpgradeCost(Constants.CobaltLevel), GetCobaltFishingRodCondition(masteryCondition), Constants.CobaltFishingRodPurchasedMailId);
+        AddFishingRodShopItem(fishShop.Items, Constants.PrismaticFishingRodId, ToolTierUtility.GetUpgradeCost(Constants.MiddleCustomLevel), GetTierFishingRodCondition(masteryCondition, Constants.CobaltFishingRodPurchasedMailId, Constants.MiddleCustomLevel), Constants.PrismaticFishingRodPurchasedMailId);
+        AddFishingRodShopItem(fishShop.Items, Constants.RadioactiveFishingRodId, ToolTierUtility.GetUpgradeCost(Constants.HighestCustomLevel), GetTierFishingRodCondition(masteryCondition, Constants.PrismaticFishingRodPurchasedMailId, Constants.HighestCustomLevel), Constants.RadioactiveFishingRodPurchasedMailId);
     }
 
     private static void AddPurchaseMailAction(List<ShopItemData> items, string itemId, string purchaseMailId)
@@ -333,17 +520,15 @@ public sealed class ModEntry : Mod
         return masteryCondition + ", PLAYER_HAS_MAIL Current " + Constants.IridiumRodPurchasedMailId + " Received, PLAYER_HAS_CRAFTING_RECIPE Current Cobalt Bar";
     }
 
-    private static string GetPrismaticFishingRodCondition(string masteryCondition)
+    private static string GetTierFishingRodCondition(string masteryCondition, string previousPurchaseMailId, int level)
     {
-        return masteryCondition + ", PLAYER_HAS_MAIL Current " + Constants.CobaltFishingRodPurchasedMailId + " Received, PLAYER_HAS_CRAFTING_RECIPE Current Prismatic Bar";
+        string materialCondition = ToolTierUtility.GetIdentity(level) == UpgradeIdentity.Prismatic
+            ? "PLAYER_HAS_CRAFTING_RECIPE Current Prismatic Bar"
+            : "PLAYER_HAS_ITEM Current (O)" + Constants.VanillaRadioactiveBarId;
+        return masteryCondition + ", PLAYER_HAS_MAIL Current " + previousPurchaseMailId + " Received, " + materialCondition;
     }
 
-    private static string GetRadioactiveFishingRodCondition(string masteryCondition)
-    {
-        return masteryCondition + ", PLAYER_HAS_MAIL Current " + Constants.PrismaticFishingRodPurchasedMailId + " Received, PLAYER_HAS_ITEM Current (O)" + Constants.VanillaRadioactiveBarId;
-    }
-
-    private static void AddShopTool(IDictionary<string, ToolData> data, string templateId, string id, string name, string description, int level, string textureAsset)
+    private static void AddShopTool(IDictionary<string, ToolData> data, string templateId, string id, string name, string displayName, string description, int level, string textureAsset)
     {
         if (!data.TryGetValue(templateId, out ToolData? template))
             return;
@@ -352,7 +537,7 @@ public sealed class ModEntry : Mod
         {
             ClassName = template.ClassName,
             Name = name,
-            DisplayName = name,
+            DisplayName = displayName,
             Description = description,
             Texture = textureAsset,
             SpriteIndex = template.SpriteIndex,
@@ -370,7 +555,7 @@ public sealed class ModEntry : Mod
         };
     }
 
-    private static void AddTool(IDictionary<string, ToolData> data, string templateId, string id, string name, string description, int level, string requireToolId, string tradeItemId, string textureAsset, int price, int tradeAmount)
+    private static void AddTool(IDictionary<string, ToolData> data, string templateId, string id, string name, string displayName, string description, int level, string requireToolId, string tradeItemId, string textureAsset, int price, int tradeAmount)
     {
         if (!data.TryGetValue(templateId, out ToolData? template))
             return;
@@ -379,7 +564,7 @@ public sealed class ModEntry : Mod
         {
             ClassName = template.ClassName,
             Name = name,
-            DisplayName = name,
+            DisplayName = displayName,
             Description = description,
             Texture = textureAsset,
             SpriteIndex = template.SpriteIndex,
@@ -409,6 +594,7 @@ public sealed class ModEntry : Mod
 
     private void OnSaveLoaded(object? sender, SaveLoadedEventArgs e)
     {
+        ApplyTierOrderToCurrentSave();
         RefreshExistingCustomToolSprites();
         MarkKnownRodPurchases();
         UnlockKnownRecipes();
@@ -418,6 +604,37 @@ public sealed class ModEntry : Mod
     {
         MarkKnownRodPurchases();
         UnlockKnownRecipes();
+        WaterCustomSprinklersInGreenhouses();
+    }
+
+    private void WaterCustomSprinklersInGreenhouses()
+    {
+        if (!Context.IsMainPlayer || Game1.player.team.SpecialOrderRuleActive("NO_SPRINKLER", null))
+            return;
+
+        int appliedCount = 0;
+
+        foreach (GameLocation location in Game1.locations.ToArray())
+        {
+            if (!location.IsGreenhouse)
+                continue;
+
+            foreach (KeyValuePair<Vector2, SObject> pair in location.Objects.Pairs.ToArray())
+            {
+                SObject sprinkler = pair.Value;
+                if (!IsCustomSprinkler(sprinkler.ItemId))
+                    continue;
+
+                sprinkler.Location = location;
+                foreach (Vector2 tile in sprinkler.GetSprinklerTiles())
+                    sprinkler.ApplySprinkler(tile);
+
+                appliedCount++;
+            }
+        }
+
+        if (appliedCount > 0)
+            DebugLog($"Applied {appliedCount} custom greenhouse sprinkler(s) at day start.");
     }
 
     internal static int GetSprinklerRange(SObject sprinkler)
@@ -426,10 +643,11 @@ public sealed class ModEntry : Mod
         if (baseRange <= 0)
             return 0;
 
-        if (!HasPressureNozzle(sprinkler))
+        int nozzleBonus = GetPressureNozzleBonus(sprinkler);
+        if (nozzleBonus <= 0)
             return baseRange;
 
-        int upgradedRange = baseRange + 1;
+        int upgradedRange = baseRange + nozzleBonus;
         if (!Config.PreventPressureNozzleFromMatchingNextBaseTier)
             return upgradedRange;
 
@@ -458,14 +676,45 @@ public sealed class ModEntry : Mod
         return GetBaseSprinklerRange(itemId) > 0;
     }
 
-    internal static bool IsRadioactiveSprinklerScarecrow(SObject obj)
+    internal static bool IsHighestTierSprinklerScarecrow(SObject obj)
     {
         return Config.RadioactiveSprinklerActsAsScarecrow && IsObjectId(obj, Constants.RadioactiveSprinklerId);
     }
 
-    private static bool HasPressureNozzle(SObject sprinkler)
+    private static int GetPressureNozzleBonus(SObject sprinkler)
     {
-        return IsPressureNozzle(sprinkler.heldObject.Value) || sprinkler.modData.ContainsKey(Constants.ImmersivePressureNozzleKey);
+        int bonus = 0;
+        if (IsPressureNozzle(sprinkler.heldObject.Value) || sprinkler.modData.ContainsKey(Constants.ImmersivePressureNozzleKey))
+            bonus += 1;
+
+        bonus += GetNozzleAndEnricherBonus(sprinkler);
+        return bonus;
+    }
+
+    private static int GetNozzleAndEnricherBonus(SObject sprinkler)
+    {
+        if (!Instance.Helper.ModRegistry.IsLoaded(Constants.NozzleAndEnricherModId))
+            return 0;
+
+        if (!sprinkler.modData.TryGetValue(Constants.NozzleAndEnricherNozzleKey, out string? nozzleId) || string.IsNullOrWhiteSpace(nozzleId))
+            return 0;
+
+        try
+        {
+            Dictionary<string, int> nozzles = Instance.Helper.GameContent.Load<Dictionary<string, int>>(Constants.NozzleAndEnricherDictAsset);
+            if (nozzles.TryGetValue(nozzleId, out int bonus))
+                return Math.Max(0, bonus);
+
+            string qualifiedId = QualifyObjectId(nozzleId);
+            if (nozzles.TryGetValue(qualifiedId, out bonus))
+                return Math.Max(0, bonus);
+        }
+        catch (Exception ex)
+        {
+            Instance.DebugLog("Nozzle and Enricher compatibility skipped nozzle bonus lookup: " + ex.Message);
+        }
+
+        return 0;
     }
 
     private static bool IsPressureNozzle(SObject? obj)
@@ -475,10 +724,20 @@ public sealed class ModEntry : Mod
 
     private static bool IsObjectId(Item item, string id)
     {
-        return item.ItemId == id || item.QualifiedItemId == "(O)" + id;
+        return IsObjectId(item.ItemId, id) || IsObjectId(item.QualifiedItemId, id);
     }
 
-    private const string SpriteRefreshVersion = "1.3.0";
+    private static bool IsObjectId(string itemId, string id)
+    {
+        return itemId == id || itemId == "(O)" + id;
+    }
+
+    private static string QualifyObjectId(string itemId)
+    {
+        return itemId.StartsWith("(O)", StringComparison.OrdinalIgnoreCase) ? itemId : "(O)" + itemId;
+    }
+
+    private const string SpriteRefreshVersion = "2.0.1";
 
     private void RefreshExistingCustomToolSprites()
     {
@@ -521,7 +780,7 @@ public sealed class ModEntry : Mod
         }
 
         if (fixedCount > 0)
-            Monitor.Log($"Refreshed {fixedCount} existing custom tool instance(s) to current Data/Tools sprite indexes.", LogLevel.Info);
+            DebugLog($"Refreshed {fixedCount} existing custom tool instance(s) to current Data/Tools sprite indexes.");
     }
 
     private static int RefreshToolBeingUpgraded(Farmer? farmer, HashSet<Item> seen)
@@ -591,9 +850,12 @@ public sealed class ModEntry : Mod
     {
         return string.Equals(NormalizeToolItemId(tool.ItemId), itemId, StringComparison.OrdinalIgnoreCase)
             && string.Equals(NormalizeToolItemId(tool.QualifiedItemId), itemId, StringComparison.OrdinalIgnoreCase)
+            && string.Equals(tool.Name, spriteData.Name, StringComparison.Ordinal)
             && tool.UpgradeLevel == spriteData.Level
             && tool.CurrentParentTileIndex == spriteData.SpriteIndex
             && tool.IndexOfMenuItemView == spriteData.MenuSpriteIndex
+            && tool.modData.TryGetValue(Constants.ModId + "/Tier", out string? tier)
+            && string.Equals(tier, ToolTierUtility.GetTierName(spriteData.Level), StringComparison.Ordinal)
             && tool.modData.TryGetValue(Constants.ModId + "/SpriteRefreshVersion", out string? refreshVersion)
             && string.Equals(refreshVersion, SpriteRefreshVersion, StringComparison.Ordinal);
     }
@@ -871,6 +1133,29 @@ public sealed class ModEntry : Mod
         return false;
     }
 
+    internal static bool TryGetCustomPanAnimationTexture(Pan pan, out Texture2D? texture)
+    {
+        texture = null;
+
+        string textureAsset = TryGetCustomToolDataForItem(pan, out _, out CustomToolSpriteData spriteData)
+            ? ToolTierUtility.GetPanAnimationTextureAsset(spriteData.Level)
+            : ToolTierUtility.GetPanAnimationTextureAsset(pan.UpgradeLevel);
+
+        if (string.IsNullOrWhiteSpace(textureAsset))
+            return false;
+
+        try
+        {
+            texture = Game1.content.Load<Texture2D>(textureAsset);
+            return texture != null;
+        }
+        catch (Exception ex)
+        {
+            Instance.DebugLog("Custom pan animation texture could not be loaded: " + ex.Message);
+            return false;
+        }
+    }
+
     private static IEnumerable<string> GetToolIdentityCandidates(Tool tool)
     {
         yield return tool.ItemId;
@@ -897,25 +1182,56 @@ public sealed class ModEntry : Mod
 
         return itemId switch
         {
-            "Cobalt Axe" => Constants.CobaltAxeId,
-            "Cobalt Pickaxe" => Constants.CobaltPickaxeId,
-            "Cobalt Hoe" => Constants.CobaltHoeId,
-            "Cobalt Watering Can" => Constants.CobaltWateringCanId,
-            "Cobalt Pan" => Constants.CobaltPanId,
-            "Cobalt Rod" => Constants.CobaltFishingRodId,
-            "Prismatic Axe" => Constants.PrismaticAxeId,
-            "Prismatic Pickaxe" => Constants.PrismaticPickaxeId,
-            "Prismatic Hoe" => Constants.PrismaticHoeId,
-            "Prismatic Watering Can" => Constants.PrismaticWateringCanId,
-            "Prismatic Pan" => Constants.PrismaticPanId,
-            "Prismatic Rod" => Constants.PrismaticFishingRodId,
-            "Radioactive Axe" => Constants.RadioactiveAxeId,
-            "Radioactive Pickaxe" => Constants.RadioactivePickaxeId,
-            "Radioactive Hoe" => Constants.RadioactiveHoeId,
-            "Radioactive Watering Can" => Constants.RadioactiveWateringCanId,
-            "Radioactive Pan" => Constants.RadioactivePanId,
-            "Radioactive Rod" => Constants.RadioactiveFishingRodId,
+            "Cobalt Axe" => GetToolIdForIdentity(UpgradeIdentity.Cobalt, "Axe"),
+            "Cobalt Pickaxe" => GetToolIdForIdentity(UpgradeIdentity.Cobalt, "Pickaxe"),
+            "Cobalt Hoe" => GetToolIdForIdentity(UpgradeIdentity.Cobalt, "Hoe"),
+            "Cobalt Watering Can" => GetToolIdForIdentity(UpgradeIdentity.Cobalt, "WateringCan"),
+            "Cobalt Pan" => GetToolIdForIdentity(UpgradeIdentity.Cobalt, "Pan"),
+            "Cobalt Rod" => GetToolIdForIdentity(UpgradeIdentity.Cobalt, "FishingRod"),
+            "Prismatic Axe" => GetToolIdForIdentity(UpgradeIdentity.Prismatic, "Axe"),
+            "Prismatic Pickaxe" => GetToolIdForIdentity(UpgradeIdentity.Prismatic, "Pickaxe"),
+            "Prismatic Hoe" => GetToolIdForIdentity(UpgradeIdentity.Prismatic, "Hoe"),
+            "Prismatic Watering Can" => GetToolIdForIdentity(UpgradeIdentity.Prismatic, "WateringCan"),
+            "Prismatic Pan" => GetToolIdForIdentity(UpgradeIdentity.Prismatic, "Pan"),
+            "Prismatic Rod" => GetToolIdForIdentity(UpgradeIdentity.Prismatic, "FishingRod"),
+            "Radioactive Axe" => GetToolIdForIdentity(UpgradeIdentity.Radioactive, "Axe"),
+            "Radioactive Pickaxe" => GetToolIdForIdentity(UpgradeIdentity.Radioactive, "Pickaxe"),
+            "Radioactive Hoe" => GetToolIdForIdentity(UpgradeIdentity.Radioactive, "Hoe"),
+            "Radioactive Watering Can" => GetToolIdForIdentity(UpgradeIdentity.Radioactive, "WateringCan"),
+            "Radioactive Pan" => GetToolIdForIdentity(UpgradeIdentity.Radioactive, "Pan"),
+            "Radioactive Rod" => GetToolIdForIdentity(UpgradeIdentity.Radioactive, "FishingRod"),
             _ => itemId
+        };
+    }
+
+    private static string GetToolIdForIdentity(UpgradeIdentity identity, string toolKind)
+    {
+        return GetToolIdForLevel(ToolTierUtility.GetLevel(identity), toolKind);
+    }
+
+    private static string GetToolIdForLevel(int level, string toolKind)
+    {
+        return (level, toolKind) switch
+        {
+            (Constants.CobaltLevel, "Axe") => Constants.CobaltAxeId,
+            (Constants.CobaltLevel, "Pickaxe") => Constants.CobaltPickaxeId,
+            (Constants.CobaltLevel, "Hoe") => Constants.CobaltHoeId,
+            (Constants.CobaltLevel, "WateringCan") => Constants.CobaltWateringCanId,
+            (Constants.CobaltLevel, "Pan") => Constants.CobaltPanId,
+            (Constants.CobaltLevel, "FishingRod") => Constants.CobaltFishingRodId,
+            (Constants.MiddleCustomLevel, "Axe") => Constants.PrismaticAxeId,
+            (Constants.MiddleCustomLevel, "Pickaxe") => Constants.PrismaticPickaxeId,
+            (Constants.MiddleCustomLevel, "Hoe") => Constants.PrismaticHoeId,
+            (Constants.MiddleCustomLevel, "WateringCan") => Constants.PrismaticWateringCanId,
+            (Constants.MiddleCustomLevel, "Pan") => Constants.PrismaticPanId,
+            (Constants.MiddleCustomLevel, "FishingRod") => Constants.PrismaticFishingRodId,
+            (Constants.HighestCustomLevel, "Axe") => Constants.RadioactiveAxeId,
+            (Constants.HighestCustomLevel, "Pickaxe") => Constants.RadioactivePickaxeId,
+            (Constants.HighestCustomLevel, "Hoe") => Constants.RadioactiveHoeId,
+            (Constants.HighestCustomLevel, "WateringCan") => Constants.RadioactiveWateringCanId,
+            (Constants.HighestCustomLevel, "Pan") => Constants.RadioactivePanId,
+            (Constants.HighestCustomLevel, "FishingRod") => Constants.RadioactiveFishingRodId,
+            _ => string.Empty
         };
     }
 
@@ -930,13 +1246,14 @@ public sealed class ModEntry : Mod
         if (!data.TryGetValue(itemId, out ToolData? customTool) || !data.TryGetValue(templateId, out ToolData? template))
             return false;
 
-        int menuSpriteIndex = template.MenuSpriteIndex >= 0 ? template.MenuSpriteIndex : template.SpriteIndex;
+        int spriteIndex = customTool.SpriteIndex >= 0 ? customTool.SpriteIndex : template.SpriteIndex;
+        int menuSpriteIndex = customTool.MenuSpriteIndex >= 0 ? customTool.MenuSpriteIndex : spriteIndex;
         spriteData = new CustomToolSpriteData(
             level,
             customTool.Name,
             customTool.DisplayName,
             customTool.Texture,
-            template.SpriteIndex,
+            spriteIndex,
             menuSpriteIndex
         );
         return true;
@@ -950,9 +1267,9 @@ public sealed class ModEntry : Mod
         if (itemId is Constants.CobaltAxeId or Constants.CobaltPickaxeId or Constants.CobaltHoeId or Constants.CobaltWateringCanId or Constants.CobaltPanId or Constants.CobaltFishingRodId)
             level = Constants.CobaltLevel;
         else if (itemId is Constants.PrismaticAxeId or Constants.PrismaticPickaxeId or Constants.PrismaticHoeId or Constants.PrismaticWateringCanId or Constants.PrismaticPanId or Constants.PrismaticFishingRodId)
-            level = Constants.PrismaticLevel;
+            level = Constants.MiddleCustomLevel;
         else if (itemId is Constants.RadioactiveAxeId or Constants.RadioactivePickaxeId or Constants.RadioactiveHoeId or Constants.RadioactiveWateringCanId or Constants.RadioactivePanId or Constants.RadioactiveFishingRodId)
-            level = Constants.RadioactiveLevel;
+            level = Constants.HighestCustomLevel;
         else
             return false;
 
@@ -1137,6 +1454,40 @@ public sealed class ModEntry : Mod
             player.mailReceived.Add(Constants.RadioactiveFishingRodPurchasedMailId);
     }
 
+
+
+    private static void ApplyTierOrderToCurrentSave()
+    {
+        bool previousRadioactiveBeforePrismatic = false;
+        if (Game1.player.modData.TryGetValue(Constants.TierOrderSaveKey, out string? storedValue))
+            bool.TryParse(storedValue, out previousRadioactiveBeforePrismatic);
+
+        if (previousRadioactiveBeforePrismatic != Config.RadioactiveBeforePrismatic)
+            MigrateKnownTierRecipeNames(previousRadioactiveBeforePrismatic, Config.RadioactiveBeforePrismatic);
+
+        Game1.player.modData[Constants.TierOrderSaveKey] = Config.RadioactiveBeforePrismatic.ToString();
+    }
+
+    private static void MigrateKnownTierRecipeNames(bool previousRadioactiveBeforePrismatic, bool currentRadioactiveBeforePrismatic)
+    {
+        Farmer player = Game1.player;
+        string previousMiddleRecipe = ToolTierUtility.GetTierName(Constants.MiddleCustomLevel, previousRadioactiveBeforePrismatic) + " Sprinkler";
+        string previousHighestRecipe = ToolTierUtility.GetTierName(Constants.HighestCustomLevel, previousRadioactiveBeforePrismatic) + " Sprinkler";
+        string currentMiddleRecipe = ToolTierUtility.GetTierName(Constants.MiddleCustomLevel, currentRadioactiveBeforePrismatic) + " Sprinkler";
+        string currentHighestRecipe = ToolTierUtility.GetTierName(Constants.HighestCustomLevel, currentRadioactiveBeforePrismatic) + " Sprinkler";
+
+        bool knewMiddleRecipe = player.craftingRecipes.TryGetValue(previousMiddleRecipe, out int middleCraftedCount);
+        bool knewHighestRecipe = player.craftingRecipes.TryGetValue(previousHighestRecipe, out int highestCraftedCount);
+
+        player.craftingRecipes.Remove("Prismatic Sprinkler");
+        player.craftingRecipes.Remove("Radioactive Sprinkler");
+
+        if (knewMiddleRecipe)
+            player.craftingRecipes[currentMiddleRecipe] = middleCraftedCount;
+        if (knewHighestRecipe)
+            player.craftingRecipes[currentHighestRecipe] = highestCraftedCount;
+    }
+
     private static void UnlockKnownRecipes()
     {
         Farmer player = Game1.player;
@@ -1148,14 +1499,21 @@ public sealed class ModEntry : Mod
             AddCraftingRecipe(player, "Cobalt Sprinkler");
         }
 
-        if (highestToolLevel >= Constants.CobaltLevel || HasItem(player, Constants.PrismaticBarId))
-        {
-            AddCraftingRecipe(player, "Prismatic Bar");
-            AddCraftingRecipe(player, "Prismatic Sprinkler");
-        }
+        UnlockTierRecipes(player, highestToolLevel, Constants.MiddleCustomLevel, Constants.CobaltLevel);
+        UnlockTierRecipes(player, highestToolLevel, Constants.HighestCustomLevel, Constants.MiddleCustomLevel);
+    }
 
-        if (highestToolLevel >= Constants.PrismaticLevel || HasItem(player, Constants.VanillaRadioactiveBarId))
-            AddCraftingRecipe(player, "Radioactive Sprinkler");
+    private static void UnlockTierRecipes(Farmer player, int highestToolLevel, int level, int previousLevel)
+    {
+        string requiredBarId = ToolTierUtility.GetRequiredBarId(level);
+        if (highestToolLevel < previousLevel && !HasItem(player, requiredBarId))
+            return;
+
+        string? barRecipe = ToolTierUtility.GetBarRecipeName(level);
+        if (barRecipe != null)
+            AddCraftingRecipe(player, barRecipe);
+
+        AddCraftingRecipe(player, ToolTierUtility.GetSprinklerRecipeName(level));
     }
 
     private static int GetHighestCoreToolLevel(Farmer player)
@@ -1192,7 +1550,7 @@ public sealed class ModEntry : Mod
 
     private void SetHeldToolLevelCommand(string command, string[] args)
     {
-        if (args.Length < 1 || !int.TryParse(args[0], out int level) || level is < Constants.CobaltLevel or > Constants.RadioactiveLevel)
+        if (args.Length < 1 || !int.TryParse(args[0], out int level) || level is < Constants.CobaltLevel or > Constants.HighestCustomLevel)
         {
             Monitor.Log("Usage: toolandsprinklerupgrades_setlevel <5|6|7>", LogLevel.Info);
             return;
