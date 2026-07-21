@@ -1,3 +1,11 @@
+(TTG) CLEAR MONOCLE LICENSE
+===========================
+
+This license applies to (TTG) Clear Monocle v1.1.0.
+
+PRIMARY LICENSE
+---------------
+
 Mozilla Public License Version 2.0
 ==================================
 
@@ -117,16 +125,16 @@ b.  under Patent Claims of such Contributor to make, use, sell, offer
 
 ### 2.2. Effective Date
 
-The licenses granted in Section 2.1 with respect to any Contribution
+The licenses granted in SectionÂ 2.1 with respect to any Contribution
 become effective for each Contribution on the date the Contributor first
 distributes such Contribution.
 
 ### 2.3. Limitations on Grant Scope
 
-The licenses granted in this Section 2 are the only rights granted under
+The licenses granted in this SectionÂ 2 are the only rights granted under
 this License. No additional rights or licenses will be implied from the
 distribution or licensing of Covered Software under this License.
-Notwithstanding Section 2.1(b) above, no patent license is granted by a
+Notwithstanding SectionÂ 2.1(b) above, no patent license is granted by a
 Contributor:
 
 a.  for any code that a Contributor has removed from Covered Software;
@@ -142,14 +150,14 @@ c.  under Patent Claims infringed by Covered Software in the absence of
 
 This License does not grant any rights in the trademarks, service marks,
 or logos of any Contributor (except as may be necessary to comply with
-the notice requirements in Section 3.4).
+the notice requirements in SectionÂ 3.4).
 
 ### 2.4. Subsequent Licenses
 
 No Contributor makes additional grants as a result of Your choice to
 distribute the Covered Software under a subsequent version of this
-License (see Section 10.2) or under the terms of a Secondary License (if
-permitted under the terms of Section 3.3).
+License (see SectionÂ 10.2) or under the terms of a Secondary License (if
+permitted under the terms of SectionÂ 3.3).
 
 ### 2.5. Representation
 
@@ -166,7 +174,7 @@ equivalents.
 ### 2.7. Conditions
 
 Sections 3.1, 3.2, 3.3, and 3.4 are conditions of the licenses granted
-in Section 2.1.
+in SectionÂ 2.1.
 
 3. Responsibilities
 -------------------
@@ -186,7 +194,7 @@ Form.
 If You distribute Covered Software in Executable Form then:
 
 a.  such Covered Software must also be made available in Source Code
-    Form, as described in Section 3.1, and You must inform recipients of
+    Form, as described in SectionÂ 3.1, and You must inform recipients of
     the Executable Form how they can obtain a copy of such Source Code
     Form by reasonable means in a timely manner, at a charge no more
     than the cost of distribution to the recipient; and
@@ -265,9 +273,9 @@ infringement claim (excluding declaratory judgment actions,
 counter-claims, and cross-claims) alleging that a Contributor Version
 directly or indirectly infringes any patent, then the rights granted to
 You by any and all Contributors for the Covered Software under
-Section 2.1 of this License shall terminate.
+SectionÂ 2.1 of this License shall terminate.
 
-5.3. In the event of termination under Sections 5.1 or 5.2 above, all
+5.3. In the event of termination under SectionsÂ 5.1 or 5.2 above, all
 end user license agreements (excluding distributors and resellers) which
 have been validly granted by You or Your distributors under this License
 prior to termination shall survive termination.
@@ -330,7 +338,7 @@ shall not be used to construe this License against a Contributor.
 ### 10.1. New Versions
 
 Mozilla Foundation is the license steward. Except as provided in
-Section 10.3, no one other than the license steward has the right to
+SectionÂ 10.3, no one other than the license steward has the right to
 modify or publish new versions of this License. Each version will be
 given a distinguishing version number.
 
@@ -374,3 +382,36 @@ Exhibit B - "Incompatible With Secondary Licenses" Notice
 
 > This Source Code Form is "Incompatible With Secondary Licenses", as
 > defined by the Mozilla Public License, v. 2.0.
+
+
+MODS AND PROJECTS USED OR REFERENCED
+------------------------------------
+
+This mod uses, supports, or references the following mods and projects.
+
+- CommunityToolkit.HighPerformance â€” MIT License
+  https://github.com/CommunityToolkit/dotnet
+
+- FastExpressionCompiler.LightExpression â€” MIT License
+  https://github.com/dadhi/FastExpressionCompiler
+
+- Generic Mod Config Menu â€” MIT License
+  https://github.com/spacechase0/GenericModConfigMenu
+
+- Harmony â€” MIT License
+  https://github.com/pardeike/Harmony
+
+- HD Portraits
+  https://www.nexusmods.com/stardewvalley/mods/10971
+
+- LinqFasterer â€” MIT License
+  https://github.com/JackMott/LinqFaster
+
+- SpriteMaster â€” MPL-2.0 License
+  https://github.com/aurpine/Stardew-SpriteMaster
+
+- Stardew Modding API (SMAPI) â€” LGPL-3.0 License
+  https://github.com/Pathoschild/SMAPI
+
+- Tomlyn â€” BSD-2-Clause License
+  https://github.com/xoofx/Tomlyn
