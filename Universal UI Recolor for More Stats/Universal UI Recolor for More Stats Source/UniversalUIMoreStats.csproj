@@ -3,16 +3,16 @@
     <TargetFramework>net6.0</TargetFramework>
     <AssemblyName>UniversalUIMoreStats</AssemblyName>
     <RootNamespace>ThaleTheGreat.UniversalUIMoreStats</RootNamespace>
-    <Version>2.2.1</Version>
+    <Version>2.3.0</Version>
     <LangVersion>10.0</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <ModFolderName>Universal UI Recolor for More Stats</ModFolderName>
   
-    <AssemblyVersion>2.2.1.0</AssemblyVersion>
-    <FileVersion>2.2.1.0</FileVersion>
-    <InformationalVersion>2.2.1</InformationalVersion>
+    <AssemblyVersion>2.3.0.0</AssemblyVersion>
+    <FileVersion>2.3.0.0</FileVersion>
+    <InformationalVersion>2.3.0</InformationalVersion>
 </PropertyGroup>
 
   <ItemGroup>

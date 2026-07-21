@@ -1,6 +1,14 @@
+(TTG) UNIVERSAL UI RECOLOR FOR MORE STATS LICENSE
+=================================================
+
+This license applies to (TTG) Universal UI Recolor for More Stats v2.3.0.
+
+PRIMARY LICENSE
+---------------
+
 MIT License
 
-Copyright (c) 2026 Thale
+Copyright (c) 2026 ThaleTheGreat
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,8 +28,22 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-Third Party Asset Exceptions are as follows.
 
-Universal UI for More Stats:
+MODS AND PROJECTS USED OR REFERENCED
+------------------------------------
 
-The original textures belong to XanCreations on Nexus Mods and you would have to seek permission from them to use them
+This mod uses, supports, or references the following mods and projects.
+
+- Harmony — MIT License
+  https://github.com/pardeike/Harmony
+
+- More Stats
+  https://www.nexusmods.com/stardewvalley/mods/40937
+
+- Stardew Modding API (SMAPI) — LGPL-3.0 License
+  https://github.com/Pathoschild/SMAPI
+
+ADDITIONAL ASSET TERMS
+----------------------
+
+The original textures belong to XanCreations on Nexus Mods and you would have to seek permission from them to use them.
