@@ -58,5 +58,5 @@ internal static class Versioning {
     }
 
     internal static string StringHeader =>
-        $"Clear Monocle {FullVersion} ({Config.BuildConfiguration})";
+        $"(TTG) Clear Monocle {FullVersion} ({Config.BuildConfiguration})";
 }
