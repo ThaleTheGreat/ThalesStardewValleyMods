@@ -93,7 +93,7 @@ public sealed class ModEntry : Mod
                 return;
 
             Texture2D icon = this.Helper.ModContent.Load<Texture2D>("assets/MobilePhone.png");
-            this.mobilePhoneApi.AddApp(this.ModManifest.UniqueID, "Wait Menu", this.OpenFromMobilePhone, icon);
+            this.mobilePhoneApi.AddApp(this.ModManifest.UniqueID, "(TTG) Wait Menu", this.OpenFromMobilePhone, icon);
         }
         catch (Exception ex)
         {

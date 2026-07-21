@@ -1,11 +1,10 @@
-WALLET TOOLS LICENSE AND THIRD-PARTY NOTICES
-============================================
+(TTG) WALLET TOOLS LICENSE
+==========================
 
-Applies to Wallet Tools version 3.1.0.
-Dependency notice audit: July 20, 2026.
+This license applies to (TTG) Wallet Tools v3.2.0.
 
-WALLET TOOLS LICENSE
---------------------
+PRIMARY LICENSE
+---------------
 
 MIT License
 
@@ -29,193 +28,56 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-THIRD-PARTY NOTICE SCOPE
-------------------------
 
-The notices below identify external packages, frameworks, public APIs, and
-optional mods with which Wallet Tools builds or interoperates. They do not
-relicense those projects. Each external project remains governed by its own
-license and distribution terms.
+MODS AND PROJECTS USED OR REFERENCED
+------------------------------------
 
-DIRECT NUGET REFERENCES
------------------------
+This mod uses, supports, or references the following mods and projects.
 
-1. Pathoschild.Stardew.ModBuildConfig 4.4.0
-   Use: SMAPI mod build configuration package.
-   Project setting: PrivateAssets="all".
-   License: MIT.
-   Bundled in this source archive: No.
-   Package: https://www.nuget.org/packages/Pathoschild.Stardew.ModBuildConfig/4.4.0
+- (TTG) Coin Collector Redux — MIT License
+  https://github.com/ThaleTheGreat/ThalesStardewValleyMods
 
-2. Newtonsoft.Json 13.0.4
-   Use: JSON serialization package.
-   License: MIT.
-   Copyright: Copyright (c) James Newton-King.
-   Bundled in this source archive: No.
-   Package: https://www.nuget.org/packages/Newtonsoft.Json/13.0.4
-   Source and license: https://github.com/JamesNK/Newtonsoft.Json
+- Animal Husbandry Mod — GPL-3.0 License
+  https://github.com/Digus/StardewValleyMods
 
-PLATFORM AND PATCHING COMPONENTS
---------------------------------
+- Automate Tool Swap
+  https://www.nexusmods.com/stardewvalley/mods/21050
 
-1. Stardew Modding API (SMAPI)
-   Use: Required runtime modding platform and development API.
-   Manifest minimum API version: 4.0.0.
-   License: LGPL-3.0.
-   Source and license: https://github.com/Pathoschild/SMAPI
+- Fashion Sense — GPL-3.0 License
+  https://github.com/Floogen/FashionSense
 
-2. Harmony
-   Use: Runtime method patching enabled by EnableHarmony=true in the project.
-   License: MIT.
-   Source and license: https://github.com/pardeike/Harmony
+- Generic Mod Config Menu — MIT License
+  https://github.com/spacechase0/GenericModConfigMenu
 
-3. Stardew Valley
-   Use: Required proprietary game and game assemblies.
-   License: Proprietary; governed by the game's applicable terms.
-   Website: https://www.stardewvalley.net/
+- Harmony — MIT License
+  https://github.com/pardeike/Harmony
 
-PUBLIC API INTERFACE DECLARATIONS IN THIS SOURCE
-------------------------------------------------
+- Item Extensions — GPL-3.0 License
+  https://github.com/misty-spring/StardewMods
 
-Wallet Tools contains local C# interface declarations matching public APIs
-exposed by the following optional mods.
+- Mobile Phone — GPL-3.0 License
+  https://github.com/aedenthorn/StardewValleyMods
 
-1. Generic Mod Config Menu
-   UniqueID: spacechase0.GenericModConfigMenu
-   Local declaration: IGenericModConfigMenuApi.cs and module-specific copies.
-   Upstream license: MIT.
-   Source and license: https://github.com/spacechase0/GenericModConfigMenu
+- Nature In The Valley (Catchable Creatures)
+  https://www.nexusmods.com/stardewvalley/mods/30138
 
-2. Mobile Phone
-   UniqueID: aedenthorn.MobilePhone
-   Local declaration: IMobilePhoneApi.cs and module-specific copy.
-   Upstream repository license: GPL-3.0.
-   Source and license: https://github.com/aedenthorn/StardewValleyMods
+- Newtonsoft.Json — MIT License
+  https://github.com/JamesNK/Newtonsoft.Json
 
-3. Special Power Utilities
-   UniqueID: Spiderbuttons.SpecialPowerUtilities
-   Local declaration: ISpecialPowerAPI.cs.
-   Upstream terms: Copyright (c) 2024 Spiderbuttons. All rights reserved,
-   except translations, which the upstream project licenses under MIT.
-   Source and terms: https://github.com/Spiderbuttons/SpecialPowerUtilities
+- Special Power Utilities — Custom License
+  https://github.com/Spiderbuttons/SpecialPowerUtilities
 
-4. Item Extensions
-   UniqueID: mistyspring.ItemExtensions
-   Local declaration: IItemExtensionsApi.cs.
-   Upstream repository license: GPL-3.0.
-   Source and license: https://github.com/misty-spring/StardewMods
+- Stardew Modding API (SMAPI) — LGPL-3.0 License
+  https://github.com/Pathoschild/SMAPI
 
-OPTIONAL SMAPI MANIFEST COMPATIBILITY TARGETS
----------------------------------------------
+- Sword and Sorcery
+  https://www.nexusmods.com/stardewvalley/mods/12369
 
-1. Tool Smart Switch
-   UniqueID: aedenthorn.ToolSmartSwitch
-   Required: No.
-   Relationship: Runtime compatibility detection.
-   Upstream repository license: GPL-3.0.
-   Source and license: https://github.com/aedenthorn/StardewValleyMods
+- Tool Smart Switch — GPL-3.0 License
+  https://github.com/aedenthorn/StardewValleyMods
 
-2. Automate Tool Swap
-   UniqueID: Trapyy.AutomatetoolSwap
-   Required: No.
-   Relationship: Runtime compatibility detection.
-   Upstream license designation: Custom License.
-   Project page: https://www.curseforge.com/stardewvalley/mods/automate-tool-swap
+- Tool Upgrade Bundles
+  https://www.nexusmods.com/stardewvalley/mods/42725
 
-3. Mobile Phone
-   UniqueID: aedenthorn.MobilePhone
-   Required: No.
-   Relationship: Optional public-API integration.
-   Upstream repository license: GPL-3.0.
-   Source and license: https://github.com/aedenthorn/StardewValleyMods
-
-4. Fashion Sense
-   UniqueID: PeacefulEnd.FashionSense
-   Required: No.
-   Relationship: Runtime compatibility for the Hand Mirror.
-   Upstream repository license: GPL-3.0.
-   Source and license: https://github.com/Floogen/FashionSense
-
-5. Generic Mod Config Menu
-   UniqueID: spacechase0.GenericModConfigMenu
-   Required: No.
-   Relationship: Optional public-API configuration integration.
-   Upstream license: MIT.
-   Source and license: https://github.com/spacechase0/GenericModConfigMenu
-
-6. Special Power Utilities
-   UniqueID: Spiderbuttons.SpecialPowerUtilities
-   Required: No.
-   Relationship: Optional public-API integration.
-   Upstream terms: All rights reserved except upstream translations under MIT.
-   Source and terms: https://github.com/Spiderbuttons/SpecialPowerUtilities
-
-7. Item Extensions
-   UniqueID: mistyspring.ItemExtensions
-   Required: No.
-   Relationship: Optional public-API and item-data compatibility integration.
-   Upstream repository license: GPL-3.0.
-   Source and license: https://github.com/misty-spring/StardewMods
-
-8. Animal Husbandry Mod
-   UniqueID: DIGUS.ANIMALHUSBANDRYMOD
-   Required: No.
-   Relationship: Runtime compatibility integration.
-   Upstream repository license: GPL-3.0.
-   Source and license: https://github.com/Digus/StardewValleyMods
-
-9. Coin Collector Redux
-   UniqueID: ThaleTheGreat.CoinCollectorRedux
-   Required: No.
-   Relationship: Integrated Metal Detector compatibility module.
-   Upstream license: MIT, subject to that project's own listed exceptions.
-   Source and license: https://github.com/ThaleTheGreat/ThalesStardewValleyMods
-
-10. Nature In The Valley
-    UniqueID: Nature.NatureInTheValley
-    Required: No.
-    Relationship: Runtime compatibility for the SMAPI component.
-    License status: No standalone open-source license is included or relied on
-    by Wallet Tools. Consult that project's current distribution terms.
-
-11. Nature In The Valley Content
-    UniqueID: Nature.NatureInValleyContent
-    Required: No.
-    Relationship: Runtime compatibility for the content component.
-    License status: No standalone open-source license is included or relied on
-    by Wallet Tools. Consult that project's current distribution terms.
-
-12. Sword and Sorcery
-    UniqueID: DN.SnS
-    Required: No.
-    Relationship: Runtime compatibility for one package component.
-    License status: No standalone open-source license is included or relied on
-    by Wallet Tools. Consult that project's current distribution terms.
-
-13. Sword and Sorcery
-    UniqueID: KCC.SnS
-    Required: No.
-    Relationship: Runtime compatibility for the second package component.
-    License status: No standalone open-source license is included or relied on
-    by Wallet Tools. Consult that project's current distribution terms.
-
-14. Tool Upgrade Bundles
-    UniqueID: Pixeltica.SMAPI.Tool_Bundles
-    Required: No.
-    Relationship: Runtime compatibility for the SMAPI component.
-    License status: No standalone open-source license is included or relied on
-    by Wallet Tools. Consult that project's current distribution terms.
-
-15. Tool Upgrade Bundles
-    UniqueID: Pixeltica.Tool_Bundles
-    Required: No.
-    Relationship: Runtime compatibility for the content component.
-    License status: No standalone open-source license is included or relied on
-    by Wallet Tools. Consult that project's current distribution terms.
-
-16. Tractor Mod
-    UniqueID: Pathoschild.TractorMod
-    Required: No.
-    Relationship: Runtime compatibility integration.
-    Upstream license: MIT.
-    Source and license: https://github.com/Pathoschild/StardewMods
+- Tractor Mod — MIT License
+  https://github.com/Pathoschild/StardewMods

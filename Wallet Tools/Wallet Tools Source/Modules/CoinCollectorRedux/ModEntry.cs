@@ -23,7 +23,7 @@ internal sealed class CoinCollectorReduxModule : WalletModule
     internal const string LegacyUniqueId = "ThaleTheGreat.WalletToolsForCoinCollectorRedux";
 
     internal CoinCollectorReduxModule(ThaleTheGreat.WalletTools.ModEntry host)
-        : base(host, ModuleKey, "Coin Collector Redux", LegacyUniqueId, "ThaleTheGreat.CoinCollectorRedux")
+        : base(host, ModuleKey, "(TTG) Coin Collector Redux", LegacyUniqueId, "ThaleTheGreat.CoinCollectorRedux")
     {
     }
     private const string DetectorId = "ThaleTheGreat.CoinCollectorRedux_MetalDetector";
