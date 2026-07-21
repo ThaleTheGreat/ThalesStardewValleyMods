@@ -1,7 +1,7 @@
 {
   "Name": "(TTG) Utility Grid Redux",
   "Author": "ThaleTheGreat",
-  "Version": "1.2.1",
+  "Version": "1.1.2",
   "Description": "Adds one cohesive Utility Grid mod.",
   "UniqueID": "ThaleTheGreat.UtilityGridRedux",
   "EntryDll": "UtilityGridRedux.dll",

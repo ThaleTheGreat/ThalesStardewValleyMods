@@ -6,12 +6,12 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <Version>1.2.1</Version>
+    <Version>1.1.2</Version>
     <ModFolderName>Utility Grid Redux</ModFolderName>
   
-    <AssemblyVersion>1.2.1.0</AssemblyVersion>
-    <FileVersion>1.2.1.0</FileVersion>
-    <InformationalVersion>1.2.1</InformationalVersion>
+    <AssemblyVersion>1.1.2.0</AssemblyVersion>
+    <FileVersion>1.1.2.0</FileVersion>
+    <InformationalVersion>1.1.2</InformationalVersion>
 </PropertyGroup>
 
   <ItemGroup>

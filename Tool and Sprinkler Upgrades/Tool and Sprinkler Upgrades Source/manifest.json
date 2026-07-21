@@ -1,7 +1,7 @@
 {
   "Name": "(TTG) Tool and Sprinkler Upgrades",
   "Author": "ThaleTheGreat",
-  "Version": "2.1.0",
+  "Version": "2.0.1",
   "Description": "Adds Cobalt, Prismatic, and Radioactive tool and sprinkler upgrades with configurable tier order and optional Sword and Sorcery compatibility.",
   "UniqueID": "ThaleTheGreat.ToolAndSprinklerUpgrades",
   "EntryDll": "ToolAndSprinklerUpgrades.dll",
