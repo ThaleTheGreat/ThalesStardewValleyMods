@@ -1,7 +1,7 @@
 {
-  "Name": "Clear Build Sites",
+  "Name": "(TTG) Clear Build Sites",
   "Author": "ThaleTheGreat",
-  "Version": "1.0.1",
+  "Version": "1.1.0",
   "Description": "Lets building placement clear the selected build site.",
   "UniqueID": "ThaleTheGreat.ClearBuildSites",
   "EntryDll": "ClearBuildSites.dll",
