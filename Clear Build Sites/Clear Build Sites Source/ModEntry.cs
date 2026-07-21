@@ -76,15 +76,20 @@ internal sealed class ModEntry : Mod
 
         gmcm.Register(ModManifest, () => Config = new ModConfig(), () => Helper.WriteConfig(Config));
 
-        gmcm.AddBoolOption(ModManifest, () => Config.Enabled, value => Config.Enabled = value, () => "Enable Mod");
-        gmcm.AddBoolOption(ModManifest, () => Config.ClearStones, value => Config.ClearStones = value, () => "Clear Stones");
-        gmcm.AddBoolOption(ModManifest, () => Config.ClearTwigs, value => Config.ClearTwigs = value, () => "Clear Twigs");
-        gmcm.AddBoolOption(ModManifest, () => Config.ClearWeeds, value => Config.ClearWeeds = value, () => "Clear Weeds");
-        gmcm.AddBoolOption(ModManifest, () => Config.ClearGrass, value => Config.ClearGrass = value, () => "Clear Grass");
-        gmcm.AddBoolOption(ModManifest, () => Config.ClearTreeSeedsAndSaplings, value => Config.ClearTreeSeedsAndSaplings = value, () => "Clear Tree Seeds and Saplings");
-        gmcm.AddBoolOption(ModManifest, () => Config.ClearWildTrees, value => Config.ClearWildTrees = value, () => "Clear Wild Trees");
-        gmcm.AddBoolOption(ModManifest, () => Config.ClearResourceClumps, value => Config.ClearResourceClumps = value, () => "Clear Stumps, Logs, and Boulders");
-        gmcm.AddBoolOption(ModManifest, () => Config.ClearFlooringAndPaths, value => Config.ClearFlooringAndPaths = value, () => "Clear Flooring and Paths");
+        gmcm.AddBoolOption(ModManifest, () => Config.Enabled, value => Config.Enabled = value, () => T("config.enabled.name"));
+        gmcm.AddBoolOption(ModManifest, () => Config.ClearStones, value => Config.ClearStones = value, () => T("config.clear-stones.name"));
+        gmcm.AddBoolOption(ModManifest, () => Config.ClearTwigs, value => Config.ClearTwigs = value, () => T("config.clear-twigs.name"));
+        gmcm.AddBoolOption(ModManifest, () => Config.ClearWeeds, value => Config.ClearWeeds = value, () => T("config.clear-weeds.name"));
+        gmcm.AddBoolOption(ModManifest, () => Config.ClearGrass, value => Config.ClearGrass = value, () => T("config.clear-grass.name"));
+        gmcm.AddBoolOption(ModManifest, () => Config.ClearTreeSeedsAndSaplings, value => Config.ClearTreeSeedsAndSaplings = value, () => T("config.clear-tree-seeds.name"));
+        gmcm.AddBoolOption(ModManifest, () => Config.ClearWildTrees, value => Config.ClearWildTrees = value, () => T("config.clear-wild-trees.name"));
+        gmcm.AddBoolOption(ModManifest, () => Config.ClearResourceClumps, value => Config.ClearResourceClumps = value, () => T("config.clear-resource-clumps.name"));
+        gmcm.AddBoolOption(ModManifest, () => Config.ClearFlooringAndPaths, value => Config.ClearFlooringAndPaths = value, () => T("config.clear-flooring.name"));
+    }
+
+    private string T(string key)
+    {
+        return Helper.Translation.Get(key).ToString();
     }
 
     internal void OnIsBuildable(GameLocation location, Vector2 tileLocation, ref bool result)

@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 #nullable disable
 namespace ThaleTheGreat.StarBull;
@@ -87,8 +88,23 @@ internal sealed class ModEntry : Mod
       this._config.EasyMode = this._easyMode;
       helper.WriteConfig<ModConfig>(this._config);
     }));
-    api.AddBoolOption(this.ModManifest, (Func<bool>) (() => this._enableLogging), (Action<bool>) (value => this._enableLogging = value), (Func<string>) (() => "Debug Logging"), (Func<string>) (() => "Log routine asset, shop, and vending-machine diagnostics. Errors are always logged."));
-    api.AddBoolOption(this.ModManifest, (Func<bool>) (() => this._easyMode), (Action<bool>) (value => this._easyMode = value), (Func<string>) (() => "Easy Mode"), (Func<string>) (() => "When enabled: (1) the vending machine is sold at Robin's Carpentry Shop, and (2) all Star Bull editions are sold at Pierre's and JojaMart."));
+    api.AddBoolOption(this.ModManifest, (Func<bool>) (() => this._enableLogging), (Action<bool>) (value => this._enableLogging = value), (Func<string>) (() => this.T("config.debug-logging.name")), (Func<string>) (() => this.T("config.debug-logging.tooltip")));
+    api.AddBoolOption(this.ModManifest, (Func<bool>) (() => this._easyMode), (Action<bool>) (value => this._easyMode = value), (Func<string>) (() => this.T("config.easy-mode.name")), (Func<string>) (() => this.T("config.easy-mode.tooltip")));
+  }
+
+  private string ResolveI18nTokens(string json)
+  {
+    return Regex.Replace(json, @"\{\{i18n:([A-Za-z0-9_.-]+)\}\}", match =>
+    {
+      string translated = this.T(match.Groups[1].Value);
+      string serialized = JsonConvert.ToString(translated);
+      return serialized != null && serialized.Length >= 2 ? serialized.Substring(1, serialized.Length - 2) : string.Empty;
+    });
+  }
+
+  private string T(string key)
+  {
+    return this.Helper.Translation.Get(key).ToString();
   }
 
   private void LoadEmbeddedContentPackJson()
@@ -103,7 +119,7 @@ internal sealed class ModEntry : Mod
       this.Log($"Failed to read embedded {"content.json"}: {ex}", LogLevel.Error);
       return;
     }
-    JObject jobject1 = JObject.Parse(str1.Replace("{{ModId}}", this.ModManifest.UniqueID, StringComparison.Ordinal));
+    JObject jobject1 = JObject.Parse(this.ResolveI18nTokens(str1.Replace("{{ModId}}", this.ModManifest.UniqueID, StringComparison.Ordinal)));
     try
     {
       JArray source1 = (JArray) jobject1["Changes"];
@@ -214,7 +230,7 @@ internal sealed class ModEntry : Mod
         }
         if (!e.NameWithoutLocale.BaseName.Equals("Data/Furniture", StringComparison.OrdinalIgnoreCase))
           return;
-        e.Edit((Action<IAssetData>) (asset => ((IAssetData<IDictionary<string, string>>) asset.AsDictionary<string, string>()).Data["ThaleTheGreat.StarBull_VendingMachine"] = $"StarBullVendingMachine/other/1 2/1 1/1/0/2/Star Bull Vending Machine/0/{this.VendingMachineTexture}/true/starbull vending_machine"), (AssetEditPriority) 0, (string) null);
+        e.Edit((Action<IAssetData>) (asset => ((IAssetData<IDictionary<string, string>>) asset.AsDictionary<string, string>()).Data["ThaleTheGreat.StarBull_VendingMachine"] = $"StarBullVendingMachine/other/1 2/1 1/1/0/2/{this.T("furniture.vending-machine.name")}/0/{this.VendingMachineTexture}/true/starbull vending_machine"), (AssetEditPriority) 0, (string) null);
       }
     }
   }
@@ -227,7 +243,7 @@ internal sealed class ModEntry : Mod
         return;
       Game1.player.addItemByMenuIfNecessary(ItemRegistry.Create("(F)ThaleTheGreat.StarBull_VendingMachine", 1, 0, false), (ItemGrabMenu.behaviorOnItemSelect) null, false);
       ((NetHashSet<string>) Game1.player.mailReceived).Add("ThaleTheGreat.StarBull_VendingMachineReceived");
-      Game1.addHUDMessage(new HUDMessage("A Star Bull vending machine has been delivered!", 2));
+      Game1.addHUDMessage(new HUDMessage(this.T("message.vending-delivered"), 2));
       this.Log("Delivered Star Bull vending machine.");
     }
     catch (Exception ex)
@@ -284,7 +300,7 @@ internal sealed class ModEntry : Mod
     if (((NetDictionary<string, string, NetString, SerializableDictionary<string, string>, NetStringDictionary<string, NetString>>) ((Character) Game1.player).modData).TryGetValue("ThaleTheGreat.StarBull/VendClaimDay", out s) && int.TryParse(s, out result) && result == totalDays)
     {
       Game1.playSound("cancel", new int?());
-      Game1.addHUDMessage(new HUDMessage("The Star Bull vending machine is empty for today. Check back tomorrow!", 3));
+      Game1.addHUDMessage(new HUDMessage(this.T("message.vending-empty"), 3));
     }
     else
     {
@@ -324,13 +340,13 @@ internal sealed class ModEntry : Mod
       if (num > 0)
       {
         Game1.playSound("purchase", new int?());
-        Game1.addHUDMessage(new HUDMessage("Star Bull vending machine dispensed today's drinks!", 2));
+        Game1.addHUDMessage(new HUDMessage(this.T("message.vending-dispensed"), 2));
         this.Log($"Vending machine dispensed daily set (x{num}).", (LogLevel) 0);
       }
       else
       {
         Game1.playSound("cancel", new int?());
-        Game1.addHUDMessage(new HUDMessage("The vending machine rattled, but nothing came out.", 3));
+        Game1.addHUDMessage(new HUDMessage(this.T("message.vending-failed"), 3));
       }
     }
   }
@@ -412,7 +428,7 @@ internal sealed class ModEntry : Mod
                   else if (parameterType2 == typeof (bool))
                     objArray[index] = (object) false;
                   else if (parameterType2 == typeof (string))
-                    objArray[index] = (object) "Star Bull Vending";
+                    objArray[index] = (object) this.T("shop.vending-title");
                   else if (parameterType2 == typeof (Farmer))
                     objArray[index] = (object) Game1.player;
                   else if (typeof (IList).IsAssignableFrom(parameterType2))

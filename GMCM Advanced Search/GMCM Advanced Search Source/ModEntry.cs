@@ -72,17 +72,22 @@ public sealed class ModEntry : Mod
         }
 
         Gmcm.Register(ModManifest, ResetConfig, SaveConfig);
-        Gmcm.AddSectionTitle(ModManifest, () => "(TTG) GMCM Advanced Search", () => "Search inside GMCM authors, mod names, UniqueIDs, Nexus IDs, option labels, tooltips, field IDs, and config keys.");
-        Gmcm.AddKeybindList(ModManifest, () => Config.OpenSearchMenuKey, v => Config.OpenSearchMenuKey = v, () => "Open search menu", () => "Hotkey to open the GMCM Advanced Search menu.");
-        Gmcm.AddBoolOption(ModManifest, () => Config.ShowResultDetails, v => Config.ShowResultDetails = v, () => "Show Advanced Details", () => "Show extra metadata under each search result, including section/page, tooltip text, field ID, config key path, and option type.");
-        Gmcm.AddBoolOption(ModManifest, () => Config.ShowModTooltips, v => Config.ShowModTooltips = v, () => "Show Mod Tooltips", () => "Show GMCM-style hover tooltips with the result mod name and description.");
-        Gmcm.AddBoolOption(ModManifest, () => Config.IncludeContentPacks, SetIncludeContentPacks, () => "Include content packs", () => "Include GMCM-registered content packs when searching.");
-        Gmcm.AddBoolOption(ModManifest, () => Config.IncludeConfigFileFallback, SetIncludeConfigFileFallback, () => "Include config.json fallback", () => "Also search config.json keys when GMCM option metadata can't be fully read.");
-        Gmcm.AddBoolOption(ModManifest, () => Config.IncludeConfigValues, SetIncludeConfigValues, () => "Search config values", () => "Also index simple config.json values. This can produce more noisy results.");
-        Gmcm.AddBoolOption(ModManifest, () => Config.DebugLogging, v => Config.DebugLogging = v, () => "Debug logging", () => "Log index counts and reflection details for troubleshooting.");
-        Gmcm.AddParagraph(ModManifest, () => "Tip: search results show matching authors first, then matching mod names, UniqueIDs, or Nexus IDs with matching option labels, tooltips, field IDs, and config keys grouped underneath.");
+        Gmcm.AddSectionTitle(ModManifest, () => T("config.section.title"), () => T("config.section.tooltip"));
+        Gmcm.AddKeybindList(ModManifest, () => Config.OpenSearchMenuKey, v => Config.OpenSearchMenuKey = v, () => T("config.open-menu.name"), () => T("config.open-menu.tooltip"));
+        Gmcm.AddBoolOption(ModManifest, () => Config.ShowResultDetails, v => Config.ShowResultDetails = v, () => T("config.show-details.name"), () => T("config.show-details.tooltip"));
+        Gmcm.AddBoolOption(ModManifest, () => Config.ShowModTooltips, v => Config.ShowModTooltips = v, () => T("config.show-tooltips.name"), () => T("config.show-tooltips.tooltip"));
+        Gmcm.AddBoolOption(ModManifest, () => Config.IncludeContentPacks, SetIncludeContentPacks, () => T("config.include-content-packs.name"), () => T("config.include-content-packs.tooltip"));
+        Gmcm.AddBoolOption(ModManifest, () => Config.IncludeConfigFileFallback, SetIncludeConfigFileFallback, () => T("config.include-config-fallback.name"), () => T("config.include-config-fallback.tooltip"));
+        Gmcm.AddBoolOption(ModManifest, () => Config.IncludeConfigValues, SetIncludeConfigValues, () => T("config.search-values.name"), () => T("config.search-values.tooltip"));
+        Gmcm.AddBoolOption(ModManifest, () => Config.DebugLogging, v => Config.DebugLogging = v, () => T("config.debug-logging.name"), () => T("config.debug-logging.tooltip"));
+        Gmcm.AddParagraph(ModManifest, () => T("config.tip"));
 
         TryRegisterMobilePhoneApp();
+    }
+
+    private string T(string key)
+    {
+        return Helper.Translation.Get(key).ToString();
     }
 
     private void TryRegisterMobilePhoneApp()
@@ -96,7 +101,7 @@ public sealed class ModEntry : Mod
         if (icon == null)
             return;
 
-        bool registered = MobilePhone.AddApp(ModManifest.UniqueID, "GMCM Search", OpenSearchMenuFromPhone, icon);
+        bool registered = MobilePhone.AddApp(ModManifest.UniqueID, T("mobile-app.name"), OpenSearchMenuFromPhone, icon);
 
         if (Config.DebugLogging)
             Monitor.Log($"Mobile Phone app registration: {registered}.", LogLevel.Debug);
@@ -202,7 +207,7 @@ public sealed class ModEntry : Mod
 
         if (Gmcm == null)
         {
-            Game1.showRedMessage("Generic Mod Config Menu is not installed.");
+            Game1.showRedMessage(T("message.gmcm-not-installed"));
             return;
         }
 
@@ -216,7 +221,7 @@ public sealed class ModEntry : Mod
 
         if (IndexedOptions.Count == 0)
         {
-            Game1.showRedMessage("No GMCM options or config keys found.");
+            Game1.showRedMessage(T("message.no-options-found"));
             return;
         }
 
@@ -240,7 +245,7 @@ public sealed class ModEntry : Mod
 
     private void OpenMenu()
     {
-        Game1.activeClickableMenu = new SearchMenu("(TTG) GMCM Advanced Search", Config.ShowResultDetails, Config.ShowModTooltips, IndexedOptions, TryOpenMod);
+        Game1.activeClickableMenu = new SearchMenu(T("menu.title"), Config.ShowResultDetails, Config.ShowModTooltips, IndexedOptions, TryOpenMod, Helper.Translation);
     }
 
     private bool TryOpenMod(IManifest manifest)

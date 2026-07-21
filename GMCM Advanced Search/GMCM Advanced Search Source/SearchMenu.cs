@@ -15,6 +15,7 @@ namespace GMCMAdvancedSearch;
 
 internal sealed class SearchMenu : IClickableMenu
 {
+    private static ITranslationHelper Translation = null!;
     private static readonly Rectangle MenuBoxSource = new(0, 256, 60, 60);
 
     private readonly string title;
@@ -58,9 +59,10 @@ internal sealed class SearchMenu : IClickableMenu
     private int ItemsPerPage => Math.Max(1, (resultsRect.Height + RowHeight - MinimumVisibleRowHeight) / RowHeight);
     private int MaxScroll => Math.Max(0, filtered.Count - ItemsPerPage);
 
-    public SearchMenu(string title, bool showResultDetails, bool showModTooltips, List<GmcmOptionRecord> records, Func<IManifest, bool> openMod)
+    public SearchMenu(string title, bool showResultDetails, bool showModTooltips, List<GmcmOptionRecord> records, Func<IManifest, bool> openMod, ITranslationHelper translation)
         : base(0, 0, 0, 0, false)
     {
+        Translation = translation;
         this.title = title;
         this.showResultDetails = showResultDetails;
         this.showModTooltips = showModTooltips;
@@ -467,7 +469,7 @@ internal sealed class SearchMenu : IClickableMenu
         if (openMod(target.Mod))
             return;
 
-        Game1.showRedMessage("That entry couldn't be opened in GMCM.");
+        Game1.showRedMessage(T("message.open-failed"));
         string failedUniqueId = target.UniqueId;
         modResults.RemoveAll(r => string.Equals(r.UniqueId, failedUniqueId, StringComparison.OrdinalIgnoreCase));
         optionResults.RemoveAll(r => string.Equals(r.UniqueId, failedUniqueId, StringComparison.OrdinalIgnoreCase));
@@ -554,11 +556,11 @@ internal sealed class SearchMenu : IClickableMenu
 
     private void DrawSearchRow(SpriteBatch b)
     {
-        Utility.drawTextWithShadow(b, "Search", detailFont, new Vector2(searchRowRect.X, searchRowRect.Y + 19), Game1.textColor);
+        Utility.drawTextWithShadow(b, T("menu.search-label"), detailFont, new Vector2(searchRowRect.X, searchRowRect.Y + 19), Game1.textColor);
         searchBox.Draw(b);
         if (string.IsNullOrEmpty(searchBox.Text) && !searchBox.Selected)
         {
-            Utility.drawTextWithShadow(b, "Results order: Alphabetical", Game1.smallFont,
+            Utility.drawTextWithShadow(b, T("menu.search-placeholder"), Game1.smallFont,
                 new Vector2(searchBoxRect.X + 10, searchBoxRect.Y + 14), new Color(120, 120, 120));
         }
     }
@@ -566,10 +568,10 @@ internal sealed class SearchMenu : IClickableMenu
     private void DrawStatusLine(SpriteBatch b)
     {
         string status = !string.IsNullOrWhiteSpace(searchBox.Text)
-            ? $"{filtered.Count} result(s). Results order: Authors → Mods → Options."
+            ? T("status.search-results", new { count = filtered.Count })
             : string.IsNullOrWhiteSpace(activeAuthor)
-                ? $"{filtered.Count} author(s). Results order: Alphabetical."
-                : $"{filtered.Count} mod(s) by {activeAuthor}. Results order: Alphabetical.";
+                ? T("status.authors", new { count = filtered.Count })
+                : T("status.author-mods", new { count = filtered.Count, author = activeAuthor });
 
         DrawBoldTextWithShadow(b, status, mainFont, new Vector2(resultsRect.X, searchRowRect.Bottom + 5), Game1.textColor);
     }
@@ -787,6 +789,16 @@ internal sealed class SearchMenu : IClickableMenu
         Utility.drawTextWithShadow(b, text + ellipsis, font, position, color);
     }
 
+    private static string T(string key)
+    {
+        return Translation.Get(key).ToString();
+    }
+
+    private static string T(string key, object tokens)
+    {
+        return Translation.Get(key, tokens).ToString();
+    }
+
     private sealed record MenuState(string? ActiveAuthor, string SearchText, int SelectedIndex, int ScrollOffset);
 
     private enum SearchResultKind
@@ -818,7 +830,7 @@ internal sealed class SearchMenu : IClickableMenu
 
         public string DetailText => Kind switch
         {
-            SearchResultKind.Author => $"Author • {ModCount} installed mod{(ModCount == 1 ? "" : "s")}",
+            SearchResultKind.Author => T(ModCount == 1 ? "result.author-detail.one" : "result.author-detail.many", new { count = ModCount }),
             SearchResultKind.Mod => UniqueId,
             _ => Option?.PrimaryText ?? ""
         };
@@ -829,7 +841,7 @@ internal sealed class SearchMenu : IClickableMenu
 
         public string AdvancedText => Kind switch
         {
-            SearchResultKind.Author => "Click to show this author's installed mods.",
+            SearchResultKind.Author => T("result.author-advanced"),
             SearchResultKind.Mod => Mod?.Description ?? "",
             _ => Option?.SecondaryText ?? ""
         };
@@ -842,7 +854,7 @@ internal sealed class SearchMenu : IClickableMenu
 
         public string TooltipDescription => Kind switch
         {
-            SearchResultKind.Author => $"{ModCount} installed mod{(ModCount == 1 ? "" : "s")}. Click to list this author's mods.",
+            SearchResultKind.Author => T(ModCount == 1 ? "result.author-tooltip.one" : "result.author-tooltip.many", new { count = ModCount }),
             SearchResultKind.Mod => Mod?.Description ?? "",
             _ => Mod?.Description ?? ""
         };
@@ -1039,7 +1051,7 @@ internal sealed class SearchMenu : IClickableMenu
 
     private static string NormalizeAuthor(string? author)
     {
-        return string.IsNullOrWhiteSpace(author) ? "Unknown Author" : author.Trim();
+        return string.IsNullOrWhiteSpace(author) ? T("result.unknown-author") : author.Trim();
     }
 
     private sealed class GmcmVerticalScrollbar

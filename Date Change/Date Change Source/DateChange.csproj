@@ -24,6 +24,7 @@
   <ItemGroup>
     <None Include="manifest.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="LICENSE" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="i18n\**\*" CopyToOutputDirectory="PreserveNewest" />
     <None Update="assets\**\*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 

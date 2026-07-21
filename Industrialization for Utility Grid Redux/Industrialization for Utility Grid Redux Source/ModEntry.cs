@@ -107,7 +107,7 @@ public sealed class ModEntry : Mod
 
         this.ExcludeBetterCraftingMachineRuleRecipes(recipeNames);
 
-        betterCrafting.CreateDefaultCategory(false, BetterCraftingIndustrializationCategoryId, () => "Industrialization", recipeNames, iconRecipe, false, null);
+        betterCrafting.CreateDefaultCategory(false, BetterCraftingIndustrializationCategoryId, () => this.T("better-crafting.category"), recipeNames, iconRecipe, false, null);
         betterCrafting.AddRecipesToDefaultCategory(false, BetterCraftingIndustrializationCategoryId, recipeNames);
         betterCrafting.RemoveRecipesFromDefaultCategory(false, "machines", recipeNames);
     }
@@ -142,7 +142,7 @@ public sealed class ModEntry : Mod
                 continue;
 
             Dictionary<string, object?>? configuredRule = this.GetConfiguredRuleData(displayName, rule);
-            string tooltipText = configuredRule is null ? string.Empty : FormatUtilityGridTooltip(configuredRule);
+            string tooltipText = configuredRule is null ? string.Empty : this.FormatUtilityGridTooltip(configuredRule);
 
             Dictionary<string, object?>? bigCraftable = this.GetBigCraftableByDisplayName(displayName);
             if (bigCraftable is null)
@@ -251,7 +251,9 @@ public sealed class ModEntry : Mod
 
     private Dictionary<string, object?>? GetBigCraftableByDisplayName(string displayName)
     {
-        foreach (object? rawEntry in this.bigCraftableEntries.Values)
+        string normalizedDisplayName = NormalizeMachineName(displayName);
+
+        foreach ((string entryId, object? rawEntry) in this.bigCraftableEntries)
         {
             if (rawEntry is not Dictionary<string, object?> entry)
                 continue;
@@ -259,18 +261,43 @@ public sealed class ModEntry : Mod
             string? entryDisplayName = Convert.ToString(entry.GetValueOrDefault("DisplayName"), CultureInfo.InvariantCulture);
             if (string.Equals(entryDisplayName, displayName, StringComparison.OrdinalIgnoreCase))
                 return entry;
+
+            int separatorIndex = entryId.LastIndexOf('_');
+            string technicalName = separatorIndex >= 0 ? entryId[(separatorIndex + 1)..] : entryId;
+            if (string.Equals(NormalizeMachineName(technicalName), normalizedDisplayName, StringComparison.OrdinalIgnoreCase))
+                return entry;
         }
 
         return null;
     }
 
-    private static string FormatUtilityGridTooltip(Dictionary<string, object?> rule)
+    private string GetMachineDisplayName(string displayName)
+    {
+        Dictionary<string, object?>? bigCraftable = this.GetBigCraftableByDisplayName(displayName);
+        if (bigCraftable is not null)
+        {
+            string? localizedName = Convert.ToString(bigCraftable.GetValueOrDefault("DisplayName"), CultureInfo.InvariantCulture);
+            if (!string.IsNullOrWhiteSpace(localizedName))
+                return localizedName;
+        }
+
+        return string.Equals(displayName, "Furnace", StringComparison.OrdinalIgnoreCase)
+            ? this.T("machine.furnace.name")
+            : displayName;
+    }
+
+    private static string NormalizeMachineName(string value)
+    {
+        return Regex.Replace(value ?? string.Empty, "[^A-Za-z0-9]", string.Empty);
+    }
+
+    private string FormatUtilityGridTooltip(Dictionary<string, object?> rule)
     {
         List<string> parts = new();
-        AddStorageAmount(parts, "water", GetRuleFloat(rule, "waterChargeCapacity"), GetRuleFloat(rule, "waterDischargeRate"));
-        AddStorageAmount(parts, "power", GetRuleFloat(rule, "powerChargeCapacity"), GetRuleFloat(rule, "powerDischargeRate"));
-        AddUtilityAmount(parts, "water", GetRuleFloat(rule, "water"));
-        AddUtilityAmount(parts, "power", GetRuleFloat(rule, "power"));
+        this.AddStorageAmount(parts, "water", GetRuleFloat(rule, "waterChargeCapacity"), GetRuleFloat(rule, "waterDischargeRate"));
+        this.AddStorageAmount(parts, "power", GetRuleFloat(rule, "powerChargeCapacity"), GetRuleFloat(rule, "powerDischargeRate"));
+        this.AddUtilityAmount(parts, "water", GetRuleFloat(rule, "water"));
+        this.AddUtilityAmount(parts, "power", GetRuleFloat(rule, "power"));
         return string.Join(" ", parts);
     }
 
@@ -311,18 +338,37 @@ public sealed class ModEntry : Mod
         return last is '.' or '!' or '?' ? text : text + ".";
     }
 
-    private static void AddStorageAmount(List<string> parts, string label, float capacity, float output)
+    private void AddStorageAmount(List<string> parts, string resourceKey, float capacity, float output)
     {
         if (capacity > 0 && output > 0)
-            parts.Add($"Stores {FormatRuleFloat(capacity)} {label}. Outputs {FormatRuleFloat(output)} {label}.");
+        {
+            parts.Add(this.T("tooltip.storage", new
+            {
+                capacity = FormatRuleFloat(capacity),
+                output = FormatRuleFloat(output),
+                resource = this.T($"resource.{resourceKey}")
+            }));
+        }
     }
 
-    private static void AddUtilityAmount(List<string> parts, string label, float amount)
+    private void AddUtilityAmount(List<string> parts, string resourceKey, float amount)
     {
         if (amount > 0)
-            parts.Add($"Produces {FormatRuleFloat(amount)} {label}.");
+        {
+            parts.Add(this.T("tooltip.produces", new
+            {
+                amount = FormatRuleFloat(amount),
+                resource = this.T($"resource.{resourceKey}")
+            }));
+        }
         else if (amount < 0)
-            parts.Add($"Consumes {FormatRuleFloat(-amount)} {label}.");
+        {
+            parts.Add(this.T("tooltip.consumes", new
+            {
+                amount = FormatRuleFloat(-amount),
+                resource = this.T($"resource.{resourceKey}")
+            }));
+        }
     }
 
     private static float GetRuleFloat(Dictionary<string, object?> rule, string key)
@@ -359,8 +405,8 @@ public sealed class ModEntry : Mod
 
         gmcm.AddSectionTitle(
             this.ModManifest,
-            () => "Utility Grid Machine Rules",
-            () => "Produced amounts allow 1-2500. Consumed amounts allow 1-250. Only resources already used by each machine are shown.");
+            () => this.T("config.section.title"),
+            () => this.T("config.section.tooltip", new { minProduced = MinProducedAmount, maxProduced = MaxProducedAmount, minConsumed = MinConsumedAmount, maxConsumed = MaxConsumedAmount }));
 
         foreach ((string displayName, object? rawRule) in this.utilityGridEntries.OrderBy(entry => entry.Key, StringComparer.OrdinalIgnoreCase))
         {
@@ -394,7 +440,7 @@ public sealed class ModEntry : Mod
             return description;
 
         Dictionary<string, object?>? configuredRule = this.GetConfiguredRuleData(displayName, rule, requireEnabled: false);
-        string utilityText = configuredRule is null ? string.Empty : FormatUtilityGridTooltip(configuredRule);
+        string utilityText = configuredRule is null ? string.Empty : this.FormatUtilityGridTooltip(configuredRule);
 
         if (string.IsNullOrWhiteSpace(description))
             return utilityText;
@@ -421,8 +467,8 @@ public sealed class ModEntry : Mod
             this.ModManifest,
             getValue,
             setValue,
-            () => machineName,
-            tooltip ?? (() => "Turn this off to exclude this machine from Utility Grid management."));
+            () => this.GetMachineDisplayName(machineName),
+            tooltip ?? (() => this.T("config.machine-toggle.tooltip")));
     }
 
     private void AddProducedOption(IGenericModConfigMenuApi gmcm, Func<int> getValue, Action<int> setValue, string resourceName)
@@ -431,8 +477,8 @@ public sealed class ModEntry : Mod
             this.ModManifest,
             () => FormatAmountText(getValue()),
             value => setValue(ParseProducedAmountText(value, getValue())),
-            () => $"  {resourceName.ToLowerInvariant()} produced",
-            () => $"Amount of {resourceName.ToLowerInvariant()} this machine adds to the grid. Type a value from {MinProducedAmount} to {MaxProducedAmount}.");
+            () => this.T("config.resource-produced.name", new { resource = this.T($"resource.{resourceName.ToLowerInvariant()}") }),
+            () => this.T("config.resource-produced.tooltip", new { resource = this.T($"resource.{resourceName.ToLowerInvariant()}"), min = MinProducedAmount, max = MaxProducedAmount }));
     }
 
     private void AddConsumedOption(IGenericModConfigMenuApi gmcm, Func<int> getValue, Action<int> setValue, string resourceName)
@@ -441,8 +487,8 @@ public sealed class ModEntry : Mod
             this.ModManifest,
             () => FormatAmountText(getValue()),
             value => setValue(ParseConsumedAmountText(value, getValue())),
-            () => $"  {resourceName.ToLowerInvariant()} consumed",
-            () => $"Amount of {resourceName.ToLowerInvariant()} this machine removes from the grid. Type a value from {MinConsumedAmount} to {MaxConsumedAmount}.");
+            () => this.T("config.resource-consumed.name", new { resource = this.T($"resource.{resourceName.ToLowerInvariant()}") }),
+            () => this.T("config.resource-consumed.tooltip", new { resource = this.T($"resource.{resourceName.ToLowerInvariant()}"), min = MinConsumedAmount, max = MaxConsumedAmount }));
     }
 
     private static string FormatAmountText(int value)
@@ -605,14 +651,34 @@ public sealed class ModEntry : Mod
         return Math.Clamp(value, MinConsumedAmount, MaxConsumedAmount);
     }
 
+    private string ResolveI18nTokens(string json)
+    {
+        return Regex.Replace(json, @"\{\{i18n:([A-Za-z0-9_.-]+)\}\}", match =>
+        {
+            string translated = this.T(match.Groups[1].Value);
+            string serialized = JsonSerializer.Serialize(translated);
+            return serialized.Length >= 2 ? serialized[1..^1] : string.Empty;
+        });
+    }
+
+    private string T(string key)
+    {
+        return this.Helper.Translation.Get(key).ToString();
+    }
+
+    private string T(string key, object tokens)
+    {
+        return this.Helper.Translation.Get(key, tokens).ToString();
+    }
+
     private Dictionary<string, object?> ReadDictionary(string relativePath)
     {
         string path = Path.Combine(this.Helper.DirectoryPath, relativePath);
         if (!File.Exists(path))
             return new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
 
-        using FileStream stream = File.OpenRead(path);
-        using JsonDocument document = JsonDocument.Parse(stream);
+        string json = this.ResolveI18nTokens(File.ReadAllText(path));
+        using JsonDocument document = JsonDocument.Parse(json);
         object? converted = ConvertJson(document.RootElement);
         return converted as Dictionary<string, object?> ?? new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
     }

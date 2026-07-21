@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using StardewModdingAPI;
 using StardewValley;
 using StardewValley.BellsAndWhistles;
 using StardewValley.Menus;
@@ -15,11 +16,13 @@ public sealed class WaitSelectMenu : IClickableMenu
     private readonly List<ClickableComponent> optionButtons = new();
     private readonly List<int> minutes = new();
     private readonly bool previousMouseVisible;
+    private readonly ITranslationHelper translation;
     private bool titleInPosition = true;
 
-    public WaitSelectMenu(Action<int> onPickMinutes, int maxWaitMinutes)
+    public WaitSelectMenu(Action<int> onPickMinutes, int maxWaitMinutes, ITranslationHelper translation)
     {
         this.onPickMinutes = onPickMinutes;
+        this.translation = translation;
         this.previousMouseVisible = Game1.game1.IsMouseVisible;
         Game1.game1.IsMouseVisible = false;
 
@@ -35,7 +38,7 @@ public sealed class WaitSelectMenu : IClickableMenu
         int buttonHeight = Math.Max(44, Game1.smallFont.LineSpacing + 20);
         int rowGap = Math.Max(8, Game1.smallFont.LineSpacing / 4);
         int rowHeight = buttonHeight + rowGap;
-        int buttonWidth = Math.Max(320, (int)Game1.smallFont.MeasureString("4 hours").X + IClickableMenu.spaceToClearSideBorder * 4);
+        int buttonWidth = Math.Max(320, (int)Game1.smallFont.MeasureString(this.T("duration.hours", new { count = 4 })).X + IClickableMenu.spaceToClearSideBorder * 4);
 
         int titleAreaHeight = Math.Max(80, IClickableMenu.borderWidth + Game1.smallFont.LineSpacing);
         int menuWidth = buttonWidth + sidePadding;
@@ -158,7 +161,7 @@ public sealed class WaitSelectMenu : IClickableMenu
             1f,
             false);
 
-        const string title = "Wait how long?";
+        string title = this.T("menu.title");
         SpriteText.drawStringHorizontallyCenteredAt(
             b,
             title,
@@ -186,7 +189,7 @@ public sealed class WaitSelectMenu : IClickableMenu
                 1f,
                 false);
 
-            string label = FormatMinutes(this.minutes[index]);
+            string label = this.FormatMinutes(this.minutes[index]);
             Vector2 labelSize = Game1.smallFont.MeasureString(label);
             Utility.drawTextWithShadow(
                 b,
@@ -205,16 +208,28 @@ public sealed class WaitSelectMenu : IClickableMenu
         base.cleanupBeforeExit();
     }
 
-    private static string FormatMinutes(int minutes)
+    private string T(string key)
+    {
+        return this.translation.Get(key).ToString();
+    }
+
+    private string T(string key, object tokens)
+    {
+        return this.translation.Get(key, tokens).ToString();
+    }
+
+    private string FormatMinutes(int minutes)
     {
         if (minutes % 60 == 0)
         {
             int hours = minutes / 60;
-            return hours == 1 ? "1 hour" : $"{hours} hours";
+            return hours == 1 ? this.T("duration.one-hour") : this.T("duration.hours", new { count = hours });
         }
 
         int hourPart = minutes / 60;
         int minutePart = minutes % 60;
-        return hourPart > 0 ? $"{hourPart}h {minutePart}m" : $"{minutePart} minutes";
+        return hourPart > 0
+            ? this.T("duration.hours-minutes-short", new { hours = hourPart, minutes = minutePart })
+            : this.T("duration.minutes", new { count = minutePart });
     }
 }

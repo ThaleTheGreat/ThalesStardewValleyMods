@@ -34,4 +34,7 @@
     <Error Condition="'$(GameModsPathOutputFile)' == ''" Text="GameModsPathOutputFile was not provided." />
     <WriteLinesToFile File="$(GameModsPathOutputFile)" Lines="$(GameModsPath)" Overwrite="true" />
   </Target>
+  <ItemGroup>
+    <None Include="i18n\**\*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>

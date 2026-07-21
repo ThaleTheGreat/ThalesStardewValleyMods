@@ -75,8 +75,8 @@ public sealed class ModEntry : Mod
                 config.ShowInfestedLevelIndicators = value;
                 RefreshIndicators();
             },
-            name: () => "Show Infested Level Indicators",
-            tooltip: () => "Show infested mine levels in the HUD tooltip."
+            name: () => T("config.show-infested.name"),
+            tooltip: () => T("config.show-infested.tooltip")
         );
 
         gmcm.AddBoolOption(
@@ -87,8 +87,8 @@ public sealed class ModEntry : Mod
                 config.ShowMushroomLevelIndicators = value;
                 RefreshIndicators();
             },
-            name: () => "Show Mushroom Level Indicators",
-            tooltip: () => "Show mushroom mine levels in the HUD tooltip."
+            name: () => T("config.show-mushroom.name"),
+            tooltip: () => T("config.show-mushroom.tooltip")
         );
 
         gmcm.AddBoolOption(
@@ -99,9 +99,19 @@ public sealed class ModEntry : Mod
                 config.ShowDinoLevelIndicators = value;
                 RefreshIndicators();
             },
-            name: () => "Show Dino Level Indicators",
-            tooltip: () => "Show prehistoric Skull Cavern levels in the HUD tooltip."
+            name: () => T("config.show-dino.name"),
+            tooltip: () => T("config.show-dino.tooltip")
         );
+    }
+
+    private string T(string key)
+    {
+        return Helper.Translation.Get(key).ToString();
+    }
+
+    private string T(string key, object tokens)
+    {
+        return Helper.Translation.Get(key, tokens).ToString();
     }
 
     private void RegisterMobilePhoneApp()
@@ -112,20 +122,20 @@ public sealed class ModEntry : Mod
 
         mobilePhoneLoaded = true;
 
-        phoneApi.AddApp(ModManifest.UniqueID, "Mine Levels", ShowMineLevelReport, GetIndicatorIconTexture());
+        phoneApi.AddApp(ModManifest.UniqueID, T("mobile-app.name"), ShowMineLevelReport, GetIndicatorIconTexture());
     }
 
     private void ShowMineLevelReport()
     {
         if (!Context.IsWorldReady)
         {
-            Game1.addHUDMessage(new HUDMessage("Mine level indicators are available after loading a save.", HUDMessage.error_type));
+            Game1.addHUDMessage(new HUDMessage(T("message.save-required"), HUDMessage.error_type));
             return;
         }
 
         RefreshIndicators();
         string text = BuildMobileReportText(Game1.player?.deepestMineLevel ?? 0, HasSkullKey());
-        Game1.drawObjectDialogue(string.IsNullOrWhiteSpace(text) ? "No mine level indicators are currently enabled." : text);
+        Game1.drawObjectDialogue(string.IsNullOrWhiteSpace(text) ? T("message.none-enabled") : text);
     }
 
     private Texture2D GetIndicatorIconTexture()
@@ -228,29 +238,29 @@ public sealed class ModEntry : Mod
         {
             string infestedText = infestedLevels.Any()
                 ? FormatWrappedList(infestedLevels.Select(level => $"{level.Level}{(string.IsNullOrEmpty(level.Type) ? string.Empty : " (" + level.Type + ")")}"), Environment.NewLine)
-                : "None";
-            sections.Add($"Infested Levels:{Environment.NewLine}{infestedText}");
+                : T("value.none");
+            sections.Add($"{T("section.infested-levels")}:{Environment.NewLine}{infestedText}");
         }
 
         if (config.ShowMushroomLevelIndicators)
         {
             string mushroomText = deepest > 80
-                ? mushroomLevels.Any() ? FormatWrappedList(mushroomLevels.Select(level => level.ToString()), Environment.NewLine) : "None"
-                : "Mine Not Sufficiently Explored";
-            sections.Add($"Mushroom Levels:{Environment.NewLine}{mushroomText}");
+                ? mushroomLevels.Any() ? FormatWrappedList(mushroomLevels.Select(level => level.ToString()), Environment.NewLine) : T("value.none")
+                : T("value.mine-not-explored");
+            sections.Add($"{T("section.mushroom-levels")}:{Environment.NewLine}{mushroomText}");
         }
 
         if (config.ShowDinoLevelIndicators)
         {
             string dinoText;
             if (!hasSkullKey)
-                dinoText = "Skull Key Required";
+                dinoText = T("value.skull-key-required");
             else if (dinoLevels.Any())
                 dinoText = FormatWrappedList(dinoLevels.Select(level => level.ToString()), Environment.NewLine);
             else
-                dinoText = $"None through Skull Cavern {MaxSkullCavernDinoLevel}";
+                dinoText = T("value.none-through-skull-cavern", new { level = MaxSkullCavernDinoLevel });
 
-            sections.Add($"Dino Levels:{Environment.NewLine}{dinoText}");
+            sections.Add($"{T("section.dino-levels")}:{Environment.NewLine}{dinoText}");
         }
 
         return string.Join(Environment.NewLine + Environment.NewLine, sections);
@@ -264,29 +274,29 @@ public sealed class ModEntry : Mod
         {
             string infestedText = infestedLevels.Any()
                 ? FormatWrappedList(infestedLevels.Select(level => $"{level.Level}{(string.IsNullOrEmpty(level.Type) ? string.Empty : " (" + level.Type + ")")}"), "^")
-                : "None";
-            rows.Add($"Infested Levels: {infestedText}");
+                : T("value.none");
+            rows.Add($"{T("section.infested-levels")}: {infestedText}");
         }
 
         if (config.ShowMushroomLevelIndicators)
         {
             string mushroomText = deepest > 80
-                ? mushroomLevels.Any() ? FormatWrappedList(mushroomLevels.Select(level => level.ToString()), "^") : "None"
-                : "Mine Not Sufficiently Explored";
-            rows.Add($"Mushroom Levels: {mushroomText}");
+                ? mushroomLevels.Any() ? FormatWrappedList(mushroomLevels.Select(level => level.ToString()), "^") : T("value.none")
+                : T("value.mine-not-explored");
+            rows.Add($"{T("section.mushroom-levels")}: {mushroomText}");
         }
 
         if (config.ShowDinoLevelIndicators)
         {
             string dinoText;
             if (!hasSkullKey)
-                dinoText = "Skull Key Required";
+                dinoText = T("value.skull-key-required");
             else if (dinoLevels.Any())
                 dinoText = FormatWrappedList(dinoLevels.Select(level => level.ToString()), "^");
             else
-                dinoText = $"None through Skull Cavern {MaxSkullCavernDinoLevel}";
+                dinoText = T("value.none-through-skull-cavern", new { level = MaxSkullCavernDinoLevel });
 
-            rows.Add($"Dino Levels: {dinoText}");
+            rows.Add($"{T("section.dino-levels")}: {dinoText}");
         }
 
         return string.Join("^", rows);
@@ -331,8 +341,8 @@ public sealed class ModEntry : Mod
 
             string type = infestedType switch
             {
-                1 => "Slime",
-                2 => "Monster",
+                1 => T("level-type.slime"),
+                2 => T("level-type.monster"),
                 _ => string.Empty
             };
             infestedLevels.Add((level, type));

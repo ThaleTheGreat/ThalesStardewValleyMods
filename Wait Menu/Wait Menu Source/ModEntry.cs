@@ -49,29 +49,29 @@ public sealed class ModEntry : Mod
             this.ModManifest,
             getValue: () => this.config.OpenMenuKey,
             setValue: value => this.config.OpenMenuKey = value,
-            name: () => "Open menu keybind",
-            tooltip: () => "Keybind to open the wait menu. Default is Ctrl+W.");
+            name: () => this.T("config.open-menu-key.name"),
+            tooltip: () => this.T("config.open-menu-key.tooltip"));
 
         api.AddBoolOption(
             this.ModManifest,
             getValue: () => this.config.AllowDuringFestival,
             setValue: value => this.config.AllowDuringFestival = value,
-            name: () => "Allow during festivals",
-            tooltip: () => "If disabled, the wait menu won't open during festivals.");
+            name: () => this.T("config.allow-festivals.name"),
+            tooltip: () => this.T("config.allow-festivals.tooltip"));
 
         api.AddBoolOption(
             this.ModManifest,
             getValue: () => this.config.AllowDuringEvents,
             setValue: value => this.config.AllowDuringEvents = value,
-            name: () => "Allow during events",
-            tooltip: () => "If disabled, the wait menu won't open during cutscenes/events.");
+            name: () => this.T("config.allow-events.name"),
+            tooltip: () => this.T("config.allow-events.tooltip"));
 
         api.AddNumberOption(
             this.ModManifest,
             getValue: () => this.config.MaxWaitMinutes,
             setValue: value => this.config.MaxWaitMinutes = value,
-            name: () => "Max wait minutes",
-            tooltip: () => "Safety clamp for max minutes advanced per wait action.",
+            name: () => this.T("config.max-wait.name"),
+            tooltip: () => this.T("config.max-wait.tooltip"),
             min: 30,
             max: 240,
             interval: 30);
@@ -80,8 +80,13 @@ public sealed class ModEntry : Mod
             this.ModManifest,
             getValue: () => this.config.StabilizeAfterTeleport,
             setValue: value => this.config.StabilizeAfterTeleport = value,
-            name: () => "Stabilize after NPC teleport",
-            tooltip: () => "Clears stale NPC pathing/animation state after placing NPCs at schedule destinations.");
+            name: () => this.T("config.stabilize.name"),
+            tooltip: () => this.T("config.stabilize.tooltip"));
+    }
+
+    private string T(string key)
+    {
+        return this.Helper.Translation.Get(key).ToString();
     }
 
     private void RegisterMobilePhoneApp()
@@ -93,7 +98,7 @@ public sealed class ModEntry : Mod
                 return;
 
             Texture2D icon = this.Helper.ModContent.Load<Texture2D>("assets/MobilePhone.png");
-            this.mobilePhoneApi.AddApp(this.ModManifest.UniqueID, "(TTG) Wait Menu", this.OpenFromMobilePhone, icon);
+            this.mobilePhoneApi.AddApp(this.ModManifest.UniqueID, this.T("mobile-app.name"), this.OpenFromMobilePhone, icon);
         }
         catch (Exception ex)
         {
@@ -138,7 +143,7 @@ public sealed class ModEntry : Mod
         if (Game1.isFestival() && !this.config.AllowDuringFestival)
             return;
 
-        Game1.activeClickableMenu = new WaitSelectMenu(this.AdvanceTime, this.config.MaxWaitMinutes);
+        Game1.activeClickableMenu = new WaitSelectMenu(this.AdvanceTime, this.config.MaxWaitMinutes, this.Helper.Translation);
     }
 
     private void AdvanceTime(int minutes)
@@ -148,7 +153,7 @@ public sealed class ModEntry : Mod
 
         if (Game1.timeOfDay >= 2600)
         {
-            Game1.addHUDMessage(new HUDMessage("It's too late to wait.", HUDMessage.error_type));
+            Game1.addHUDMessage(new HUDMessage(this.T("message.too-late"), HUDMessage.error_type));
             return;
         }
 
@@ -166,7 +171,7 @@ public sealed class ModEntry : Mod
             catch (Exception ex)
             {
                 this.Monitor.Log($"WaitMenu: error while advancing time at {Game1.timeOfDay}: {ex}", LogLevel.Error);
-                Game1.addHUDMessage(new HUDMessage("WaitMenu: An NPC schedule error occurred while advancing time. Check SMAPI log.", HUDMessage.error_type));
+                Game1.addHUDMessage(new HUDMessage(this.T("message.schedule-error"), HUDMessage.error_type));
                 return;
             }
         }

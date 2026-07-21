@@ -64,19 +64,19 @@
       "Action": "EditData",
       "Target": "Data/Hats",
       "Entries": {
-        "MouseyPounds.ShadowFestival.ImposingMask": "Imposing Mask/It gives off an imposing aura, yet is oddly calming to those of the shadows./false/true//Imposing Mask/0/{{ModId}}\\ShadowFestivalHats",
-        "MouseyPounds.ShadowFestival.ShamanicMask": "Shamanic Mask/It's imbued with an ancient magic that endears you to those of the shadow./false/true//Shamanic Mask/1/{{ModId}}\\ShadowFestivalHats",
-        "MouseyPounds.ShadowFestival.ShadyMask": "Shady Mask/You'll surely blend in with those of shadow in this./false/true//Shady Mask/2/{{ModId}}\\ShadowFestivalHats",
-        "MouseyPounds.ShadowFestival.ShadyBowedMask": "Shady Bowed Mask/The bow gives this creepy mask an oddly cute look that may placate those of the shadow./false/true//Shady Bowed Mask/3/{{ModId}}\\ShadowFestivalHats",
-        "MouseyPounds.ShadowFestival.StrangeBunHat": "Strange Bun Hat/A festive hat with a slightly disconcerting odor./true/false//Strange Bun Hat/4/{{ModId}}\\ShadowFestivalHats"
+        "MouseyPounds.ShadowFestival.ImposingMask": "{{i18n:item.imposing-mask.name}}/{{i18n:item.imposing-mask.description}}/false/true//{{i18n:item.imposing-mask.name}}/0/{{ModId}}\\ShadowFestivalHats",
+        "MouseyPounds.ShadowFestival.ShamanicMask": "{{i18n:item.shamanic-mask.name}}/{{i18n:item.shamanic-mask.description}}/false/true//{{i18n:item.shamanic-mask.name}}/1/{{ModId}}\\ShadowFestivalHats",
+        "MouseyPounds.ShadowFestival.ShadyMask": "{{i18n:item.shady-mask.name}}/{{i18n:item.shady-mask.description}}/false/true//{{i18n:item.shady-mask.name}}/2/{{ModId}}\\ShadowFestivalHats",
+        "MouseyPounds.ShadowFestival.ShadyBowedMask": "{{i18n:item.shady-bowed-mask.name}}/{{i18n:item.shady-bowed-mask.description}}/false/true//{{i18n:item.shady-bowed-mask.name}}/3/{{ModId}}\\ShadowFestivalHats",
+        "MouseyPounds.ShadowFestival.StrangeBunHat": "{{i18n:item.strange-bun-hat.name}}/{{i18n:item.strange-bun-hat.description}}/true/false//{{i18n:item.strange-bun-hat.name}}/4/{{ModId}}\\ShadowFestivalHats"
       }
     },
     {
       "Action": "EditData",
       "Target": "Data/Boots",
       "Entries": {
-        "MouseyPounds.ShadowFestival.DinosaurBootsGreen": "Dinosaur Boots - Green/Clomp around like a prehistoric menace!/0/1/1/0/Dinosaur Boots - Green/{{ModId}}\\DinoBootsColor/0/{{ModId}}\\DinoBoots",
-        "MouseyPounds.ShadowFestival.DinosaurBootsRed": "Dinosaur Boots - Red/Clomp around like a prehistoric menace!/0/1/1/1/Dinosaur Boots - Red/{{ModId}}\\DinoBootsColor/1/{{ModId}}\\DinoBoots"
+        "MouseyPounds.ShadowFestival.DinosaurBootsGreen": "{{i18n:item.dinosaur-boots-green.name}}/{{i18n:item.dinosaur-boots-green.description}}/0/1/1/0/{{i18n:item.dinosaur-boots-green.name}}/{{ModId}}\\DinoBootsColor/0/{{ModId}}\\DinoBoots",
+        "MouseyPounds.ShadowFestival.DinosaurBootsRed": "{{i18n:item.dinosaur-boots-red.name}}/{{i18n:item.dinosaur-boots-red.description}}/0/1/1/1/{{i18n:item.dinosaur-boots-red.name}}/{{ModId}}\\DinoBootsColor/1/{{ModId}}\\DinoBoots"
       }
     },
     {
@@ -85,8 +85,8 @@
       "Entries": {
         "MouseyPounds.ShadowFestival.DinosaurShirt": {
           "Name": "DinosaurShirt",
-          "DisplayName": "Dinosaur Shirt",
-          "Description": "A matching shirt for a complete dinosaur suit. Rawr!",
+          "DisplayName": "{{i18n:item.dinosaur-shirt.name}}",
+          "Description": "{{i18n:item.dinosaur-shirt.description}}",
           "Price": 1000,
           "Texture": "{{ModId}}/DinoShirt",
           "SpriteIndex": 0,
@@ -95,8 +95,8 @@
         },
         "MouseyPounds.ShadowFestival.DinosaurShirtAlt": {
           "Name": "DinosaurShirtAlt",
-          "DisplayName": "Dinosaur Shirt (Alternate)",
-          "Description": "A matching shirt for a complete dinosaur suit. Rawr!",
+          "DisplayName": "{{i18n:item.dinosaur-shirt-alt.name}}",
+          "Description": "{{i18n:item.dinosaur-shirt-alt.description}}",
           "Price": 1000,
           "Texture": "{{ModId}}/DinoShirtAlt",
           "SpriteIndex": 0,
@@ -109,7 +109,7 @@
       "Action": "EditData",
       "Target": "Data/Mail",
       "Entries": {
-        "Wizard_ShadowFestival": "Greetings @,^^As you might know, supernatural activity always increases near Spirit's Eve. The Shadow people even have their own celebration. If you can access the sewers, their 'Festival of the Mundane' will be happening all day. You probably won't run into much trouble, although it might be good to find a disguise once you're in there just to be safe.^^ - M.Rasmodius"
+        "Wizard_ShadowFestival": "{{i18n:mail.wizard-shadow-festival}}"
       }
     },
     {
@@ -120,19 +120,19 @@
         "Day": "27"
       },
       "Entries": {
-        "fall_27": "Hi friend. Welcome to the 'Festival of the Mundane'.#b#Make sure to keep a Shadow disguise on when talking to the others.#b#The rodent of unusual cuteness is selling more masks if you need them.",
-        "fall_27_2": "Hi friend. Welcome to the 'Festival of the Mundane'.#b#Make sure to keep a Shadow disguise on when talking to the others.#b#The rodent of unusual cuteness is selling more masks if you need them.",
-        "spring_27": "Hi friend. Welcome to the 'Festival of the Mundane'.#b#Make sure to keep a Shadow disguise on when talking to the others.#b#The rodent of unusual cuteness is selling more masks if you need them.",
-        "summer_27": "Hi friend. Welcome to the 'Festival of the Mundane'.#b#Make sure to keep a Shadow disguise on when talking to the others.#b#The rodent of unusual cuteness is selling more masks if you need them.",
-        "winter_27": "Hi friend. Welcome to the 'Festival of the Mundane'.#b#Make sure to keep a Shadow disguise on when talking to the others.#b#The rodent of unusual cuteness is selling more masks if you need them.",
-        "Mon": "Hi friend. Welcome to the 'Festival of the Mundane'.#b#Make sure to keep a Shadow disguise on when talking to the others.#b#The rodent of unusual cuteness is selling more masks if you need them.",
-        "Tue": "Hi friend. Welcome to the 'Festival of the Mundane'.#b#Make sure to keep a Shadow disguise on when talking to the others.#b#The rodent of unusual cuteness is selling more masks if you need them.",
-        "Wed": "Hi friend. Welcome to the 'Festival of the Mundane'.#b#Make sure to keep a Shadow disguise on when talking to the others.#b#The rodent of unusual cuteness is selling more masks if you need them.",
-        "Thu": "Hi friend. Welcome to the 'Festival of the Mundane'.#b#Make sure to keep a Shadow disguise on when talking to the others.#b#The rodent of unusual cuteness is selling more masks if you need them.",
-        "Fri": "Hi friend. Welcome to the 'Festival of the Mundane'.#b#Make sure to keep a Shadow disguise on when talking to the others.#b#The rodent of unusual cuteness is selling more masks if you need them.",
-        "Sat": "Hi friend. Welcome to the 'Festival of the Mundane'.#b#Make sure to keep a Shadow disguise on when talking to the others.#b#The rodent of unusual cuteness is selling more masks if you need them.",
-        "Sun": "Hi friend. Welcome to the 'Festival of the Mundane'.#b#Make sure to keep a Shadow disguise on when talking to the others.#b#The rodent of unusual cuteness is selling more masks if you need them.",
-        "default": "Hi friend. Welcome to the 'Festival of the Mundane'.#b#Make sure to keep a Shadow disguise on when talking to the others.#b#The rodent of unusual cuteness is selling more masks if you need them."
+        "fall_27": "{{i18n:dialogue.krobus-festival}}",
+        "fall_27_2": "{{i18n:dialogue.krobus-festival}}",
+        "spring_27": "{{i18n:dialogue.krobus-festival}}",
+        "summer_27": "{{i18n:dialogue.krobus-festival}}",
+        "winter_27": "{{i18n:dialogue.krobus-festival}}",
+        "Mon": "{{i18n:dialogue.krobus-festival}}",
+        "Tue": "{{i18n:dialogue.krobus-festival}}",
+        "Wed": "{{i18n:dialogue.krobus-festival}}",
+        "Thu": "{{i18n:dialogue.krobus-festival}}",
+        "Fri": "{{i18n:dialogue.krobus-festival}}",
+        "Sat": "{{i18n:dialogue.krobus-festival}}",
+        "Sun": "{{i18n:dialogue.krobus-festival}}",
+        "default": "{{i18n:dialogue.krobus-festival}}"
       }
     },
     {
@@ -143,7 +143,7 @@
         "Day": "27"
       },
       "Entries": {
-        "NPC.cs.3990": "A human visitor? This is most unusual...#b#I am Krobus and you have come during our 'Festival of the Mundane'.#b#Make sure to keep a Shadow disguise on when talking to the others.#b#The rodent of unusual cuteness is selling more masks if you need them.#b#And I sell a variety of rare and exotic goods, even outside of this festival"
+        "NPC.cs.3990": "{{i18n:dialogue.krobus-introduction}}"
       }
     },
     {

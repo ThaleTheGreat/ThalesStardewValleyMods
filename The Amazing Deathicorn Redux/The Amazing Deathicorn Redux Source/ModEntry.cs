@@ -71,16 +71,16 @@ public sealed class ModEntry : Mod
     if (api == null)
       return;
     api.Register(this.ModManifest, (Action) (() => this.Config = new ModConfig()), (Action) (() => this.Helper.WriteConfig<ModConfig>(this.Config)));
-    api.AddBoolOption(this.ModManifest, (Func<bool>) (() => this.Config.EnableHornLasers), (Action<bool>) (value => this.Config.EnableHornLasers = value), (Func<string>) (() => "Horn lasers"), (Func<string>) (() => "Enable/disable the Deathicorn's horn laser auto-attack."));
-    api.AddNumberOption(this.ModManifest, (Func<float>) (() => this.Config.LaserIntervalSeconds), (Action<float>) (value => this.Config.LaserIntervalSeconds = Math.Max(0.1f, value)), (Func<string>) (() => "Laser interval (seconds)"), (Func<string>) (() => "Seconds between horn laser shots."), new float?(0.1f), new float?(10f), new float?(0.1f));
-    api.AddNumberOption(this.ModManifest, (Func<int>) (() => this.Config.RangeTiles), (Action<int>) (value => this.Config.RangeTiles = Math.Clamp(value, 1, 40)), (Func<string>) (() => "Laser range (tiles)"), (Func<string>) (() => "How far the horn lasers can target enemies."), new int?(1), new int?(40), new int?(1));
-    api.AddBoolOption(this.ModManifest, (Func<bool>) (() => this.Config.EnableDeathicornGlow), (Action<bool>) (value => this.Config.EnableDeathicornGlow = value), (Func<string>) (() => "Deathicorn glow"), (Func<string>) (() => "Emit light like a glow ring (mounted or nearby when dismounted)."));
+    api.AddBoolOption(this.ModManifest, (Func<bool>) (() => this.Config.EnableHornLasers), (Action<bool>) (value => this.Config.EnableHornLasers = value), (Func<string>) (() => this.T("config.horn-lasers.name")), (Func<string>) (() => this.T("config.horn-lasers.tooltip")));
+    api.AddNumberOption(this.ModManifest, (Func<float>) (() => this.Config.LaserIntervalSeconds), (Action<float>) (value => this.Config.LaserIntervalSeconds = Math.Max(0.1f, value)), (Func<string>) (() => this.T("config.laser-interval.name")), (Func<string>) (() => this.T("config.laser-interval.tooltip")), new float?(0.1f), new float?(10f), new float?(0.1f));
+    api.AddNumberOption(this.ModManifest, (Func<int>) (() => this.Config.RangeTiles), (Action<int>) (value => this.Config.RangeTiles = Math.Clamp(value, 1, 40)), (Func<string>) (() => this.T("config.laser-range.name")), (Func<string>) (() => this.T("config.laser-range.tooltip")), new int?(1), new int?(40), new int?(1));
+    api.AddBoolOption(this.ModManifest, (Func<bool>) (() => this.Config.EnableDeathicornGlow), (Action<bool>) (value => this.Config.EnableDeathicornGlow = value), (Func<string>) (() => this.T("config.deathicorn-glow.name")), (Func<string>) (() => this.T("config.deathicorn-glow.tooltip")));
     string[] names = Enum.GetNames(typeof (LaserColor));
-    api.AddTextOption(this.ModManifest, (Func<string>) (() => this.Config.BoltCoreColor.ToString()), (Action<string>) (value => this.Config.BoltCoreColor = ModEntry.ParseLaserColor(value)), (Func<string>) (() => "Bolt core color"), (Func<string>) (() => "Color of the traveling bolt core at the tip of the beam."), names, (Func<string, string>) (v => ModEntry.FormatLaserColorChoiceForGmcm(v)));
-    api.AddTextOption(this.ModManifest, (Func<string>) (() => this.Config.BoltGlowColor.ToString()), (Action<string>) (value => this.Config.BoltGlowColor = ModEntry.ParseLaserColor(value)), (Func<string>) (() => "Bolt glow color"), (Func<string>) (() => "Color of the glow around the traveling bolt core."), names, (Func<string, string>) (v => ModEntry.FormatLaserColorChoiceForGmcm(v)));
-    api.AddTextOption(this.ModManifest, (Func<string>) (() => this.Config.ImpactSplashColor.ToString()), (Action<string>) (value => this.Config.ImpactSplashColor = ModEntry.ParseLaserColor(value)), (Func<string>) (() => "Impact splash color"), (Func<string>) (() => "Color of the splash/flash when the bolt hits an enemy."), names, (Func<string, string>) (v => ModEntry.FormatLaserColorChoiceForGmcm(v)));
-    api.AddTextOption(this.ModManifest, (Func<string>) (() => this.Config.GlowColor.ToString()), (Action<string>) (value => this.Config.GlowColor = ModEntry.ParseLaserColor(value)), (Func<string>) (() => "Glow color"), (Func<string>) (() => "Color of the Deathicorn's light (Prismatic cycles)."), names, (Func<string, string>) (v => ModEntry.FormatLaserColorChoiceForGmcm(v)));
-    api.AddNumberOption(this.ModManifest, (Func<float>) (() => this.Config.GlowRadius), (Action<float>) (value => this.Config.GlowRadius = MathHelper.Clamp(value, 0.5f, 15f)), (Func<string>) (() => "Glow radius"), (Func<string>) (() => "Light radius in tiles. (Glow Ring is ~10; Small Glow Ring is ~5.)"), new float?(0.5f), new float?(15f), new float?(0.5f));
+    api.AddTextOption(this.ModManifest, (Func<string>) (() => this.Config.BoltCoreColor.ToString()), (Action<string>) (value => this.Config.BoltCoreColor = ModEntry.ParseLaserColor(value)), (Func<string>) (() => this.T("config.bolt-core-color.name")), (Func<string>) (() => this.T("config.bolt-core-color.tooltip")), names, (Func<string, string>) (v => this.FormatLaserColorChoiceForGmcm(v)));
+    api.AddTextOption(this.ModManifest, (Func<string>) (() => this.Config.BoltGlowColor.ToString()), (Action<string>) (value => this.Config.BoltGlowColor = ModEntry.ParseLaserColor(value)), (Func<string>) (() => this.T("config.bolt-glow-color.name")), (Func<string>) (() => this.T("config.bolt-glow-color.tooltip")), names, (Func<string, string>) (v => this.FormatLaserColorChoiceForGmcm(v)));
+    api.AddTextOption(this.ModManifest, (Func<string>) (() => this.Config.ImpactSplashColor.ToString()), (Action<string>) (value => this.Config.ImpactSplashColor = ModEntry.ParseLaserColor(value)), (Func<string>) (() => this.T("config.impact-splash-color.name")), (Func<string>) (() => this.T("config.impact-splash-color.tooltip")), names, (Func<string, string>) (v => this.FormatLaserColorChoiceForGmcm(v)));
+    api.AddTextOption(this.ModManifest, (Func<string>) (() => this.Config.GlowColor.ToString()), (Action<string>) (value => this.Config.GlowColor = ModEntry.ParseLaserColor(value)), (Func<string>) (() => this.T("config.glow-color.name")), (Func<string>) (() => this.T("config.glow-color.tooltip")), names, (Func<string, string>) (v => this.FormatLaserColorChoiceForGmcm(v)));
+    api.AddNumberOption(this.ModManifest, (Func<float>) (() => this.Config.GlowRadius), (Action<float>) (value => this.Config.GlowRadius = MathHelper.Clamp(value, 0.5f, 15f)), (Func<string>) (() => this.T("config.glow-radius.name")), (Func<string>) (() => this.T("config.glow-radius.tooltip")), new float?(0.5f), new float?(15f), new float?(0.5f));
   }
 
   private void OnAssetRequested(object? sender, AssetRequestedEventArgs e)
@@ -859,9 +859,15 @@ public sealed class ModEntry : Mod
     return new Color((int) (byte) Math.Clamp((int) Math.Round((double) num7 * (double) byte.MaxValue), 0, (int) byte.MaxValue), (int) (byte) Math.Clamp((int) Math.Round((double) num8 * (double) byte.MaxValue), 0, (int) byte.MaxValue), (int) (byte) Math.Clamp((int) Math.Round((double) num9 * (double) byte.MaxValue), 0, (int) byte.MaxValue));
   }
 
-  private static string FormatLaserColorChoiceForGmcm(string value)
+  private string FormatLaserColorChoiceForGmcm(string value)
   {
-    return ModEntry.ParseLaserColor(value).ToString();
+    LaserColor color = ModEntry.ParseLaserColor(value);
+    return this.T($"color.{color.ToString().ToLowerInvariant()}");
+  }
+
+  private string T(string key)
+  {
+    return this.Helper.Translation.Get(key).ToString();
   }
 
   private static LaserColor ParseLaserColor(string? value)

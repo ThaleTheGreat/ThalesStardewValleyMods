@@ -11,7 +11,6 @@ internal sealed class ModEntry : Mod
     private const string SaveDataKey = "ItRubsTheMayoInState";
     private const int RareMayonnaiseQuoteMinimumPreviousThrows = 10;
     private const int RareMayonnaiseQuoteChance = 50;
-    private const string RareMayonnaiseQuote = "At least it ain't a road flare this time.";
 
     private Config Config = new();
     private SaveState State = new();
@@ -72,7 +71,7 @@ internal sealed class ModEntry : Mod
             State.MayonnaiseThrowsGiven++;
 
             quote = canUseRareQuote && Random.Next(RareMayonnaiseQuoteChance) == 0
-                ? RareMayonnaiseQuote
+                ? T("quote.mayonnaise.rare")
                 : TakeNextQuote(State.RemainingMayonnaiseQuotes, Config.MayonnaiseQuotes);
         }
         else
@@ -146,7 +145,28 @@ internal sealed class ModEntry : Mod
 
         string quote = remainingQuotes[0];
         remainingQuotes.RemoveAt(0);
-        return quote;
+        return LocalizeQuote(quote);
+    }
+
+    private string LocalizeQuote(string quote)
+    {
+        return quote switch
+        {
+            "Say it, don't spray it brother. Dang." => T("quote.mayonnaise.1"),
+            "I need a towel now." => T("quote.mayonnaise.2"),
+            "There look, I'm putting the Mayonnaise on the skin. I'm rubbing it in." => T("quote.mayonnaise.3"),
+            "Where's my supplies. Yeah, come on man, I thought we had a deal." => T("quote.mayonnaise.4"),
+            "Yee! Auto Trader!" => T("quote.book.1"),
+            "Ohh August, I don't got this one." => T("quote.book.2"),
+            "There's some deals in here." => T("quote.book.3"),
+            "Check this out. 71' Cuda. Plum Crazy Purple." => T("quote.book.4"),
+            _ => quote
+        };
+    }
+
+    private string T(string key)
+    {
+        return Helper.Translation.Get(key).ToString();
     }
 
     private void RefillQuoteQueue(List<string> target, List<string> source)

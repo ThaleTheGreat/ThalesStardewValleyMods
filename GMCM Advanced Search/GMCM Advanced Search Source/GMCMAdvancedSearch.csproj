@@ -18,6 +18,7 @@
   <ItemGroup>
     <None Include="manifest.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="LICENSE" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="i18n\**\*" CopyToOutputDirectory="PreserveNewest" />
     <EmbeddedResource Include="MobilePhone.png" LogicalName="GMCMAdvancedSearch.MobilePhone.png" />
   </ItemGroup>
 

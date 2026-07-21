@@ -1,0 +1,20 @@
+{
+  "config.show-infested.name": "Show Infested Level Indicators",
+  "config.show-infested.tooltip": "Show infested mine levels in the HUD tooltip.",
+  "config.show-mushroom.name": "Show Mushroom Level Indicators",
+  "config.show-mushroom.tooltip": "Show mushroom mine levels in the HUD tooltip.",
+  "config.show-dino.name": "Show Dino Level Indicators",
+  "config.show-dino.tooltip": "Show prehistoric Skull Cavern levels in the HUD tooltip.",
+  "mobile-app.name": "Mine Levels",
+  "message.save-required": "Mine level indicators are available after loading a save.",
+  "message.none-enabled": "No mine level indicators are currently enabled.",
+  "section.infested-levels": "Infested Levels",
+  "section.mushroom-levels": "Mushroom Levels",
+  "section.dino-levels": "Dino Levels",
+  "value.none": "None",
+  "value.mine-not-explored": "Mine Not Sufficiently Explored",
+  "value.skull-key-required": "Skull Key Required",
+  "value.none-through-skull-cavern": "None through Skull Cavern {{level}}",
+  "level-type.slime": "Slime",
+  "level-type.monster": "Monster"
+}

@@ -90,23 +90,40 @@ namespace ThaleTheGreat.Mapster
                 return;
 
             gmcm.Register(ModManifest, () => Config = new ModConfig(), () => Helper.WriteConfig(Config));
-            gmcm.AddBoolOption(ModManifest, () => Config.ModEnabled, value => Config.ModEnabled = value, () => "Mod Enabled");
-            gmcm.AddBoolOption(ModManifest, () => Config.AllowTeleport, value => Config.AllowTeleport = value, () => "Allow Teleport From Preview");
-            gmcm.AddBoolOption(ModManifest, () => Config.ShowLocationDropdown, value => Config.ShowLocationDropdown = value, () => "Show Location Dropdown", () => "Show the searchable location dropdown. Disable this to only preview the player's current location.");
-            gmcm.AddBoolOption(ModManifest, () => Config.ShowMiniMap, value => Config.ShowMiniMap = value, () => "Show Mini Map", () => "Show a small local map during normal gameplay.");
-            gmcm.AddTextOption(ModManifest, () => Config.MiniMapSize, value => Config.MiniMapSize = NormalizeMiniMapSize(value), () => "Mini Map Size", () => "Choose the size of the mini map.", MiniMapSizeOptions);
-            gmcm.AddNumberOption(ModManifest, () => Config.MiniMapXPercent, value => Config.MiniMapXPercent = Math.Clamp(value, 0, 100), () => "Mini Map X Position", () => "Set the mini map window's horizontal position as a percentage of available screen space. 0 is left, 100 is right.", 0, 100, 1);
-            gmcm.AddNumberOption(ModManifest, () => Config.MiniMapYPercent, value => Config.MiniMapYPercent = Math.Clamp(value, 0, 100), () => "Mini Map Y Position", () => "Set the mini map window's vertical position as a percentage of available screen space. 0 is top, 100 is bottom.", 0, 100, 1);
-            gmcm.AddBoolOption(ModManifest, () => Config.ShowNpcMapLocationsOnMap, value => Config.ShowNpcMapLocationsOnMap = value, () => "NPC Map Locations On Full Map", () => "If NPC Map Locations is installed, show NPC and player markers on Mapster's full map.");
-            gmcm.AddBoolOption(ModManifest, () => Config.ShowNpcMapLocationsOnMiniMap, value => Config.ShowNpcMapLocationsOnMiniMap = value, () => "NPC Map Locations On Mini Map", () => "If NPC Map Locations is installed, show NPC and player markers on Mapster's mini map.");
-            gmcm.AddBoolOption(ModManifest, () => Config.ShowNpcMapLocationTooltipsOnMap, value => Config.ShowNpcMapLocationTooltipsOnMap = value, () => "NPC Tooltips On Full Map", () => "Show a name tooltip when hovering NPC Map Locations markers on Mapster's full map.");
-            gmcm.AddBoolOption(ModManifest, () => Config.ShowNpcMapLocationTooltipsOnMiniMap, value => Config.ShowNpcMapLocationTooltipsOnMiniMap = value, () => "NPC Tooltips On Mini Map", () => "Show a name tooltip when hovering NPC Map Locations markers on Mapster's mini map.");
-            gmcm.AddBoolOption(ModManifest, () => Config.ShowMobilePhoneApp, value => { Config.ShowMobilePhoneApp = value; if (value) RegisterMobilePhoneApp(); }, () => "Mobile Phone App", () => "If Mobile Phone is installed, add Mapster as an app on the phone. Turning this off after registration requires restarting the game to remove the icon from Mobile Phone.");
-            gmcm.AddBoolOption(ModManifest, () => Config.AnimatePreview, value => Config.AnimatePreview = value, () => "Animate Map Preview", () => "Periodically refresh the map preview so animated tiles and sprites can update. Turn this off if another mod conflicts with preview rendering.");
-            gmcm.AddKeybindList(ModManifest, () => Config.MapKey, value => Config.MapKey = value, () => "Open Mapster");
-            gmcm.AddBoolOption(ModManifest, () => Config.DebugLogging, value => Config.DebugLogging = value, () => "Debug Logging");
+            gmcm.AddBoolOption(ModManifest, () => Config.ModEnabled, value => Config.ModEnabled = value, () => T("config.enabled.name"));
+            gmcm.AddBoolOption(ModManifest, () => Config.AllowTeleport, value => Config.AllowTeleport = value, () => T("config.allow-teleport.name"));
+            gmcm.AddBoolOption(ModManifest, () => Config.ShowLocationDropdown, value => Config.ShowLocationDropdown = value, () => T("config.show-location-dropdown.name"), () => T("config.show-location-dropdown.tooltip"));
+            gmcm.AddBoolOption(ModManifest, () => Config.ShowMiniMap, value => Config.ShowMiniMap = value, () => T("config.show-mini-map.name"), () => T("config.show-mini-map.tooltip"));
+            gmcm.AddTextOption(ModManifest, () => Config.MiniMapSize, value => Config.MiniMapSize = NormalizeMiniMapSize(value), () => T("config.mini-map-size.name"), () => T("config.mini-map-size.tooltip"), MiniMapSizeOptions, FormatMiniMapSizeForGmcm);
+            gmcm.AddNumberOption(ModManifest, () => Config.MiniMapXPercent, value => Config.MiniMapXPercent = Math.Clamp(value, 0, 100), () => T("config.mini-map-x.name"), () => T("config.mini-map-x.tooltip"), 0, 100, 1);
+            gmcm.AddNumberOption(ModManifest, () => Config.MiniMapYPercent, value => Config.MiniMapYPercent = Math.Clamp(value, 0, 100), () => T("config.mini-map-y.name"), () => T("config.mini-map-y.tooltip"), 0, 100, 1);
+            gmcm.AddBoolOption(ModManifest, () => Config.ShowNpcMapLocationsOnMap, value => Config.ShowNpcMapLocationsOnMap = value, () => T("config.npc-markers-full.name"), () => T("config.npc-markers-full.tooltip"));
+            gmcm.AddBoolOption(ModManifest, () => Config.ShowNpcMapLocationsOnMiniMap, value => Config.ShowNpcMapLocationsOnMiniMap = value, () => T("config.npc-markers-mini.name"), () => T("config.npc-markers-mini.tooltip"));
+            gmcm.AddBoolOption(ModManifest, () => Config.ShowNpcMapLocationTooltipsOnMap, value => Config.ShowNpcMapLocationTooltipsOnMap = value, () => T("config.npc-tooltips-full.name"), () => T("config.npc-tooltips-full.tooltip"));
+            gmcm.AddBoolOption(ModManifest, () => Config.ShowNpcMapLocationTooltipsOnMiniMap, value => Config.ShowNpcMapLocationTooltipsOnMiniMap = value, () => T("config.npc-tooltips-mini.name"), () => T("config.npc-tooltips-mini.tooltip"));
+            gmcm.AddBoolOption(ModManifest, () => Config.ShowMobilePhoneApp, value => { Config.ShowMobilePhoneApp = value; if (value) RegisterMobilePhoneApp(); }, () => T("config.mobile-phone.name"), () => T("config.mobile-phone.tooltip"));
+            gmcm.AddBoolOption(ModManifest, () => Config.AnimatePreview, value => Config.AnimatePreview = value, () => T("config.animate-preview.name"), () => T("config.animate-preview.tooltip"));
+            gmcm.AddKeybindList(ModManifest, () => Config.MapKey, value => Config.MapKey = value, () => T("config.open-mapster.name"));
+            gmcm.AddBoolOption(ModManifest, () => Config.DebugLogging, value => Config.DebugLogging = value, () => T("config.debug-logging.name"));
         }
 
+
+        private string T(string key)
+        {
+            return Helper.Translation.Get(key).ToString();
+        }
+
+        private string FormatMiniMapSizeForGmcm(string value)
+        {
+            return NormalizeMiniMapSize(value) switch
+            {
+                "Small" => T("config.mini-map-size.value.small"),
+                "Medium" => T("config.mini-map-size.value.medium"),
+                "Large" => T("config.mini-map-size.value.large"),
+                "Extra Large" => T("config.mini-map-size.value.extra-large"),
+                _ => value
+            };
+        }
 
         private void RegisterMobilePhoneApp()
         {
@@ -120,7 +137,7 @@ namespace ThaleTheGreat.Mapster
             try
             {
                 mobilePhoneAppIcon ??= CreateMobilePhoneAppIcon();
-                mobilePhoneAppRegistered = api.AddApp(ModManifest.UniqueID, "Mapster", OpenMapFromMobilePhone, mobilePhoneAppIcon);
+                mobilePhoneAppRegistered = api.AddApp(ModManifest.UniqueID, T("mobile-app.name"), OpenMapFromMobilePhone, mobilePhoneAppIcon);
             }
             catch (Exception ex)
             {
@@ -994,7 +1011,7 @@ namespace ThaleTheGreat.Mapster
                 }
 
                 if (Config.AllowTeleport)
-                    DrawSmallText(b, "Click the preview to warp to this relative map position.", new Vector2(borderRect.X, Math.Min(Game1.uiViewport.Height - 32, borderRect.Bottom + 6)));
+                    DrawSmallText(b, T("menu.teleport-hint"), new Vector2(borderRect.X, Math.Min(Game1.uiViewport.Height - 32, borderRect.Bottom + 6)));
             }
 
             if (Config.ShowLocationDropdown)
@@ -1398,20 +1415,21 @@ namespace ThaleTheGreat.Mapster
             string query = searchBox?.Text ?? string.Empty;
             string text = searchFocused || !string.IsNullOrWhiteSpace(query) ? query : GetLocationName(viewedLocation);
             if (string.IsNullOrEmpty(text) && searchFocused)
-                text = "Search locations...";
+                text = T("menu.search-placeholder");
 
-            Color textColor = string.Equals(text, "Search locations...", StringComparison.Ordinal) ? Game1.textColor * 0.65f : Game1.textColor;
+            string searchPlaceholder = T("menu.search-placeholder");
+            Color textColor = string.Equals(text, searchPlaceholder, StringComparison.Ordinal) ? Game1.textColor * 0.65f : Game1.textColor;
             Vector2 textPosition = new(x + 12, y + (height - Game1.smallFont.LineSpacing) / 2f);
             int textMaxWidth = Math.Max(1, fieldWidth - 24);
             DrawClippedText(b, text, Game1.smallFont, textPosition, textColor, textMaxWidth);
 
             if (searchFocused && DateTime.UtcNow.Millisecond < 500)
-                DrawSearchCaret(b, text, textPosition, textMaxWidth, y + 10, height - 20);
+                DrawSearchCaret(b, text, searchPlaceholder, textPosition, textMaxWidth, y + 10, height - 20);
         }
 
-        private static void DrawSearchCaret(SpriteBatch b, string text, Vector2 textPosition, int maxWidth, int y, int height)
+        private static void DrawSearchCaret(SpriteBatch b, string text, string searchPlaceholder, Vector2 textPosition, int maxWidth, int y, int height)
         {
-            if (string.Equals(text, "Search locations...", StringComparison.Ordinal))
+            if (string.Equals(text, searchPlaceholder, StringComparison.Ordinal))
                 text = string.Empty;
 
             float width = Game1.smallFont.MeasureString(text).X;

@@ -1,0 +1,22 @@
+{
+  "config.open-menu-key.name": "Open Menu Key",
+  "config.open-menu-key.tooltip": "Keybind to open the Date Change menu.",
+  "config.apply-immediately.name": "Apply Immediately",
+  "config.apply-immediately.tooltip": "If enabled, Apply happens right now. If disabled (default), Apply queues changes for the next morning.",
+  "config.debug-logging.name": "Debug Logging",
+  "config.debug-logging.tooltip": "Show routine Date Change diagnostic messages in the SMAPI console.",
+  "mobile-app.name": "(TTG) Date Change",
+  "menu.title": "(TTG) Date Change",
+  "menu.freeze-clock": "Freeze Clock: {{state}}",
+  "state.on": "ON",
+  "state.off": "OFF",
+  "menu.day": "Day",
+  "menu.season": "Season",
+  "menu.year": "Year",
+  "menu.ok": "OK",
+  "menu.cancel": "Cancel",
+  "season.spring": "Spring",
+  "season.summer": "Summer",
+  "season.fall": "Fall",
+  "season.winter": "Winter"
+}

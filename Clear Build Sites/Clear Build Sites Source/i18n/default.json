@@ -1,0 +1,11 @@
+{
+  "config.enabled.name": "Enable Mod",
+  "config.clear-stones.name": "Clear Stones",
+  "config.clear-twigs.name": "Clear Twigs",
+  "config.clear-weeds.name": "Clear Weeds",
+  "config.clear-grass.name": "Clear Grass",
+  "config.clear-tree-seeds.name": "Clear Tree Seeds and Saplings",
+  "config.clear-wild-trees.name": "Clear Wild Trees",
+  "config.clear-resource-clumps.name": "Clear Stumps, Logs, and Boulders",
+  "config.clear-flooring.name": "Clear Flooring and Paths"
+}

@@ -81,9 +81,19 @@ public class ModEntry : Mod
     if (api == null)
       return;
     api.Register(this.ModManifest, (Action) (() => this.Config = new ModConfig()), (Action) (() => this.Helper.WriteConfig<ModConfig>(this.Config)));
-    api.AddKeybindList(this.ModManifest, (Func<KeybindList>) (() => this.Config.OpenMenuKey), (Action<KeybindList>) (value => this.Config.OpenMenuKey = value), (Func<string>) (() => "Open Menu Key"), (Func<string>) (() => "Keybind to open the Date Change menu."));
-    api.AddBoolOption(this.ModManifest, (Func<bool>) (() => this.Config.ApplyImmediately), (Action<bool>) (value => this.Config.ApplyImmediately = value), (Func<string>) (() => "Apply Immediately"), (Func<string>) (() => "If enabled, Apply happens right now. If disabled (default), Apply queues changes for the next morning."));
-    api.AddBoolOption(this.ModManifest, (Func<bool>) (() => this.Config.DebugLogging), (Action<bool>) (value => this.Config.DebugLogging = value), (Func<string>) (() => "Debug Logging"), (Func<string>) (() => "Show routine Date Change diagnostic messages in the SMAPI console."));
+    api.AddKeybindList(this.ModManifest, (Func<KeybindList>) (() => this.Config.OpenMenuKey), (Action<KeybindList>) (value => this.Config.OpenMenuKey = value), (Func<string>) (() => this.T("config.open-menu-key.name")), (Func<string>) (() => this.T("config.open-menu-key.tooltip")));
+    api.AddBoolOption(this.ModManifest, (Func<bool>) (() => this.Config.ApplyImmediately), (Action<bool>) (value => this.Config.ApplyImmediately = value), (Func<string>) (() => this.T("config.apply-immediately.name")), (Func<string>) (() => this.T("config.apply-immediately.tooltip")));
+    api.AddBoolOption(this.ModManifest, (Func<bool>) (() => this.Config.DebugLogging), (Action<bool>) (value => this.Config.DebugLogging = value), (Func<string>) (() => this.T("config.debug-logging.name")), (Func<string>) (() => this.T("config.debug-logging.tooltip")));
+  }
+
+  internal string T(string key)
+  {
+    return this.Helper.Translation.Get(key).ToString();
+  }
+
+  internal string T(string key, object tokens)
+  {
+    return this.Helper.Translation.Get(key, tokens).ToString();
   }
 
   private void RegisterMobilePhoneApp()
@@ -95,7 +105,7 @@ public class ModEntry : Mod
     try
     {
       Texture2D appIcon = this.Helper.ModContent.Load<Texture2D>(Path.Combine("assets", "MobilePhone.png"));
-      bool success = this.MobilePhoneApi.AddApp(this.ModManifest.UniqueID, "(TTG) Date Change", this.OpenFromMobilePhone, appIcon);
+      bool success = this.MobilePhoneApi.AddApp(this.ModManifest.UniqueID, this.T("mobile-app.name"), this.OpenFromMobilePhone, appIcon);
       this.DebugLog($"Mobile Phone app registration success: {success}.");
     }
     catch (Exception ex)

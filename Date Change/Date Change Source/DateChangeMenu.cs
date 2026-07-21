@@ -87,10 +87,10 @@ public class DateChangeMenu : IClickableMenu
 
     Rectangle seasonBounds = new Rectangle(fieldX, contentTop + 108, fieldWidth, fieldHeight);
     List<string> items = new List<string>();
-    items.Add("Spring");
-    items.Add("Summer");
-    items.Add("Fall");
-    items.Add("Winter");
+    items.Add(this.Mod.T("season.spring"));
+    items.Add(this.Mod.T("season.summer"));
+    items.Add(this.Mod.T("season.fall"));
+    items.Add(this.Mod.T("season.winter"));
     this.seasonDropdown = new SimpleDropdown(seasonBounds, items, DateChangeMenu.SeasonToIndex(this.tempSeason))
     {
       VisibleRows = 4
@@ -400,7 +400,7 @@ public class DateChangeMenu : IClickableMenu
 
     SpriteText.drawStringHorizontallyCenteredAt(
       b,
-      "(TTG) Date Change",
+      this.Mod.T("menu.title"),
       this.xPositionOnScreen + this.width / 2,
       this.yPositionOnScreen + 28,
       999999,
@@ -409,15 +409,15 @@ public class DateChangeMenu : IClickableMenu
       1f,
       0.88f);
 
-    this.DrawVanillaButton(b, this.freezeToggleButton.bounds, "Freeze Clock: " + (this.tempFreeze ? "ON" : "OFF"));
+    this.DrawVanillaButton(b, this.freezeToggleButton.bounds, this.Mod.T("menu.freeze-clock", new { state = this.tempFreeze ? this.Mod.T("state.on") : this.Mod.T("state.off") }));
     this.dayDropdown.SelectedIndex = Math.Clamp(this.tempDay - 1, 0, 27);
     this.seasonDropdown.SelectedIndex = DateChangeMenu.SeasonToIndex(this.tempSeason);
     this.yearDropdown.SelectedIndex = Math.Clamp(this.tempYear - 1, 0, this.yearDropdown.Items.Count - 1);
-    this.dayDropdown.DrawLabeledDropdown(b, "Day");
-    this.seasonDropdown.DrawLabeledDropdown(b, "Season");
-    this.yearDropdown.DrawLabeledDropdown(b, "Year");
-    this.DrawVanillaButton(b, this.applyButton.bounds, "OK");
-    this.DrawVanillaButton(b, this.cancelButton.bounds, "Cancel");
+    this.dayDropdown.DrawLabeledDropdown(b, this.Mod.T("menu.day"));
+    this.seasonDropdown.DrawLabeledDropdown(b, this.Mod.T("menu.season"));
+    this.yearDropdown.DrawLabeledDropdown(b, this.Mod.T("menu.year"));
+    this.DrawVanillaButton(b, this.applyButton.bounds, this.Mod.T("menu.ok"));
+    this.DrawVanillaButton(b, this.cancelButton.bounds, this.Mod.T("menu.cancel"));
 
     if (this.dayDropdown.IsOpen)
       this.dayDropdown.DrawOpenList(b);

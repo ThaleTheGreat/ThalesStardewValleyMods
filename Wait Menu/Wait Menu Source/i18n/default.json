@@ -1,0 +1,20 @@
+{
+  "config.open-menu-key.name": "Open menu keybind",
+  "config.open-menu-key.tooltip": "Keybind to open the wait menu. Default is Ctrl+W.",
+  "config.allow-festivals.name": "Allow during festivals",
+  "config.allow-festivals.tooltip": "If disabled, the wait menu won't open during festivals.",
+  "config.allow-events.name": "Allow during events",
+  "config.allow-events.tooltip": "If disabled, the wait menu won't open during cutscenes/events.",
+  "config.max-wait.name": "Max wait minutes",
+  "config.max-wait.tooltip": "Safety clamp for max minutes advanced per wait action.",
+  "config.stabilize.name": "Stabilize after NPC teleport",
+  "config.stabilize.tooltip": "Clears stale NPC pathing/animation state after placing NPCs at schedule destinations.",
+  "mobile-app.name": "(TTG) Wait Menu",
+  "message.too-late": "It's too late to wait.",
+  "message.schedule-error": "WaitMenu: An NPC schedule error occurred while advancing time. Check SMAPI log.",
+  "menu.title": "Wait how long?",
+  "duration.one-hour": "1 hour",
+  "duration.hours": "{{count}} hours",
+  "duration.hours-minutes-short": "{{hours}}h {{minutes}}m",
+  "duration.minutes": "{{count}} minutes"
+}

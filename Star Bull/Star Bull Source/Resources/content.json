@@ -7,8 +7,8 @@
       "Entries": {
         "{{ModId}}_Original": {
           "Name": "Red Bull Original",
-          "DisplayName": "Red Bull Original",
-          "Description": "Red Bull gives you wings! The iconic original with a unique sweet-tart flavor.",
+          "DisplayName": "{{i18n:object.original.name}}",
+          "Description": "{{i18n:object.original.description}}",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -18,8 +18,8 @@
           "IsDrink": true,
           "Buffs": [
             {
-              "DisplayName": "Wings!",
-              "Description": "Wings! +1 Speed, +30 Max Energy, +1 Farming, +1 Foraging, +16 Magnetism",
+              "DisplayName": "{{i18n:object.original.buff.name}}",
+              "Description": "{{i18n:object.original.buff.description}}",
               "Duration": 360,
               "CustomAttributes": {
                 "Speed": 1,
@@ -36,8 +36,8 @@
         },
         "{{ModId}}_Sugarfree": {
           "Name": "Red Bull Sugarfree",
-          "DisplayName": "Red Bull Sugarfree",
-          "Description": "All the energy, none of the sugar. Crisp and refreshing.",
+          "DisplayName": "{{i18n:object.sugarfree.name}}",
+          "Description": "{{i18n:object.sugarfree.description}}",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -47,8 +47,8 @@
           "IsDrink": true,
           "Buffs": [
             {
-              "DisplayName": "Sugar-Free Energy",
-              "Description": "Sugar-Free Energy. +1 Speed, +30 Max Energy, +1 Fishing, +1 Luck, +16 Magnetism",
+              "DisplayName": "{{i18n:object.sugarfree.buff.name}}",
+              "Description": "{{i18n:object.sugarfree.buff.description}}",
               "Duration": 360,
               "CustomAttributes": {
                 "Speed": 1,
@@ -64,8 +64,8 @@
         },
         "{{ModId}}_Zero": {
           "Name": "Red Bull Zero",
-          "DisplayName": "Red Bull Zero",
-          "Description": "Zero sugar, tastes like the original. The perfect balance.",
+          "DisplayName": "{{i18n:object.zero.name}}",
+          "Description": "{{i18n:object.zero.description}}",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -75,8 +75,8 @@
           "IsDrink": true,
           "Buffs": [
             {
-              "DisplayName": "Zero Compromise",
-              "Description": "Zero Compromise. +1 Speed, +30 Max Energy, +1 Mining, +1 Combat, +16 Magnetism",
+              "DisplayName": "{{i18n:object.zero.buff.name}}",
+              "Description": "{{i18n:object.zero.buff.description}}",
               "Duration": 360,
               "CustomAttributes": {
                 "Speed": 1,
@@ -92,8 +92,8 @@
         },
         "{{ModId}}_TotalZero": {
           "Name": "Red Bull Total Zero",
-          "DisplayName": "Red Bull Total Zero",
-          "Description": "Zero sugar, zero calories, zero carbs. Clinical precision.",
+          "DisplayName": "{{i18n:object.total-zero.name}}",
+          "Description": "{{i18n:object.total-zero.description}}",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -103,8 +103,8 @@
           "IsDrink": true,
           "Buffs": [
             {
-              "DisplayName": "Clinical Energy",
-              "Description": "Clinical Energy. +1 Speed, +30 Max Energy, +32 Magnetism, +2 Immunity",
+              "DisplayName": "{{i18n:object.total-zero.buff.name}}",
+              "Description": "{{i18n:object.total-zero.buff.description}}",
               "Duration": 360,
               "CustomAttributes": {
                 "Speed": 1,
@@ -119,8 +119,8 @@
         },
         "{{ModId}}_RedEdition": {
           "Name": "Red Bull Red Edition",
-          "DisplayName": "Red Bull Red (Watermelon)",
-          "Description": "Fresh, sweet, juicy watermelon. Incredibly refreshing!",
+          "DisplayName": "{{i18n:object.red-edition.name}}",
+          "Description": "{{i18n:object.red-edition.description}}",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -130,8 +130,8 @@
           "IsDrink": true,
           "Buffs": [
             {
-              "DisplayName": "Watermelon Rush",
-              "Description": "Watermelon Rush. +1 Speed, +40 Max Energy, +1 to all skills",
+              "DisplayName": "{{i18n:object.red-edition.buff.name}}",
+              "Description": "{{i18n:object.red-edition.buff.description}}",
               "Duration": 480,
               "CustomAttributes": {
                 "Speed": 1,
@@ -149,8 +149,8 @@
         },
         "{{ModId}}_YellowEdition": {
           "Name": "Red Bull Yellow Edition",
-          "DisplayName": "Red Bull Yellow (Tropical)",
-          "Description": "A vibrant blend of tropical fruits. Vacation in a can!",
+          "DisplayName": "{{i18n:object.yellow-edition.name}}",
+          "Description": "{{i18n:object.yellow-edition.description}}",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -160,8 +160,8 @@
           "IsDrink": true,
           "Buffs": [
             {
-              "DisplayName": "Tropical Energy",
-              "Description": "Tropical Energy. +1 Speed, +40 Max Energy, +5 Foraging, +2 Luck",
+              "DisplayName": "{{i18n:object.yellow-edition.buff.name}}",
+              "Description": "{{i18n:object.yellow-edition.buff.description}}",
               "Duration": 480,
               "CustomAttributes": {
                 "Speed": 1,
@@ -176,8 +176,8 @@
         },
         "{{ModId}}_BlueEdition": {
           "Name": "Red Bull Blue Edition",
-          "DisplayName": "Red Bull Blue (Berry)",
-          "Description": "Deep, authentic blueberry flavor. Fruity yet sophisticated.",
+          "DisplayName": "{{i18n:object.blue-edition.name}}",
+          "Description": "{{i18n:object.blue-edition.description}}",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -187,8 +187,8 @@
           "IsDrink": true,
           "Buffs": [
             {
-              "DisplayName": "Berry Focus",
-              "Description": "Berry Focus. +1 Speed, +40 Max Energy, +2 Mining, +2 Luck",
+              "DisplayName": "{{i18n:object.blue-edition.buff.name}}",
+              "Description": "{{i18n:object.blue-edition.buff.description}}",
               "Duration": 480,
               "CustomAttributes": {
                 "Speed": 1,
@@ -203,8 +203,8 @@
         },
         "{{ModId}}_CoconutEdition": {
           "Name": "Red Bull Coconut Edition",
-          "DisplayName": "Red Bull Coconut (Coconut Berry)",
-          "Description": "Unique coconut balanced by tart berry. Creamy yet refreshing!",
+          "DisplayName": "{{i18n:object.coconut-edition.name}}",
+          "Description": "{{i18n:object.coconut-edition.description}}",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -214,8 +214,8 @@
           "IsDrink": true,
           "Buffs": [
             {
-              "DisplayName": "Exotic Fortitude",
-              "Description": "Exotic Fortitude. +2 Speed, +60 Max Energy, +5 Mining, +5 Attack, +5 Defense, +5 Luck, +10 Immunity, +64 Magnetism",
+              "DisplayName": "{{i18n:object.coconut-edition.buff.name}}",
+              "Description": "{{i18n:object.coconut-edition.buff.description}}",
               "Duration": 480,
               "CustomAttributes": {
                 "Speed": 2,
@@ -234,8 +234,8 @@
         },
         "{{ModId}}_PeachEdition": {
           "Name": "Red Bull Peach Edition",
-          "DisplayName": "Red Bull Peach (White Peach)",
-          "Description": "Soft, floral, incredibly smooth. Like biting into a perfectly ripe peach.",
+          "DisplayName": "{{i18n:object.peach-edition.name}}",
+          "Description": "{{i18n:object.peach-edition.description}}",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -245,8 +245,8 @@
           "IsDrink": true,
           "Buffs": [
             {
-              "DisplayName": "Desert Refreshment",
-              "Description": "Desert Refreshment. +1 Speed, +40 Max Energy, +2 Farming, +2 Luck",
+              "DisplayName": "{{i18n:object.peach-edition.buff.name}}",
+              "Description": "{{i18n:object.peach-edition.buff.description}}",
               "Duration": 480,
               "CustomAttributes": {
                 "Speed": 1,
@@ -261,8 +261,8 @@
         },
         "{{ModId}}_AmberEdition": {
           "Name": "Red Bull Amber Edition",
-          "DisplayName": "Red Bull Amber (Strawberry Apricot)",
-          "Description": "Sweet strawberry meets tangy apricot. A delightfully balanced crowd favorite!",
+          "DisplayName": "{{i18n:object.amber-edition.name}}",
+          "Description": "{{i18n:object.amber-edition.description}}",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -272,8 +272,8 @@
           "IsDrink": true,
           "Buffs": [
             {
-              "DisplayName": "Warrior's Vigor",
-              "Description": "Warrior's Vigor. +2 Speed, +60 Max Energy, +5 Mining, +5 Attack, +5 Defense, +5 Luck, +10 Immunity, +64 Magnetism",
+              "DisplayName": "{{i18n:object.amber-edition.buff.name}}",
+              "Description": "{{i18n:object.amber-edition.buff.description}}",
               "Duration": 480,
               "CustomAttributes": {
                 "Speed": 2,
@@ -292,8 +292,8 @@
         },
         "{{ModId}}_SeaBlueEdition": {
           "Name": "Red Bull Sea Blue Edition",
-          "DisplayName": "Red Bull Sea Blue (Juneberry)",
-          "Description": "The game-changer! Complex juneberry with blueberry notes.",
+          "DisplayName": "{{i18n:object.sea-blue-edition.name}}",
+          "Description": "{{i18n:object.sea-blue-edition.description}}",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -303,8 +303,8 @@
           "IsDrink": true,
           "Buffs": [
             {
-              "DisplayName": "Angler's Focus",
-              "Description": "Angler's Focus. +1 Speed, +40 Max Energy, +2 Fishing, +2 Luck",
+              "DisplayName": "{{i18n:object.sea-blue-edition.buff.name}}",
+              "Description": "{{i18n:object.sea-blue-edition.buff.description}}",
               "Duration": 480,
               "CustomAttributes": {
                 "Speed": 1,
@@ -319,8 +319,8 @@
         },
         "{{ModId}}_GreenEdition": {
           "Name": "Red Bull Green Edition",
-          "DisplayName": "Red Bull Green (Dragon Fruit)",
-          "Description": "Exotic dragon fruit! Subtle kiwi-pear notes.",
+          "DisplayName": "{{i18n:object.green-edition.name}}",
+          "Description": "{{i18n:object.green-edition.description}}",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -330,8 +330,8 @@
           "IsDrink": true,
           "Buffs": [
             {
-              "DisplayName": "Exotic Energy",
-              "Description": "Exotic Energy. +1 Speed, +40 Max Energy, +5 Foraging, +2 Luck",
+              "DisplayName": "{{i18n:object.green-edition.buff.name}}",
+              "Description": "{{i18n:object.green-edition.buff.description}}",
               "Duration": 480,
               "CustomAttributes": {
                 "Speed": 1,
@@ -346,8 +346,8 @@
         },
         "{{ModId}}_WinterEdition2025": {
           "Name": "Red Bull Winter Edition",
-          "DisplayName": "Red Bull Winter 2025 (Fuji Apple & Ginger)",
-          "Description": "Limited release! Crisp Fuji apple with a gentle ginger kick.",
+          "DisplayName": "{{i18n:object.winter-edition2025.name}}",
+          "Description": "{{i18n:object.winter-edition2025.description}}",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -357,8 +357,8 @@
           "IsDrink": true,
           "Buffs": [
             {
-              "DisplayName": "Cozy Warmth",
-              "Description": "Cozy Warmth. +1 Speed, +50 Max Energy, +5 Mining, +32 Magnetism, +2 Luck",
+              "DisplayName": "{{i18n:object.winter-edition2025.buff.name}}",
+              "Description": "{{i18n:object.winter-edition2025.buff.description}}",
               "Duration": 600,
               "CustomAttributes": {
                 "Speed": 1,
@@ -374,8 +374,8 @@
         },
         "{{ModId}}_SummerEdition2026": {
           "Name": "Red Bull Summer Edition 2026",
-          "DisplayName": "Red Bull Summer 2026 (Sudachi-Lime)",
-          "Description": "Limited release! Bright sudachi citrus with zesty lime.",
+          "DisplayName": "{{i18n:object.summer-edition2026.name}}",
+          "Description": "{{i18n:object.summer-edition2026.description}}",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -385,8 +385,8 @@
           "IsDrink": true,
           "Buffs": [
             {
-              "DisplayName": "Summer Harvest",
-              "Description": "Summer Harvest. +1 Speed, +50 Max Energy, +3 Farming, +32 Magnetism, +1 Foraging, +1 Fishing",
+              "DisplayName": "{{i18n:object.summer-edition2026.buff.name}}",
+              "Description": "{{i18n:object.summer-edition2026.buff.description}}",
               "Duration": 600,
               "CustomAttributes": {
                 "Speed": 1,
@@ -403,8 +403,8 @@
         },
         "{{ModId}}_SpringEdition2026": {
           "Name": "Red Bull Spring Edition 2026",
-          "DisplayName": "Red Bull Spring 2026 (Cherry Sakura)",
-          "Description": "Limited release! Cherry Sakura flavor from Japan.",
+          "DisplayName": "{{i18n:object.spring-edition2026.name}}",
+          "Description": "{{i18n:object.spring-edition2026.description}}",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -414,8 +414,8 @@
           "IsDrink": true,
           "Buffs": [
             {
-              "DisplayName": "Cherry Blossom Breeze",
-              "Description": "Cherry Blossom Breeze. +1 Speed, +50 Max Energy, +3 Foraging, +32 Magnetism, +1 Farming, +1 Fishing",
+              "DisplayName": "{{i18n:object.spring-edition2026.buff.name}}",
+              "Description": "{{i18n:object.spring-edition2026.buff.description}}",
               "Duration": 600,
               "CustomAttributes": {
                 "Speed": 1,
@@ -432,8 +432,8 @@
         },
         "{{ModId}}_PinkEdition": {
           "Name": "Red Bull Pink Edition",
-          "DisplayName": "Red Bull Pink (Wild Berries)",
-          "Description": "Wild berry blend with a bright, sweet-tart finish.",
+          "DisplayName": "{{i18n:object.pink-edition.name}}",
+          "Description": "{{i18n:object.pink-edition.description}}",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -443,8 +443,8 @@
           "IsDrink": true,
           "Buffs": [
             {
-              "DisplayName": "Berry Breeze",
-              "Description": "Berry Breeze. +1 Speed, +40 Max Energy, +2 Foraging, +2 Luck",
+              "DisplayName": "{{i18n:object.pink-edition.buff.name}}",
+              "Description": "{{i18n:object.pink-edition.buff.description}}",
               "Duration": 480,
               "CustomAttributes": {
                 "Speed": 1,
@@ -459,8 +459,8 @@
         },
         "{{ModId}}_IcedEdition": {
           "Name": "Red Bull Iced Edition",
-          "DisplayName": "Red Bull Iced (Iced Vanilla Berry)",
-          "Description": "Vanilla and berry notes with a cool, refreshing finish.",
+          "DisplayName": "{{i18n:object.iced-edition.name}}",
+          "Description": "{{i18n:object.iced-edition.description}}",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -470,8 +470,8 @@
           "IsDrink": true,
           "Buffs": [
             {
-              "DisplayName": "Chill Focus",
-              "Description": "Chill Focus. +1 Speed, +40 Max Energy, +2 Combat, +2 Luck",
+              "DisplayName": "{{i18n:object.iced-edition.buff.name}}",
+              "Description": "{{i18n:object.iced-edition.buff.description}}",
               "Duration": 480,
               "CustomAttributes": {
                 "Speed": 1,
@@ -486,8 +486,8 @@
         },
         "{{ModId}}_SummerEdition2025": {
           "Name": "Red Bull Summer Edition 2025",
-          "DisplayName": "Red Bull Summer 2025 (White Peach)",
-          "Description": "Limited release! Light white-peach flavor with citrusy brightness.",
+          "DisplayName": "{{i18n:object.summer-edition2025.name}}",
+          "Description": "{{i18n:object.summer-edition2025.description}}",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -497,8 +497,8 @@
           "IsDrink": true,
           "Buffs": [
             {
-              "DisplayName": "Peach Sunshine",
-              "Description": "Peach Sunshine. +1 Speed, +50 Max Energy, +3 Farming, +32 Magnetism, +1 Foraging, +1 Fishing",
+              "DisplayName": "{{i18n:object.summer-edition2025.buff.name}}",
+              "Description": "{{i18n:object.summer-edition2025.buff.description}}",
               "Duration": 600,
               "CustomAttributes": {
                 "Speed": 1,
@@ -515,8 +515,8 @@
         },
         "{{ModId}}_SummerEdition2024": {
           "Name": "Red Bull Summer Edition 2024",
-          "DisplayName": "Red Bull Summer 2024 (Curuba Elderflower)",
-          "Description": "Limited release! Exotic curuba with delicate elderflower.",
+          "DisplayName": "{{i18n:object.summer-edition2024.name}}",
+          "Description": "{{i18n:object.summer-edition2024.description}}",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -526,8 +526,8 @@
           "IsDrink": true,
           "Buffs": [
             {
-              "DisplayName": "Sunset Sip",
-              "Description": "Sunset Sip. +1 Speed, +50 Max Energy, +3 Farming, +32 Magnetism, +1 Foraging, +1 Fishing",
+              "DisplayName": "{{i18n:object.summer-edition2024.buff.name}}",
+              "Description": "{{i18n:object.summer-edition2024.buff.description}}",
               "Duration": 600,
               "CustomAttributes": {
                 "Speed": 1,
@@ -544,8 +544,8 @@
         },
         "{{ModId}}_SummerEdition2023": {
           "Name": "Red Bull Summer Edition 2023",
-          "DisplayName": "Red Bull Summer 2023 (Juneberry)",
-          "Description": "Limited release! Unique juneberry flavor—sweet, crisp, and bright.",
+          "DisplayName": "{{i18n:object.summer-edition2023.name}}",
+          "Description": "{{i18n:object.summer-edition2023.description}}",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -555,8 +555,8 @@
           "IsDrink": true,
           "Buffs": [
             {
-              "DisplayName": "Juneberry Spark",
-              "Description": "Juneberry Spark. +1 Speed, +50 Max Energy, +3 Farming, +32 Magnetism, +1 Foraging, +1 Fishing",
+              "DisplayName": "{{i18n:object.summer-edition2023.buff.name}}",
+              "Description": "{{i18n:object.summer-edition2023.buff.description}}",
               "Duration": 600,
               "CustomAttributes": {
                 "Speed": 1,
@@ -573,8 +573,8 @@
         },
         "{{ModId}}_SummerEdition2022": {
           "Name": "Red Bull Summer Edition 2022",
-          "DisplayName": "Red Bull Summer 2022 (Strawberry Apricot)",
-          "Description": "Limited release! Strawberry and apricot with a juicy finish.",
+          "DisplayName": "{{i18n:object.summer-edition2022.name}}",
+          "Description": "{{i18n:object.summer-edition2022.description}}",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -584,8 +584,8 @@
           "IsDrink": true,
           "Buffs": [
             {
-              "DisplayName": "Fruit Burst",
-              "Description": "Fruit Burst. +1 Speed, +50 Max Energy, +3 Farming, +32 Magnetism, +1 Foraging, +1 Fishing",
+              "DisplayName": "{{i18n:object.summer-edition2022.buff.name}}",
+              "Description": "{{i18n:object.summer-edition2022.buff.description}}",
               "Duration": 600,
               "CustomAttributes": {
                 "Speed": 1,
@@ -602,8 +602,8 @@
         },
         "{{ModId}}_SummerEdition2021": {
           "Name": "Red Bull Summer Edition 2021",
-          "DisplayName": "Red Bull Summer 2021 (Dragon Fruit)",
-          "Description": "Limited release! Exotic dragon fruit with subtle kiwi-pear notes.",
+          "DisplayName": "{{i18n:object.summer-edition2021.name}}",
+          "Description": "{{i18n:object.summer-edition2021.description}}",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -613,8 +613,8 @@
           "IsDrink": true,
           "Buffs": [
             {
-              "DisplayName": "Exotic Lift",
-              "Description": "Exotic Lift. +1 Speed, +50 Max Energy, +3 Farming, +32 Magnetism, +1 Foraging, +1 Fishing",
+              "DisplayName": "{{i18n:object.summer-edition2021.buff.name}}",
+              "Description": "{{i18n:object.summer-edition2021.buff.description}}",
               "Duration": 600,
               "CustomAttributes": {
                 "Speed": 1,
@@ -631,8 +631,8 @@
         },
         "{{ModId}}_SummerEdition2020": {
           "Name": "Red Bull Summer Edition 2020",
-          "DisplayName": "Red Bull Summer 2020 (Watermelon)",
-          "Description": "Limited release! Sweet watermelon flavor—summer in a can.",
+          "DisplayName": "{{i18n:object.summer-edition2020.name}}",
+          "Description": "{{i18n:object.summer-edition2020.description}}",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -642,8 +642,8 @@
           "IsDrink": true,
           "Buffs": [
             {
-              "DisplayName": "Watermelon Rush",
-              "Description": "Watermelon Rush. +1 Speed, +50 Max Energy, +3 Farming, +32 Magnetism, +1 Foraging, +1 Fishing",
+              "DisplayName": "{{i18n:object.summer-edition2020.buff.name}}",
+              "Description": "{{i18n:object.summer-edition2020.buff.description}}",
               "Duration": 600,
               "CustomAttributes": {
                 "Speed": 1,
@@ -660,8 +660,8 @@
         },
         "{{ModId}}_WinterEdition2024": {
           "Name": "Red Bull Winter Edition 2024",
-          "DisplayName": "Red Bull Winter 2024 (Iced Vanilla Berry)",
-          "Description": "Limited release! Vanilla with berry notes and an icy finish.",
+          "DisplayName": "{{i18n:object.winter-edition2024.name}}",
+          "Description": "{{i18n:object.winter-edition2024.description}}",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -671,8 +671,8 @@
           "IsDrink": true,
           "Buffs": [
             {
-              "DisplayName": "Icy Calm",
-              "Description": "Icy Calm. +1 Speed, +50 Max Energy, +5 Mining, +32 Magnetism, +2 Luck",
+              "DisplayName": "{{i18n:object.winter-edition2024.buff.name}}",
+              "Description": "{{i18n:object.winter-edition2024.buff.description}}",
               "Duration": 600,
               "CustomAttributes": {
                 "Speed": 1,
@@ -688,8 +688,8 @@
         },
         "{{ModId}}_WinterEdition2023": {
           "Name": "Red Bull Winter Edition 2023",
-          "DisplayName": "Red Bull Winter 2023 (Pear Cinnamon)",
-          "Description": "Limited release! Sweet pear with warm cinnamon spices.",
+          "DisplayName": "{{i18n:object.winter-edition2023.name}}",
+          "Description": "{{i18n:object.winter-edition2023.description}}",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -699,8 +699,8 @@
           "IsDrink": true,
           "Buffs": [
             {
-              "DisplayName": "Cozy Warmth",
-              "Description": "Cozy Warmth. +1 Speed, +50 Max Energy, +5 Mining, +32 Magnetism, +2 Luck",
+              "DisplayName": "{{i18n:object.winter-edition2023.buff.name}}",
+              "Description": "{{i18n:object.winter-edition2023.buff.description}}",
               "Duration": 600,
               "CustomAttributes": {
                 "Speed": 1,
@@ -716,8 +716,8 @@
         },
         "{{ModId}}_WinterEdition2022": {
           "Name": "Red Bull Winter Edition 2022",
-          "DisplayName": "Red Bull Winter 2022 (Fig Apple)",
-          "Description": "Limited release! Fig and apple with rich winter sweetness.",
+          "DisplayName": "{{i18n:object.winter-edition2022.name}}",
+          "Description": "{{i18n:object.winter-edition2022.description}}",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -727,8 +727,8 @@
           "IsDrink": true,
           "Buffs": [
             {
-              "DisplayName": "Rich Reserve",
-              "Description": "Rich Reserve. +1 Speed, +50 Max Energy, +5 Mining, +32 Magnetism, +2 Luck",
+              "DisplayName": "{{i18n:object.winter-edition2022.buff.name}}",
+              "Description": "{{i18n:object.winter-edition2022.buff.description}}",
               "Duration": 600,
               "CustomAttributes": {
                 "Speed": 1,
@@ -744,8 +744,8 @@
         },
         "{{ModId}}_WinterEdition2021": {
           "Name": "Red Bull Winter Edition 2021",
-          "DisplayName": "Red Bull Winter 2021 (Pomegranate)",
-          "Description": "Limited release! Bold pomegranate with a tart finish.",
+          "DisplayName": "{{i18n:object.winter-edition2021.name}}",
+          "Description": "{{i18n:object.winter-edition2021.description}}",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -755,8 +755,8 @@
           "IsDrink": true,
           "Buffs": [
             {
-              "DisplayName": "Tart Power",
-              "Description": "Tart Power. +1 Speed, +50 Max Energy, +5 Mining, +32 Magnetism, +2 Luck",
+              "DisplayName": "{{i18n:object.winter-edition2021.buff.name}}",
+              "Description": "{{i18n:object.winter-edition2021.buff.description}}",
               "Duration": 600,
               "CustomAttributes": {
                 "Speed": 1,
@@ -772,8 +772,8 @@
         },
         "{{ModId}}_WinterEdition2020": {
           "Name": "Red Bull Winter Edition 2020",
-          "DisplayName": "Red Bull Winter 2020 (Arctic Berry)",
-          "Description": "Limited release! Cool arctic berry flavor—crisp and frosty.",
+          "DisplayName": "{{i18n:object.winter-edition2020.name}}",
+          "Description": "{{i18n:object.winter-edition2020.description}}",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -783,8 +783,8 @@
           "IsDrink": true,
           "Buffs": [
             {
-              "DisplayName": "Frostbite Focus",
-              "Description": "Frostbite Focus. +1 Speed, +50 Max Energy, +5 Mining, +32 Magnetism, +2 Luck",
+              "DisplayName": "{{i18n:object.winter-edition2020.buff.name}}",
+              "Description": "{{i18n:object.winter-edition2020.buff.description}}",
               "Duration": 600,
               "CustomAttributes": {
                 "Speed": 1,
@@ -800,8 +800,8 @@
         },
         "{{ModId}}_SpringEdition2025": {
           "Name": "Red Bull Spring Edition 2025",
-          "DisplayName": "Red Bull Spring 2025 (Grapefruit & Blossom)",
-          "Description": "Limited release! Bright grapefruit with soft floral blossom notes.",
+          "DisplayName": "{{i18n:object.spring-edition2025.name}}",
+          "Description": "{{i18n:object.spring-edition2025.description}}",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -811,8 +811,8 @@
           "IsDrink": true,
           "Buffs": [
             {
-              "DisplayName": "Citrus Bloom",
-              "Description": "Citrus Bloom. +1 Speed, +50 Max Energy, +3 Foraging, +32 Magnetism, +1 Farming, +1 Fishing",
+              "DisplayName": "{{i18n:object.spring-edition2025.buff.name}}",
+              "Description": "{{i18n:object.spring-edition2025.buff.description}}",
               "Duration": 600,
               "CustomAttributes": {
                 "Speed": 1,
@@ -829,8 +829,8 @@
         },
         "{{ModId}}_SpringEdition2024": {
           "Name": "Red Bull Spring Edition 2024",
-          "DisplayName": "Red Bull Spring 2024 (Waldbeere)",
-          "Description": "Limited release! Forest berries with a tart-sweet finish.",
+          "DisplayName": "{{i18n:object.spring-edition2024.name}}",
+          "Description": "{{i18n:object.spring-edition2024.description}}",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -840,8 +840,8 @@
           "IsDrink": true,
           "Buffs": [
             {
-              "DisplayName": "Forest Spark",
-              "Description": "Forest Spark. +1 Speed, +50 Max Energy, +3 Foraging, +32 Magnetism, +1 Farming, +1 Fishing",
+              "DisplayName": "{{i18n:object.spring-edition2024.buff.name}}",
+              "Description": "{{i18n:object.spring-edition2024.buff.description}}",
               "Duration": 600,
               "CustomAttributes": {
                 "Speed": 1,
@@ -858,8 +858,8 @@
         },
         "{{ModId}}_QiBull": {
           "Name": "Qi Bull",
-          "DisplayName": "Qi Bull",
-          "Description": "An enigmatic energy drink infused with Mr. Qi's strange luck.",
+          "DisplayName": "{{i18n:object.qi-bull.name}}",
+          "Description": "{{i18n:object.qi-bull.description}}",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -869,8 +869,8 @@
           "IsDrink": true,
           "Buffs": [
             {
-              "DisplayName": "Qi's Favor",
-              "Description": "Qi's Favor. +1 Speed, +60 Max Energy, +6 Luck, +86 Magnetism",
+              "DisplayName": "{{i18n:object.qi-bull.buff.name}}",
+              "Description": "{{i18n:object.qi-bull.buff.description}}",
               "Duration": 720,
               "CustomAttributes": {
                 "Speed": 1,
@@ -885,8 +885,8 @@
         },
         "{{ModId}}_StarBullMusk": {
           "Name": "Star Bull Monster Musk",
-          "DisplayName": "Star Bull Monster Musk",
-          "Description": "A mysterious arcane blend that makes you irresistible to monsters.",
+          "DisplayName": "{{i18n:object.star-bull-musk.name}}",
+          "Description": "{{i18n:object.star-bull-musk.description}}",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -896,8 +896,8 @@
           "IsDrink": true,
           "Buffs": [
             {
-              "DisplayName": "Musked Up",
-              "Description": "Musked Up. +1 Speed, +60 Max Energy, +5 Mining, +5 Immunity, +64 Magnetism, Monster Musk effect",
+              "DisplayName": "{{i18n:object.star-bull-musk.buff.name}}",
+              "Description": "{{i18n:object.star-bull-musk.buff.description}}",
               "Duration": 720,
               "CustomAttributes": {
                 "Speed": 1,
@@ -915,8 +915,8 @@
         },
         "{{ModId}}_StarBullGarlic": {
           "Name": "Star Bull Garlic",
-          "DisplayName": "Star Bull Garlic",
-          "Description": "An arcane infusion that wards off enemies with a pungent aura.",
+          "DisplayName": "{{i18n:object.star-bull-garlic.name}}",
+          "Description": "{{i18n:object.star-bull-garlic.description}}",
           "Type": "Basic",
           "Category": -20,
           "Price": 0,
@@ -926,8 +926,8 @@
           "IsDrink": true,
           "Buffs": [
             {
-              "DisplayName": "Garlic Ward",
-              "Description": "Garlic Ward. +1 Speed, +60 Max Energy, +5 Mining, +2 Luck, +64 Magnetism, Oil of Garlic effect",
+              "DisplayName": "{{i18n:object.star-bull-garlic.buff.name}}",
+              "Description": "{{i18n:object.star-bull-garlic.buff.description}}",
               "Duration": 720,
               "CustomAttributes": {
                 "Speed": 1,
@@ -1508,7 +1508,7 @@
       "Action": "EditData",
       "Target": "Data/Hats",
       "Entries": {
-        "{{ModId}}_RedBullHat": "{{ModId}}_RedBullHat/A two-horned Red Bull hat, perfect for any occasion./false/false//Red Bull Hat/0/ThaleTheGreat.StarBull_RedBullHatTex"
+        "{{ModId}}_RedBullHat": "{{ModId}}_RedBullHat/{{i18n:hat.red-bull.description}}/false/false//{{i18n:hat.red-bull.name}}/0/ThaleTheGreat.StarBull_RedBullHatTex"
       }
     },
     {
