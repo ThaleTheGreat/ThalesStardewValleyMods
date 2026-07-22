@@ -59,7 +59,7 @@ internal sealed class AssetEditor
                     Texture = "Mods/ThaleTheGreat.Gatherers/HarvestStatueEmpty",
                     SpriteIndex = 0,
                     ContextTags = new List<string> { "gatherers_harvest_statue" },
-                    CustomFields = new Dictionary<string, string> { ["ThaleTheGreat.Gatherers/StorageKind"] = "HarvestStatue" }
+                    CustomFields = CreateStorageCustomFields(GathererKind.HarvestStatue)
                 };
 
                 data[ModConstants.ParrotPotItemId] = new BigCraftableData
@@ -74,9 +74,9 @@ internal sealed class AssetEditor
                     Texture = "Mods/ThaleTheGreat.Gatherers/ParrotPotEmpty",
                     SpriteIndex = 0,
                     ContextTags = new List<string> { "gatherers_parrot_pot" },
-                    CustomFields = new Dictionary<string, string> { ["ThaleTheGreat.Gatherers/StorageKind"] = "ParrotPot" }
+                    CustomFields = CreateStorageCustomFields(GathererKind.ParrotPot)
                 };
-            });
+            }, AssetEditPriority.Late);
             return;
         }
 
@@ -126,5 +126,18 @@ internal sealed class AssetEditor
                 });
             });
         }
+    }
+
+    private static Dictionary<string, string> CreateStorageCustomFields(GathererKind kind)
+    {
+        return new Dictionary<string, string>
+        {
+            [ModConstants.StorageKindField] = kind == GathererKind.HarvestStatue ? "HarvestStatue" : "ParrotPot",
+            [ModConstants.ExpandedStorageEnabledField] = "true",
+            [ModConstants.ExpandedStorageFramesField] = "1",
+            [ModConstants.ExpandedStoragePlayerColorField] = "false",
+            [ModConstants.ExpandedStorageOpenSoundField] = "stoneStep",
+            [ModConstants.ExpandedStoragePlaceSoundField] = "hammer"
+        };
     }
 }

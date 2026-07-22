@@ -45,12 +45,13 @@ internal static class ChestDrawPatch
         }
 
         Texture2D texture = Game1.content.Load<Texture2D>(asset);
+        Rectangle sourceRect = texture.Bounds;
         Vector2 position = Game1.GlobalToLocal(
             Game1.viewport,
             new Vector2(
                 drawX * 64f + (__instance.shakeTimer > 0 ? Game1.random.Next(-1, 2) : 0),
-                (drawY - 1f) * 64f));
-        spriteBatch.Draw(texture, position, new Rectangle(0, 0, 16, 32), __instance.Tint * alpha, 0f, Vector2.Zero, 4f, SpriteEffects.None, layerDepth);
+                (drawY + 1f) * 64f - sourceRect.Height * 4f));
+        spriteBatch.Draw(texture, position, sourceRect, __instance.Tint * alpha, 0f, Vector2.Zero, 4f, SpriteEffects.None, layerDepth);
         return false;
     }
 }

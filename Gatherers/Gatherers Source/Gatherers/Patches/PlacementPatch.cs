@@ -57,8 +57,15 @@ internal static class PlacementPatch
             return;
 
         Vector2 tile = new(x / 64, y / 64);
-        location.objects.Remove(tile);
+        if (location.objects.TryGetValue(tile, out SObject? placedObject) && placedObject is Chest placedChest)
+        {
+            placedChest.Location = location;
+            placedChest.TileLocation = tile;
+            StorageMarker.Mark(placedChest, __state.Value);
+            return;
+        }
 
+        location.objects.Remove(tile);
         string itemId = __state.Value == GathererKind.HarvestStatue
             ? ModConstants.HarvestStatueItemId
             : ModConstants.ParrotPotItemId;

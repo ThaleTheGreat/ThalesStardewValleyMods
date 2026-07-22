@@ -2,48 +2,65 @@ namespace ThaleTheGreat.Gatherers.Framework;
 
 public sealed class ModConfig
 {
-    public bool DoJunimosEatExcessCrops { get; set; } = true;
-    public bool DoJunimosHarvestFromPots { get; set; } = true;
-    public bool DoJunimosAppearAfterHarvest { get; set; } = true;
-    public bool DoJunimosHarvestFromFruitTrees { get; set; } = true;
-    public bool DoJunimosHarvestFromFlowers { get; set; } = true;
-    public bool DoJunimosSowSeedsAfterHarvest { get; set; } = true;
-    public bool ForceRecipeUnlock { get; set; }
-    public bool EnableHarvestMessage { get; set; } = true;
-    public int MaxAmountOfJunimosToAppearAfterHarvest { get; set; } = -1;
-    public int MinimumFruitOnTreeBeforeHarvest { get; set; } = 3;
+    public static readonly int[] AllowedStorageCapacities =
+    {
+        36,
+        48,
+        60,
+        72,
+        84,
+        96,
+        108,
+        120
+    };
 
-    public bool DoParrotsEatExcessCrops { get; set; } = true;
-    public bool DoParrotsHarvestFromPots { get; set; } = true;
+    public bool EatExcessCrops { get; set; } = true;
+    public bool HarvestGardenPots { get; set; } = true;
+    public bool HarvestFruitTrees { get; set; } = true;
+    public bool HarvestFlowers { get; set; } = true;
+    public bool SowSeedsAfterHarvest { get; set; } = true;
+    public bool EnableHarvestMessage { get; set; } = true;
+    public int MinimumFruitOnTreeBeforeHarvest { get; set; } = 3;
+    public int StorageCapacity { get; set; } = 36;
+
+    public bool DoJunimosAppearAfterHarvest { get; set; } = true;
+    public int MaxAmountOfJunimosToAppearAfterHarvest { get; set; } = -1;
+    public bool ForceRecipeUnlock { get; set; }
+
     public bool DoParrotsAppearAfterHarvest { get; set; } = true;
-    public bool DoParrotsHarvestFromFruitTrees { get; set; } = true;
-    public bool DoParrotsHarvestFromFlowers { get; set; } = true;
-    public bool DoParrotsSowSeedsAfterHarvest { get; set; } = true;
-    public bool EnableParrotHarvestMessage { get; set; } = true;
-    public int MinimumFruitOnTreeBeforeParrotHarvest { get; set; } = 3;
 
     public void Reset()
     {
         ModConfig defaults = new();
 
-        DoJunimosEatExcessCrops = defaults.DoJunimosEatExcessCrops;
-        DoJunimosHarvestFromPots = defaults.DoJunimosHarvestFromPots;
-        DoJunimosAppearAfterHarvest = defaults.DoJunimosAppearAfterHarvest;
-        DoJunimosHarvestFromFruitTrees = defaults.DoJunimosHarvestFromFruitTrees;
-        DoJunimosHarvestFromFlowers = defaults.DoJunimosHarvestFromFlowers;
-        DoJunimosSowSeedsAfterHarvest = defaults.DoJunimosSowSeedsAfterHarvest;
-        ForceRecipeUnlock = defaults.ForceRecipeUnlock;
+        EatExcessCrops = defaults.EatExcessCrops;
+        HarvestGardenPots = defaults.HarvestGardenPots;
+        HarvestFruitTrees = defaults.HarvestFruitTrees;
+        HarvestFlowers = defaults.HarvestFlowers;
+        SowSeedsAfterHarvest = defaults.SowSeedsAfterHarvest;
         EnableHarvestMessage = defaults.EnableHarvestMessage;
-        MaxAmountOfJunimosToAppearAfterHarvest = defaults.MaxAmountOfJunimosToAppearAfterHarvest;
         MinimumFruitOnTreeBeforeHarvest = defaults.MinimumFruitOnTreeBeforeHarvest;
-
-        DoParrotsEatExcessCrops = defaults.DoParrotsEatExcessCrops;
-        DoParrotsHarvestFromPots = defaults.DoParrotsHarvestFromPots;
+        StorageCapacity = defaults.StorageCapacity;
+        DoJunimosAppearAfterHarvest = defaults.DoJunimosAppearAfterHarvest;
+        MaxAmountOfJunimosToAppearAfterHarvest = defaults.MaxAmountOfJunimosToAppearAfterHarvest;
+        ForceRecipeUnlock = defaults.ForceRecipeUnlock;
         DoParrotsAppearAfterHarvest = defaults.DoParrotsAppearAfterHarvest;
-        DoParrotsHarvestFromFruitTrees = defaults.DoParrotsHarvestFromFruitTrees;
-        DoParrotsHarvestFromFlowers = defaults.DoParrotsHarvestFromFlowers;
-        DoParrotsSowSeedsAfterHarvest = defaults.DoParrotsSowSeedsAfterHarvest;
-        EnableParrotHarvestMessage = defaults.EnableParrotHarvestMessage;
-        MinimumFruitOnTreeBeforeParrotHarvest = defaults.MinimumFruitOnTreeBeforeParrotHarvest;
+    }
+
+    public void Normalize(bool expandedStorageInstalled)
+    {
+        MinimumFruitOnTreeBeforeHarvest = Math.Clamp(MinimumFruitOnTreeBeforeHarvest, 1, 3);
+        MaxAmountOfJunimosToAppearAfterHarvest = Math.Clamp(MaxAmountOfJunimosToAppearAfterHarvest, -1, 50);
+
+        if (!expandedStorageInstalled)
+        {
+            StorageCapacity = 36;
+            return;
+        }
+
+        if (StorageCapacity > AllowedStorageCapacities[^1])
+            StorageCapacity = AllowedStorageCapacities[^1];
+        else if (!AllowedStorageCapacities.Contains(StorageCapacity))
+            StorageCapacity = 36;
     }
 }

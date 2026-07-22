@@ -20,23 +20,14 @@ internal sealed class GathererService
     {
         StorageMarker.ResetDailyFlags(chest);
 
-        HarvestOptions options = kind == GathererKind.HarvestStatue
-            ? new HarvestOptions(
-                Config.EnableHarvestMessage,
-                Config.DoJunimosEatExcessCrops,
-                Config.DoJunimosHarvestFromPots,
-                Config.DoJunimosHarvestFromFruitTrees,
-                Config.DoJunimosHarvestFromFlowers,
-                Config.DoJunimosSowSeedsAfterHarvest,
-                Config.MinimumFruitOnTreeBeforeHarvest)
-            : new HarvestOptions(
-                Config.EnableParrotHarvestMessage,
-                Config.DoParrotsEatExcessCrops,
-                Config.DoParrotsHarvestFromPots,
-                Config.DoParrotsHarvestFromFruitTrees,
-                Config.DoParrotsHarvestFromFlowers,
-                Config.DoParrotsSowSeedsAfterHarvest,
-                Config.MinimumFruitOnTreeBeforeParrotHarvest);
+        HarvestOptions options = new(
+            Config.EnableHarvestMessage,
+            Config.EatExcessCrops,
+            Config.HarvestGardenPots,
+            Config.HarvestFruitTrees,
+            Config.HarvestFlowers,
+            Config.SowSeedsAfterHarvest,
+            Config.MinimumFruitOnTreeBeforeHarvest);
 
         string locationName = SplitCamelCaseText(location.Name);
         List<Vector2> harvestedTiles = new();
@@ -224,6 +215,7 @@ internal sealed class GathererService
         }
 
         Chest simulation = new(true, Vector2.Zero, chest.ItemId);
+        StorageMarker.CopyCapacity(chest, simulation);
         foreach (Item existing in chest.Items.Where(item => item is not null))
         {
             if (simulation.addItem(CloneItem(existing)) is not null)

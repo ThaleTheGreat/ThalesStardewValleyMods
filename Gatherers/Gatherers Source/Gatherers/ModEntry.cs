@@ -20,7 +20,8 @@ public sealed class ModEntry : Mod
 {
     internal static ModEntry Instance { get; private set; } = null!;
 
-    private ModConfig Config = null!;
+    internal ModConfig Config { get; private set; } = null!;
+    internal bool ExpandedStorageInstalled { get; private set; }
     private GathererService Gatherer = null!;
 
     public override object GetApi()
@@ -32,7 +33,9 @@ public sealed class ModEntry : Mod
     {
         Instance = this;
         Log.Init(Monitor);
+        ExpandedStorageInstalled = helper.ModRegistry.IsLoaded(ModConstants.ExpandedStorageModId);
         Config = helper.ReadConfig<ModConfig>();
+        Config.Normalize(ExpandedStorageInstalled);
         Gatherer = new GathererService(Config);
 
         AssetEditor assetEditor = new(helper);
@@ -55,6 +58,7 @@ public sealed class ModEntry : Mod
             return;
 
         MigrationService.Run();
+        StorageMarker.ApplyCapacityToAllGathererStorage(Config.StorageCapacity);
         EnsureHarvestStatueRecipeUnlock();
 
         foreach (GameLocation location in LocationScanner.AllLocationsAndBuildingInteriors())
@@ -142,19 +146,43 @@ public sealed class ModEntry : Mod
     {
         Harmony harmony = new(ModManifest.UniqueID);
 
+        HarmonyMethod placementPostfix = new(typeof(PlacementPatch), nameof(PlacementPatch.Postfix))
+        {
+            after = new[] { ModConstants.ExpandedStorageModId }
+        };
+
         ApplyPatch(
             harmony,
             AccessTools.Method(typeof(SObject), nameof(SObject.placementAction), new[] { typeof(GameLocation), typeof(int), typeof(int), typeof(Farmer) }),
             prefix: new HarmonyMethod(typeof(PlacementPatch), nameof(PlacementPatch.Prefix)),
-            postfix: new HarmonyMethod(typeof(PlacementPatch), nameof(PlacementPatch.Postfix)),
+            postfix: placementPostfix,
             "Object.placementAction(GameLocation, int, int, Farmer)");
+
+        HarmonyMethod chestDrawPrefix = new(typeof(ChestDrawPatch), nameof(ChestDrawPatch.Prefix))
+        {
+            before = new[] { ModConstants.ExpandedStorageModId },
+            priority = Priority.First
+        };
 
         ApplyPatch(
             harmony,
             AccessTools.Method(typeof(Chest), nameof(Chest.draw), new[] { typeof(Microsoft.Xna.Framework.Graphics.SpriteBatch), typeof(int), typeof(int), typeof(float) }),
-            prefix: new HarmonyMethod(typeof(ChestDrawPatch), nameof(ChestDrawPatch.Prefix)),
+            prefix: chestDrawPrefix,
             postfix: null,
             "Chest.draw(SpriteBatch, int, int, float)");
+
+        HarmonyMethod capacityPostfix = new(typeof(ChestCapacityPatch), nameof(ChestCapacityPatch.Postfix))
+        {
+            after = new[] { ModConstants.ExpandedStorageModId },
+            priority = Priority.Last
+        };
+
+        ApplyPatch(
+            harmony,
+            AccessTools.Method(typeof(Chest), nameof(Chest.GetActualCapacity)),
+            prefix: null,
+            postfix: capacityPostfix,
+            "Chest.GetActualCapacity()");
 
         ApplyPatch(
             harmony,

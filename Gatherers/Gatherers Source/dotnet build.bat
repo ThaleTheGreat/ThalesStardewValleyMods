@@ -5,7 +5,7 @@ pushd "%~dp0" >nul
 call :clean
 if errorlevel 1 goto cleanup_failed
 
-dotnet build
+dotnet build "Gatherers.sln" -c Release
 set "exitCode=%ERRORLEVEL%"
 if not "%exitCode%"=="0" goto build_failed
 

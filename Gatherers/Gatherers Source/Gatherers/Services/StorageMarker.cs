@@ -1,3 +1,4 @@
+using System.Globalization;
 using StardewValley.Objects;
 using ThaleTheGreat.Gatherers.Framework;
 
@@ -12,21 +13,39 @@ public static class StorageMarker
 
     public static bool IsHarvestStatue(Chest chest)
     {
-        return chest.modData.ContainsKey(ModConstants.HarvestStatueFlag)
+        return string.Equals(chest.ItemId, ModConstants.HarvestStatueItemId, StringComparison.Ordinal)
+            || chest.modData.ContainsKey(ModConstants.HarvestStatueFlag)
             || chest.modData.ContainsKey(ModConstants.LegacyHarvestStatueFlag)
             || chest.modData.ContainsKey(ModConstants.LegacyOldHarvestStatueFlag);
     }
 
     public static bool IsParrotPot(Chest chest)
     {
-        return chest.modData.ContainsKey(ModConstants.ParrotPotFlag)
+        return string.Equals(chest.ItemId, ModConstants.ParrotPotItemId, StringComparison.Ordinal)
+            || chest.modData.ContainsKey(ModConstants.ParrotPotFlag)
             || chest.modData.ContainsKey(ModConstants.LegacyParrotPotFlag)
             || chest.modData.ContainsKey(ModConstants.LegacyOldParrotPotFlag);
+    }
+
+    public static int GetCapacity(Chest chest)
+    {
+        if (!ModEntry.Instance.ExpandedStorageInstalled)
+            return 36;
+
+        if (chest.modData.TryGetValue(ModConstants.StorageCapacityFlag, out string? raw)
+            && int.TryParse(raw, NumberStyles.None, CultureInfo.InvariantCulture, out int capacity)
+            && ModConfig.AllowedStorageCapacities.Contains(capacity))
+        {
+            return capacity;
+        }
+
+        return ValidateCapacity(ModEntry.Instance.Config.StorageCapacity);
     }
 
     internal static void Mark(Chest chest, GathererKind kind)
     {
         EnsureAutomateMachineOnly(chest);
+        SetCapacity(chest, ModEntry.Instance.Config.StorageCapacity);
         chest.modData[ModConstants.AteCropsFlag] = bool.FalseString;
         chest.modData[ModConstants.HasSpawnedFlag] = bool.FalseString;
         chest.modData[ModConstants.HarvestedTodayFlag] = bool.FalseString;
@@ -48,10 +67,29 @@ public static class StorageMarker
         }
     }
 
+    internal static void ApplyCapacityToAllGathererStorage(int capacity)
+    {
+        int validated = ValidateCapacity(capacity);
+        foreach (StardewValley.GameLocation location in LocationScanner.AllLocationsAndBuildingInteriors())
+        {
+            foreach (Chest chest in location.objects.Values.OfType<Chest>().Where(IsGathererStorage))
+                SetCapacity(chest, validated);
+        }
+    }
+
+    internal static void CopyCapacity(Chest source, Chest target)
+    {
+        SetCapacity(target, GetCapacity(source));
+        if (IsHarvestStatue(source))
+            target.modData[ModConstants.HarvestStatueFlag] = bool.TrueString;
+        else if (IsParrotPot(source))
+            target.modData[ModConstants.ParrotPotFlag] = bool.TrueString;
+    }
+
     internal static void EnsureAutomateMachineOnly(Chest chest)
     {
-        chest.modData[ModConstants.AutomateStoreItemsFlag] = "Disabled";
-        chest.modData[ModConstants.AutomateTakeItemsFlag] = "Disabled";
+        chest.modData[ModConstants.AutomateStoreItemsFlag] = ModConstants.AutomateDisabledValue;
+        chest.modData[ModConstants.AutomateTakeItemsFlag] = ModConstants.AutomateDisabledValue;
     }
 
     internal static void ResetDailyFlags(Chest chest)
@@ -126,6 +164,23 @@ public static class StorageMarker
             chest.modData[ModConstants.LegacyHarvestStatueSpawnedFlag] = bool.TrueString;
         if (IsParrotPot(chest))
             chest.modData[ModConstants.LegacyParrotPotSpawnedFlag] = bool.TrueString;
+    }
+
+    private static void SetCapacity(Chest chest, int capacity)
+    {
+        int validated = ValidateCapacity(capacity);
+        chest.modData[ModConstants.StorageCapacityFlag] = validated.ToString(CultureInfo.InvariantCulture);
+    }
+
+    private static int ValidateCapacity(int capacity)
+    {
+        if (!ModEntry.Instance.ExpandedStorageInstalled)
+            return 36;
+
+        if (capacity > ModConfig.AllowedStorageCapacities[^1])
+            return ModConfig.AllowedStorageCapacities[^1];
+
+        return ModConfig.AllowedStorageCapacities.Contains(capacity) ? capacity : 36;
     }
 
     private static bool IsTrue(string? value)
