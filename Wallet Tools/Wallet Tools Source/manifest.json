@@ -1,7 +1,7 @@
 {
   "Name": "(TTG) Wallet Tools",
   "Author": "ThaleTheGreat",
-  "Version": "3.1.1",
+  "Version": "3.1.2",
   "Description": "Stores vanilla and supported modded tools, the Fashion Sense Hand Mirror, Auto-Petter, Return Scepter, and Horse Flute in one multiplayer-aware wallet system.",
   "UniqueID": "ThaleTheGreat.WalletTools",
   "EntryDll": "WalletTools.dll",
