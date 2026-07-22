@@ -1,9 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
-    <AssemblyName>Gatherers</AssemblyName>
-    <RootNamespace>ThaleTheGreat.Gatherers</RootNamespace>
-    <EnableHarmony>true</EnableHarmony>
+    <AssemblyName>GatherersAutomateIntegration</AssemblyName>
+    <RootNamespace>ThaleTheGreat.GatherersAutomateIntegration</RootNamespace>
     <EnableModDeploy>false</EnableModDeploy>
     <EnableModZip>false</EnableModZip>
     <LangVersion>latest</LangVersion>
@@ -16,17 +15,26 @@
     <InformationalVersion>1.1.0</InformationalVersion>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
-    <ModFolderName>Gatherers</ModFolderName>
+    <AutomateDllPath Condition="'$(AutomateDllPath)' == ''">$(MSBuildThisFileDirectory)..\lib\Automate.dll</AutomateDllPath>
+    <ModFolderName>Gatherers Automate Integration</ModFolderName>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="4.4.0" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="Automate">
+      <HintPath>$(AutomateDllPath)</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <None Include="..\lib\Automate.dll" CopyToOutputDirectory="Never" Visible="false" />
+  </ItemGroup>
+  <ItemGroup>
     <None Include="manifest.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="LICENSE" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="assets\**\*" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="i18n\**\*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
+  <Target Name="CheckAutomateReference" BeforeTargets="ResolveReferences" Condition="!Exists('$(AutomateDllPath)')">
+    <Error Text="Automate.dll was not found at '$(AutomateDllPath)'. Copy Automate.dll into the source lib folder or build with -p:AutomateDllPath=&quot;full path to Automate.dll&quot;." />
+  </Target>
   <Target Name="DeployToSharedGatherersModsFolder" AfterTargets="Build" Condition="'$(DesignTimeBuild)' != 'true'">
     <PropertyGroup>
       <_GatherersSharedRoot>$([System.IO.Path]::Combine('$(GameModsPath)', 'Gatherers'))</_GatherersSharedRoot>

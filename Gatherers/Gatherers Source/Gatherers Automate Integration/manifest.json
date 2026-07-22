@@ -1,0 +1,24 @@
+{
+  "Name": "(TTG) Gatherers Automate Integration",
+  "Author": "ThaleTheGreat",
+  "Version": "1.1.0",
+  "Description": "Adds Automate support to Gatherers.",
+  "UniqueID": "ThaleTheGreat.GatherersAutomateIntegration",
+  "EntryDll": "GatherersAutomateIntegration.dll",
+  "MinimumApiVersion": "4.0.0",
+  "UpdateKeys": [
+    "Nexus:0000"
+  ],
+  "Dependencies": [
+    {
+      "UniqueID": "ThaleTheGreat.Gatherers",
+      "MinimumVersion": "1.1.0",
+      "IsRequired": true
+    },
+    {
+      "UniqueID": "Pathoschild.Automate",
+      "MinimumVersion": "2.6.1",
+      "IsRequired": true
+    }
+  ]
+}

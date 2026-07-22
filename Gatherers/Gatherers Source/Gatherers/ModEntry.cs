@@ -7,6 +7,7 @@ using StardewValley;
 using StardewValley.Characters;
 using StardewValley.Objects;
 using StardewValley.TerrainFeatures;
+using ThaleTheGreat.Gatherers.Api;
 using ThaleTheGreat.Gatherers.Framework;
 using ThaleTheGreat.Gatherers.Integration;
 using ThaleTheGreat.Gatherers.Patches;
@@ -21,6 +22,11 @@ public sealed class ModEntry : Mod
 
     private ModConfig Config = null!;
     private GathererService Gatherer = null!;
+
+    public override object GetApi()
+    {
+        return new GatherersApi();
+    }
 
     public override void Entry(IModHelper helper)
     {
@@ -41,9 +47,6 @@ public sealed class ModEntry : Mod
     private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
     {
         new GmcmIntegration(Helper, ModManifest, Config).Register();
-
-        if (Helper.ModRegistry.IsLoaded("Pathoschild.Automate"))
-            new AutomateIntegration(Helper.ModRegistry, Monitor).Register();
     }
 
     private void OnDayStarted(object? sender, DayStartedEventArgs e)

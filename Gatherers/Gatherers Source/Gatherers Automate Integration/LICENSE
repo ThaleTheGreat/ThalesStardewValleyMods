@@ -1,7 +1,7 @@
-GATHERERS LICENSE
+GATHERERS AUTOMATE INTEGRATION LICENSE
 =======================
 
-This license applies to Gatherers v1.1.0.
+This license applies to Gatherers Automate Integration v1.1.0.
 
 PRIMARY LICENSE
 ---------------
@@ -34,11 +34,8 @@ MODS AND PROJECTS USED OR REFERENCED
 
 This mod uses, supports, or references the following mods and projects.
 
-- Generic Mod Config Menu — MIT License
-  https://github.com/spacechase0/GenericModConfigMenu
-
-- Harmony — MIT License
-  https://github.com/pardeike/Harmony
+- Automate — MIT License
+  https://github.com/Pathoschild/StardewMods
 
 - Stardew Modding API (SMAPI) — LGPL-3.0 License
   https://github.com/Pathoschild/SMAPI
