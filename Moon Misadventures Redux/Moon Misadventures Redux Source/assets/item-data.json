@@ -1,0 +1,343 @@
+{
+    "Object:MythiciteOre": {
+        "Name": "MythiciteOre",
+        "DisplayName": "{{i18n:object.MythiciteOre.name}}",
+        "Description": "{{i18n:object.MythiciteOre.description}}",
+        "Type": "Metal",
+        "Category": -15,
+        "Price": 500,
+        "Edibility": -300,
+        "Texture": "ThaleTheGreat.MoonMisadventures/assets/objects.png",
+        "SpriteIndex": 4
+    },
+    "Object:MythiciteBar": {
+        "Name": "MythiciteBar",
+        "DisplayName": "{{i18n:object.MythiciteBar.name}}",
+        "Description": "{{i18n:object.MythiciteBar.description}}",
+        "Type": "Metal",
+        "Category": -15,
+        "Price": 5000,
+        "Edibility": -300,
+        "Texture": "ThaleTheGreat.MoonMisadventures/assets/mythicite-bar.png",
+        "SpriteIndex": 0
+    },
+    "Object:MythiciteOreMinable": {
+        "Name": "MythiciteOreMinable",
+        "DisplayName": "{{i18n:object.MythiciteOreMinable.name}}",
+        "Description": "{{i18n:object.MythiciteOreMinable.description}}",
+        "Type": "Junk",
+        "Category": -999,
+        "Price": 500,
+        "Edibility": -300,
+        "Texture": "ThaleTheGreat.MoonMisadventures/assets/objects.png",
+        "SpriteIndex": 5
+    },
+    "Object:StellarEssence": {
+        "Name": "StellarEssence",
+        "DisplayName": "{{i18n:object.StellarEssence.name}}",
+        "Description": "{{i18n:object.StellarEssence.description}}",
+        "Type": "MonsterLoot",
+        "Category": -28,
+        "Price": 500,
+        "Edibility": -300,
+        "Texture": "ThaleTheGreat.MoonMisadventures/assets/objects.png",
+        "SpriteIndex": 8
+    },
+    "Object:PersistiumDust": {
+        "Name": "PersistiumDust",
+        "DisplayName": "{{i18n:object.PersistiumDust.name}}",
+        "Description": "{{i18n:object.PersistiumDust.description}}",
+        "Type": "Gem",
+        "Category": -2,
+        "Price": 750,
+        "Edibility": -300,
+        "Texture": "ThaleTheGreat.MoonMisadventures/assets/objects.png",
+        "SpriteIndex": 3
+    },
+    "Object:SoulSapphire": {
+        "Name": "SoulSapphire",
+        "DisplayName": "{{i18n:object.SoulSapphire.name}}",
+        "Description": "{{i18n:object.SoulSapphire.description}}",
+        "Type": "Gem",
+        "Category": -2,
+        "Price": 10000,
+        "Edibility": -300,
+        "Texture": "ThaleTheGreat.MoonMisadventures/assets/objects.png",
+        "SpriteIndex": 2
+    },
+    "Object:LunarWheatSeeds": {
+        "Name": "LunarWheatSeeds",
+        "DisplayName": "{{i18n:object.LunarWheatSeeds.name}}",
+        "Description": "{{i18n:object.LunarWheatSeeds.description}}",
+        "Type": "Seeds",
+        "Category": -74,
+        "Price": 15,
+        "Edibility": -300,
+        "Texture": "ThaleTheGreat.MoonMisadventures/assets/objects.png",
+        "SpriteIndex": 12,
+        "ContextTags": [
+            "plantable_context_moon"
+        ]
+    },
+    "Object:SunbloomSeeds": {
+        "Name": "SunbloomSeeds",
+        "DisplayName": "{{i18n:object.SunbloomSeeds.name}}",
+        "Description": "{{i18n:object.SunbloomSeeds.description}}",
+        "Type": "Seeds",
+        "Category": -74,
+        "Price": 20,
+        "Edibility": -300,
+        "Texture": "ThaleTheGreat.MoonMisadventures/assets/objects.png",
+        "SpriteIndex": 12,
+        "ContextTags": [
+            "plantable_context_moon"
+        ]
+    },
+    "Object:StarPetalSeeds": {
+        "Name": "StarPetalSeeds",
+        "DisplayName": "{{i18n:object.StarPetalSeeds.name}}",
+        "Description": "{{i18n:object.StarPetalSeeds.description}}",
+        "Type": "Seeds",
+        "Category": -74,
+        "Price": 10,
+        "Edibility": -300,
+        "Texture": "ThaleTheGreat.MoonMisadventures/assets/objects.png",
+        "SpriteIndex": 12,
+        "ContextTags": [
+            "plantable_context_moon"
+        ]
+    },
+    "Object:VoidBlossomSeeds": {
+        "Name": "VoidBlossomSeeds",
+        "DisplayName": "{{i18n:object.VoidBlossomSeeds.name}}",
+        "Description": "{{i18n:object.VoidBlossomSeeds.description}}",
+        "Type": "Seeds",
+        "Category": -74,
+        "Price": 250,
+        "Edibility": -300,
+        "Texture": "ThaleTheGreat.MoonMisadventures/assets/objects.png",
+        "SpriteIndex": 12,
+        "ContextTags": [
+            "plantable_context_moon"
+        ]
+    },
+    "Object:SoulSproutSeeds": {
+        "Name": "SoulSproutSeeds",
+        "DisplayName": "{{i18n:object.SoulSproutSeeds.name}}",
+        "Description": "{{i18n:object.SoulSproutSeeds.description}}",
+        "Type": "Seeds",
+        "Category": -74,
+        "Price": 35,
+        "Edibility": -300,
+        "Texture": "ThaleTheGreat.MoonMisadventures/assets/objects.png",
+        "SpriteIndex": 12,
+        "ContextTags": [
+            "plantable_context_moon"
+        ]
+    },
+    "Crop:LunarWheatSeeds": {
+        "Seasons": [
+            "spring",
+            "summer",
+            "fall",
+            "winter"
+        ],
+        "DaysInPhase": [
+            2,
+            2,
+            2,
+            2
+        ],
+        "HarvestItemID": "ThaleTheGreat.MoonMisadventures_LunarWheat",
+        "Texture": "ThaleTheGreat.MoonMisadventures/assets/wheat.png",
+        "SpriteIndex": 0
+    },
+    "Crop:SunbloomSeeds": {
+        "Seasons": [
+            "spring",
+            "summer",
+            "fall",
+            "winter"
+        ],
+        "DaysInPhase": [
+            1,
+            2,
+            3,
+            2,
+            2
+        ],
+        "HarvestItemID": "ThaleTheGreat.MoonMisadventures_Sunbloom",
+        "Texture": "ThaleTheGreat.MoonMisadventures/assets/crops.png",
+        "SpriteIndex": 0
+    },
+    "Crop:StarPetalSeeds": {
+        "Seasons": [
+            "spring",
+            "summer",
+            "fall",
+            "winter"
+        ],
+        "DaysInPhase": [
+            1,
+            1,
+            1,
+            1,
+            1
+        ],
+        "HarvestItemID": "ThaleTheGreat.MoonMisadventures_StarPetal",
+        "Texture": "ThaleTheGreat.MoonMisadventures/assets/crops.png",
+        "SpriteIndex": 1
+    },
+    "Crop:VoidBlossomSeeds": {
+        "Seasons": [
+            "spring",
+            "summer",
+            "fall",
+            "winter"
+        ],
+        "DaysInPhase": [
+            1,
+            28,
+            28,
+            28,
+            28
+        ],
+        "HarvestItemID": "ThaleTheGreat.MoonMisadventures_VoidBlossom",
+        "Texture": "ThaleTheGreat.MoonMisadventures/assets/crops.png",
+        "SpriteIndex": 2
+    },
+    "Crop:SoulSproutSeeds": {
+        "Seasons": [
+            "spring",
+            "summer",
+            "fall",
+            "winter"
+        ],
+        "DaysInPhase": [
+            3,
+            3,
+            3,
+            3,
+            3
+        ],
+        "HarvestItemID": "ThaleTheGreat.MoonMisadventures_SoulSprout",
+        "Texture": "ThaleTheGreat.MoonMisadventures/assets/crops.png",
+        "SpriteIndex": 3
+    },
+    "Object:LunarWheat": {
+        "Name": "LunarWheat",
+        "DisplayName": "{{i18n:object.LunarWheat.name}}",
+        "Description": "{{i18n:object.LunarWheat.description}}",
+        "Type": "Flower",
+        "Category": -80,
+        "Price": 225,
+        "Edibility": -300,
+        "Texture": "ThaleTheGreat.MoonMisadventures/assets/crop-products.png",
+        "SpriteIndex": 0
+    },
+    "Object:Sunbloom": {
+        "Name": "Sunbloom",
+        "DisplayName": "{{i18n:object.Sunbloom.name}}",
+        "Description": "{{i18n:object.Sunbloom.description}}",
+        "Type": "Flower",
+        "Category": -80,
+        "Price": 225,
+        "Edibility": -300,
+        "Texture": "ThaleTheGreat.MoonMisadventures/assets/crop-products.png",
+        "SpriteIndex": 0
+    },
+    "Object:StarPetal": {
+        "Name": "StarPetal",
+        "DisplayName": "{{i18n:object.StarPetal.name}}",
+        "Description": "{{i18n:object.StarPetal.description}}",
+        "Type": "Flower",
+        "Category": -80,
+        "Price": 105,
+        "Edibility": -300,
+        "Texture": "ThaleTheGreat.MoonMisadventures/assets/crop-products.png",
+        "SpriteIndex": 1
+    },
+    "Object:VoidBlossom": {
+        "Name": "VoidBlossom",
+        "DisplayName": "{{i18n:object.VoidBlossom.name}}",
+        "Description": "{{i18n:object.VoidBlossom.description}}",
+        "Type": "Flower",
+        "Category": -80,
+        "Price": 810,
+        "Edibility": -300,
+        "Texture": "ThaleTheGreat.MoonMisadventures/assets/crop-products.png",
+        "SpriteIndex": 2
+    },
+    "Object:SoulSprout": {
+        "Name": "SoulSprout",
+        "DisplayName": "{{i18n:object.SoulSprout.name}}",
+        "Description": "{{i18n:object.SoulSprout.description}}",
+        "Type": "Flower",
+        "Category": -80,
+        "Price": 315,
+        "Edibility": -300,
+        "Texture": "ThaleTheGreat.MoonMisadventures/assets/crop-products.png",
+        "SpriteIndex": 3
+    },
+    "Object:GalaxyEgg": {
+        "Name": "GalaxyEgg",
+        "DisplayName": "{{i18n:object.GalaxyEgg.name}}",
+        "Description": "{{i18n:object.GalaxyEgg.description}}",
+        "Type": "Egg",
+        "Category": -5,
+        "Price": 200,
+        "Edibility": -300,
+        "Texture": "ThaleTheGreat.MoonMisadventures/assets/objects.png",
+        "SpriteIndex": 6
+    },
+    "Object:GalaxyMilk": {
+        "Name": "GalaxyMilk",
+        "DisplayName": "{{i18n:object.GalaxyMilk.name}}",
+        "Description": "{{i18n:object.GalaxyMilk.description}}",
+        "Type": "Milk",
+        "Category": -6,
+        "Price": 250,
+        "Edibility": -300,
+        "Texture": "ThaleTheGreat.MoonMisadventures/assets/objects.png",
+        "SpriteIndex": 7
+    },
+    "Boots:BootsOfTheCosmos": "BootsOfTheCosmos/{{i18n:boots.BootsOfTheCosmos.description}}/800/10/8/0/{{i18n:boots.BootsOfTheCosmos.name}}/ThaleTheGreat.MoonMisadventures\\assets\\boots-color.png/0/ThaleTheGreat.MoonMisadventures\\assets\\boots.png",
+    "Weapon:BladeOfTheCosmos": {
+        "Name": "Blade of the Cosmos",
+        "DisplayName": "{{i18n:weapon.BladeOfTheCosmos.name}}",
+        "Description": "{{i18n:weapon.BladeOfTheCosmos.description}}",
+        "MinDamage": 130,
+        "MaxDamage": 170,
+        "Defense": 5,
+        "Type": 3,
+        "Texture": "ThaleTheGreat.MoonMisadventures/assets/weapons.png",
+        "SpriteIndex": 1
+    },
+    "Weapon:KnifeOfTheCosmos": {
+        "Name": "Knife of the Cosmos",
+        "DisplayName": "{{i18n:weapon.KnifeOfTheCosmos.name}}",
+        "Description": "{{i18n:weapon.KnifeOfTheCosmos.description}}",
+        "MinDamage": 80,
+        "MaxDamage": 110,
+        "Knockback": 0.4,
+        "Speed": 2,
+        "CritChance": 0.1,
+        "Defense": 4,
+        "Type": 1,
+        "Texture": "ThaleTheGreat.MoonMisadventures/assets/weapons.png",
+        "SpriteIndex": 2
+    },
+    "Weapon:HammerOfTheCosmos": {
+        "Name": "Hammer of the Cosmos",
+        "DisplayName": "{{i18n:weapon.HammerOfTheCosmos.name}}",
+        "Description": "{{i18n:weapon.HammerOfTheCosmos.description}}",
+        "MinDamage": 160,
+        "MaxDamage": 210,
+        "Defense": 2,
+        "Speed": 3,
+        "Knockback": 0.6,
+        "Type": 2,
+        "Texture": "ThaleTheGreat.MoonMisadventures/assets/weapons.png",
+        "SpriteIndex": 0
+    }
+}
