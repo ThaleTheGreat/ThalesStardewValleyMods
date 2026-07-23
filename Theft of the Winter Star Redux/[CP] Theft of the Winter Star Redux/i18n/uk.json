@@ -1,0 +1,15 @@
+{
+    "recipe.frosty-stardrop.name": "Заморрожена зорекрапля",
+    "item.festive-big-key-a.name": "Святковий великий ключ (А)",
+    "item.festive-big-key-a.description": "Половина \"великого ключа\", який використовувався в Морозному підземеллі.",
+    "item.festive-big-key-b.name": "Святковий великий ключ (Б)",
+    "item.festive-big-key-b.description": "Половина \"великого ключа\", який використовувався в Морозному підземеллі.",
+    "item.festive-key.name": "Святковий ключ",
+    "item.festive-key.description": "Ключ, що використовується в Морозному підземеллі.",
+    "item.frosty-stardrop-piece.name": "Заморожений шматок зорекраплі",
+    "item.frosty-stardrop-piece.description": "Шматочок зорекраплі. П'ять таких можна об'єднати в повну.",
+    "item.tempus-globe.name": "Темпус-Глобус",
+    "item.tempus-globe.description": "Містичний предмет, який дозволяє культурам навколо нього рости цілий рік. Він також поливає посіви біля себе.\nПлоща 5х5, якщо той в центрі.",
+    "weapon.festive-scepter.name": "Святковий скіпетр",
+    "weapon.festive-scepter.description": "Стріляє морозним променем."
+}

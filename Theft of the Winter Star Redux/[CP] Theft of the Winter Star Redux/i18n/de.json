@@ -1,0 +1,15 @@
+{
+    "recipe.frosty-stardrop.name": "Frostige Sternenfall-Frucht",
+    "item.festive-big-key-a.name": "Festlicher großer Schlüssel (A)",
+    "item.festive-big-key-a.description": "Die Hälfte eines 'großen Schlüssels', der im Frostverlies verwendet wird.",
+    "item.festive-big-key-b.name": "Festlicher großer Schlüssel (B)",
+    "item.festive-big-key-b.description": "Die Hälfte eines 'großen Schlüssels', der im Frostverlies verwendet wird.",
+    "item.festive-key.name": "Festlicher Schlüssel",
+    "item.festive-key.description": "Ein Schlüssel, der im Frostverlies verwendet wird.",
+    "item.frosty-stardrop-piece.name": "Teil einer frostigen Sternenfall-Frucht",
+    "item.frosty-stardrop-piece.description": "Ein Teil einer Sternenfall-Frucht. Fünf davon können zu einer ganzen kombiniert werden.",
+    "item.tempus-globe.name": "Tempus-Globus",
+    "item.tempus-globe.description": "Ein mysteriöser Gegenstand, der die Pflanzen in seiner Umgebung das ganze Jahr über wachsen lässt. Außerdem bewässert er die Pflanzen in seiner Nähe.\n5x5 Fläche, um den Gegenstand herum.",
+    "weapon.festive-scepter.name": "Festliches Zepter",
+    "weapon.festive-scepter.description": "Er schießt einen frostigen Strahl."
+}

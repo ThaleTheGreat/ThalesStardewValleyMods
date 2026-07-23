@@ -1,0 +1,15 @@
+{
+    "recipe.frosty-stardrop.name": "Fruta estelar helada",
+    "item.festive-big-key-a.name": "Llave grande festiva (A)",
+    "item.festive-big-key-a.description": "La mitad de una 'gran llave' utilizada en la Mazmorra de la Escarcha.",
+    "item.festive-big-key-b.name": "Llave grande festiva (B)",
+    "item.festive-big-key-b.description": "La mitad de una 'gran llave' utilizada en la Mazmorra de la Escarcha.",
+    "item.festive-key.name": "Llave festiva",
+    "item.festive-key.description": "Una llave utilizada en la Mazmorra de la Escarcha.",
+    "item.frosty-stardrop-piece.name": "Pieza de fruta estelar helada",
+    "item.frosty-stardrop-piece.description": "Una pieza de fruta estelar. Se pueden combinar cinco para obtener uno completo.",
+    "item.tempus-globe.name": "Globo Tempus",
+    "item.tempus-globe.description": "Un objeto místico que permite que los cultivos a su alrededor crezcan durante todo el año. También riega los cultivos cercanos. \nÁrea de 5x5, centrada en el objeto.",
+    "weapon.festive-scepter.name": "Cetro festivo",
+    "weapon.festive-scepter.description": "Dispara un rayo helado."
+}

@@ -1,0 +1,15 @@
+{
+    "recipe.frosty-stardrop.name": "서리가 내린 별방울",
+    "item.festive-big-key-a.name": "축제 큰 열쇠 (A)",
+    "item.festive-big-key-a.description": "프로스트 던전에서 사용하는 '큰 열쇠'의 반.",
+    "item.festive-big-key-b.name": "축제 큰 열쇠 (B)",
+    "item.festive-big-key-b.description": "프로스트 던전에서 사용하는 '큰 열쇠'의 반.",
+    "item.festive-key.name": "축제 열쇠",
+    "item.festive-key.description": "프로스트 던전에서 사용하는 열쇠.",
+    "item.frosty-stardrop-piece.name": "서리가 내린 별방울 조각",
+    "item.frosty-stardrop-piece.description": "스타드롭 조각. 5개를 합쳐서 하나를 완성할 수 있습니다.",
+    "item.tempus-globe.name": "템퍼스 글로브",
+    "item.tempus-globe.description": "주변의 작물이 1년 동안 자랄 수 있게 해주는 신비로운 아이템. 그것은 또한 주변 작물에 물을 주기도 합니다. \n 5x5 영역, 대상 중심.",
+    "weapon.festive-scepter.name": "축제의 홀",
+    "weapon.festive-scepter.description": "서리가 내린 광선을 발사합니다."
+}

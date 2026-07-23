@@ -1,0 +1,15 @@
+{
+    "recipe.frosty-stardrop.name": "Fagyos csillaghulló",
+    "item.festive-big-key-a.name": "Ünnepi nagy kulcs (A)",
+    "item.festive-big-key-a.description": "A fagyos kazamatában használható 'nagy kulcs' első fele.",
+    "item.festive-big-key-b.name": "Ünnepi nagy kulcs (B)",
+    "item.festive-big-key-b.description": "A fagyos kazamatában használható 'nagy kulcs' második fele.",
+    "item.festive-key.name": "Ünnepi kulcs",
+    "item.festive-key.description": "A fagyos kazamatában használható kulcs.",
+    "item.frosty-stardrop-piece.name": "Fagyos csillaghulló darab",
+    "item.frosty-stardrop-piece.description": "Egy csillaghulló darab. Öt kombinálható össze egy teljes egésszé.",
+    "item.tempus-globe.name": "Időgömb",
+    "item.tempus-globe.description": "Egy misztikus tárgy, mely lehetővé teszi, hogy a körülötte lévő növények egész évben növekedjenek. A közelében lévő növényeket meg is öntözi.\nA lefedettség 5x5 terület, a tárgy középpontjától.",
+    "weapon.festive-scepter.name": "Ünnepi jogar",
+    "weapon.festive-scepter.description": "Fagyos sugarat lő ki."
+}

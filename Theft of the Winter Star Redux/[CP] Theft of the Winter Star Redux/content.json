@@ -1,0 +1,149 @@
+{
+    "Format": "2.9.0",
+    "Changes": [
+        {
+            "Action": "Load",
+            "Target": "Mods/ThaleTheGreat/TheftOfTheWinterStar/FestiveBigKeyA",
+            "FromFile": "assets/festive-big-key-a.png"
+        },
+        {
+            "Action": "Load",
+            "Target": "Mods/ThaleTheGreat/TheftOfTheWinterStar/FestiveBigKeyB",
+            "FromFile": "assets/festive-big-key-b.png"
+        },
+        {
+            "Action": "Load",
+            "Target": "Mods/ThaleTheGreat/TheftOfTheWinterStar/FestiveKey",
+            "FromFile": "assets/festive-key.png"
+        },
+        {
+            "Action": "Load",
+            "Target": "Mods/ThaleTheGreat/TheftOfTheWinterStar/FrostyStardropPiece",
+            "FromFile": "assets/frosty-stardrop-piece.png"
+        },
+        {
+            "Action": "Load",
+            "Target": "Mods/ThaleTheGreat/TheftOfTheWinterStar/TempusGlobe",
+            "FromFile": "assets/tempus-globe.png"
+        },
+        {
+            "Action": "Load",
+            "Target": "Mods/ThaleTheGreat/TheftOfTheWinterStar/FestiveScepter",
+            "FromFile": "assets/festive-scepter.png"
+        },
+        {
+            "Action": "EditData",
+            "Target": "Data/Objects",
+            "Entries": {
+                "ThaleTheGreat.TheftOfTheWinterStar_FestiveBigKeyA": {
+                    "Name": "Festive Big Key (A)",
+                    "DisplayName": "{{i18n:item.festive-big-key-a.name}}",
+                    "Description": "{{i18n:item.festive-big-key-a.description}}",
+                    "Type": "Minerals",
+                    "Category": -2,
+                    "Price": 0,
+                    "Edibility": -300,
+                    "IsDrink": false,
+                    "Texture": "Mods/ThaleTheGreat/TheftOfTheWinterStar/FestiveBigKeyA",
+                    "SpriteIndex": 0,
+                    "CanBeGivenAsGift": false,
+                    "CanBeTrashed": false,
+                    "ExcludeFromShippingCollection": true,
+                    "ExcludeFromRandomSale": true
+                },
+                "ThaleTheGreat.TheftOfTheWinterStar_FestiveBigKeyB": {
+                    "Name": "Festive Big Key (B)",
+                    "DisplayName": "{{i18n:item.festive-big-key-b.name}}",
+                    "Description": "{{i18n:item.festive-big-key-b.description}}",
+                    "Type": "Minerals",
+                    "Category": -2,
+                    "Price": 0,
+                    "Edibility": -300,
+                    "IsDrink": false,
+                    "Texture": "Mods/ThaleTheGreat/TheftOfTheWinterStar/FestiveBigKeyB",
+                    "SpriteIndex": 0,
+                    "CanBeGivenAsGift": false,
+                    "CanBeTrashed": false,
+                    "ExcludeFromShippingCollection": true,
+                    "ExcludeFromRandomSale": true
+                },
+                "ThaleTheGreat.TheftOfTheWinterStar_FestiveKey": {
+                    "Name": "Festive Key",
+                    "DisplayName": "{{i18n:item.festive-key.name}}",
+                    "Description": "{{i18n:item.festive-key.description}}",
+                    "Type": "Minerals",
+                    "Category": -2,
+                    "Price": 0,
+                    "Edibility": -300,
+                    "IsDrink": false,
+                    "Texture": "Mods/ThaleTheGreat/TheftOfTheWinterStar/FestiveKey",
+                    "SpriteIndex": 0,
+                    "CanBeGivenAsGift": false,
+                    "CanBeTrashed": false,
+                    "ExcludeFromShippingCollection": true,
+                    "ExcludeFromRandomSale": true
+                },
+                "ThaleTheGreat.TheftOfTheWinterStar_FrostyStardropPiece": {
+                    "Name": "Frosty Stardrop Piece",
+                    "DisplayName": "{{i18n:item.frosty-stardrop-piece.name}}",
+                    "Description": "{{i18n:item.frosty-stardrop-piece.description}}",
+                    "Type": "Minerals",
+                    "Category": -2,
+                    "Price": 0,
+                    "Edibility": -300,
+                    "IsDrink": false,
+                    "Texture": "Mods/ThaleTheGreat/TheftOfTheWinterStar/FrostyStardropPiece",
+                    "SpriteIndex": 0,
+                    "CanBeGivenAsGift": false,
+                    "CanBeTrashed": false,
+                    "ExcludeFromShippingCollection": true,
+                    "ExcludeFromRandomSale": true
+                }
+            }
+        },
+        {
+            "Action": "EditData",
+            "Target": "Data/BigCraftables",
+            "Entries": {
+                "ThaleTheGreat.TheftOfTheWinterStar_TempusGlobe": {
+                    "Name": "Tempus Globe",
+                    "DisplayName": "{{i18n:item.tempus-globe.name}}",
+                    "Description": "{{i18n:item.tempus-globe.description}}",
+                    "Price": 0,
+                    "Fragility": 0,
+                    "CanBePlacedIndoors": true,
+                    "CanBePlacedOutdoors": true,
+                    "IsLamp": true,
+                    "Texture": "Mods/ThaleTheGreat/TheftOfTheWinterStar/TempusGlobe",
+                    "SpriteIndex": 0
+                }
+            }
+        },
+        {
+            "Action": "EditData",
+            "Target": "Data/Weapons",
+            "Entries": {
+                "ThaleTheGreat.TheftOfTheWinterStar_FestiveScepter": {
+                    "Name": "Festive Scepter",
+                    "DisplayName": "{{i18n:weapon.festive-scepter.name}}",
+                    "Description": "{{i18n:weapon.festive-scepter.description}}",
+                    "Type": 3,
+                    "MinDamage": 25,
+                    "MaxDamage": 35,
+                    "Knockback": 1.0,
+                    "CanBeLostOnDeath": false,
+                    "Texture": "Mods/ThaleTheGreat/TheftOfTheWinterStar/FestiveScepter",
+                    "SpriteIndex": 0
+                }
+            }
+        },
+        {
+            "Action": "EditData",
+            "Target": "Data/CraftingRecipes",
+            "Entries": {
+                "Frosty Stardrop": "ThaleTheGreat.TheftOfTheWinterStar_FrostyStardropPiece 5/Field/434/false/null/{{i18n:recipe.frosty-stardrop.name}}",
+                "Tempus Globe": "768 25 769 25 645 1/Home/ThaleTheGreat.TheftOfTheWinterStar_TempusGlobe/true/null/{{i18n:item.tempus-globe.name}}"
+            }
+        }
+    ]
+}
