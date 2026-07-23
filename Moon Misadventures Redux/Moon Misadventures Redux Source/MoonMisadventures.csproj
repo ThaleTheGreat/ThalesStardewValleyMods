@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>annotations</Nullable>
+    <AssemblyName>MoonMisadventures</AssemblyName>
+    <RootNamespace>ThaleTheGreat.MoonMisadventures</RootNamespace>
+    <Version>1.0.0</Version>
+    <ModFolderName>Moon Misadventures Redux</ModFolderName>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <PackageLicenseExpression>GPL-3.0-only</PackageLicenseExpression>
+    <ModZipPath>$(MSBuildProjectDirectory)/release</ModZipPath>
+    <EnableModZip Condition="'$(Configuration)' != 'Release'">false</EnableModZip>
+    <PublicizerClearCacheOnClean>true</PublicizerClearCacheOnClean>
+    <EnableHarmony>true</EnableHarmony>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="4.4.0" />
+    <PackageReference Include="Krafs.Publicizer" Version="2.3.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>$(GamePath)/smapi-internal/Newtonsoft.Json.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="manifest.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="LICENSE" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="assets/**/*" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="i18n/**/*" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="asset-credits.txt" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="THIRD-PARTY-NOTICES.txt" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(OS)' == 'Windows_NT'">
+    <Publicize Include="Stardew Valley" IncludeVirtualMembers="false" IncludeCompilerGeneratedMembers="false" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(OS)' != 'Windows_NT'">
+    <Publicize Include="StardewValley" IncludeVirtualMembers="false" IncludeCompilerGeneratedMembers="false" />
+  </ItemGroup>
+
+
+</Project>
