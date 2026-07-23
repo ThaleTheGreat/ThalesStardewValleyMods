@@ -1,0 +1,20 @@
+{
+    "Name": "(TTG) Surfing Festival Redux",
+    "Author": "kittycatcasey and ThaleTheGreat",
+    "Version": "1.0.0",
+    "Description": "Adds a summer beach festival with a multiplayer-compatible surf race, prizes, mail, animation, and festival shop content.",
+    "UniqueID": "ThaleTheGreat.SurfingFestival",
+    "EntryDll": "SurfingFestival.dll",
+    "MinimumApiVersion": "4.5.2",
+    "MinimumGameVersion": "1.6.15",
+    "UpdateKeys": [
+        "Nexus:47837"
+    ],
+    "Dependencies": [
+        {
+            "UniqueID": "Pathoschild.ContentPatcher",
+            "IsRequired": true,
+            "MinimumVersion": "2.9.0"
+        }
+    ]
+}

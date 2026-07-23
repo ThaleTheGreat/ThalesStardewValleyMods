@@ -1,0 +1,16 @@
+{
+    "Name": "[CP] (TTG) Surfing Festival Redux",
+    "Author": "kittycatcasey and ThaleTheGreat",
+    "Version": "1.0.0",
+    "Description": "Adds native Stardew Valley 1.6 items, hats, mail, and shop data for Surfing Festival.",
+    "UniqueID": "ThaleTheGreat.SurfingFestival.CP",
+    "MinimumApiVersion": "4.5.2",
+    "MinimumGameVersion": "1.6.15",
+    "UpdateKeys": [
+        "Nexus:47837"
+    ],
+    "ContentPackFor": {
+        "UniqueID": "Pathoschild.ContentPatcher",
+        "MinimumVersion": "2.9.0"
+    }
+}
