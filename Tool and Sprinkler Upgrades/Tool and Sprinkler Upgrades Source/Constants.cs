@@ -8,6 +8,9 @@ internal static class Constants
     public const int DeluxeScarecrowRadius = 17;
 
     public const string ModId = "ThaleTheGreat.ToolAndSprinklerUpgrades";
+    public const string MoonMisadventuresModId = "ThaleTheGreat.MoonMisadventures";
+    public const string CobaltToMythiciteRecipe = "Transmute Cobalt Into Mythicite";
+    public const string MythiciteToCobaltRecipe = "Transmute Mythicite Into Cobalt";
     public const string TierOrderSaveKey = ModId + "/RadioactiveBeforePrismatic";
     public const string ImmersiveSprinklersAndScarecrowsModId = "aedenthorn.ImmersiveSprinklersAndScarecrows";
     public const string ImmersivePressureNozzleKey = "aedenthorn.ImmersiveSprinklersAndScarecrows/nozzle";

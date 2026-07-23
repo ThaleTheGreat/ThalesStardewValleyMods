@@ -60,7 +60,7 @@ internal static class SwordAndSorceryIntegration
         new(TopTierWateringCanToolId, MiddleTierWateringCanId, BlessedWateringCanId)
     };
 
-    public static void Apply(IDictionary<string, ToolData> tools)
+    public static void Apply(IDictionary<string, ToolData> tools, IEnumerable<AlternativeCoreToolTierRegistration> alternativeTiers)
     {
         EnsureSwordAndSorceryTools(tools);
 
@@ -69,6 +69,22 @@ internal static class SwordAndSorceryIntegration
 
         foreach (UpgradeBridge bridge in UpgradeBridges)
             AddUpgradeSource(tools, bridge);
+
+        ApplyAlternativeTierCompatibility(tools, alternativeTiers);
+    }
+
+    public static void ApplyAlternativeTierCompatibility(IDictionary<string, ToolData> tools, IEnumerable<AlternativeCoreToolTierRegistration> alternativeTiers)
+    {
+        foreach (AlternativeCoreToolTierRegistration registration in alternativeTiers)
+        {
+            if (registration.UpgradeLevel != Constants.MiddleCustomLevel)
+                continue;
+
+            AddUpgradeSource(tools, new UpgradeBridge(registration.AxeId, "(T)" + Constants.CobaltAxeId, "(T)" + StygiumAxeToolId));
+            AddUpgradeSource(tools, new UpgradeBridge(registration.PickaxeId, "(T)" + Constants.CobaltPickaxeId, "(T)" + StygiumPickaxeToolId));
+            AddUpgradeSource(tools, new UpgradeBridge(registration.HoeId, "(T)" + Constants.CobaltHoeId, "(T)" + StygiumHoeToolId));
+            AddUpgradeSource(tools, new UpgradeBridge(registration.WateringCanId, "(T)" + Constants.CobaltWateringCanId, "(T)" + StygiumWateringCanToolId));
+        }
     }
 
     private static void EnsureSwordAndSorceryTools(IDictionary<string, ToolData> tools)

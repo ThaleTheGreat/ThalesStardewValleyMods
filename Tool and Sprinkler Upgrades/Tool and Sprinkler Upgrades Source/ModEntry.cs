@@ -20,7 +20,11 @@ public sealed class ModEntry : Mod
     internal static ModEntry Instance { get; private set; } = null!;
     internal static ModConfig Config { get; private set; } = null!;
 
+    private readonly List<AlternativeCoreToolTierRegistration> alternativeCoreToolTiers = new();
+    private readonly HashSet<string> enabledAlternativeTierBarTransmutations = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ToolAndSprinklerUpgradesApi api = new();
     private bool suppressExistingSaveSpriteRefresh;
+    private bool swordAndSorceryInstalled;
     private bool enableSwordAndSorceryIntegration;
     private bool lastAppliedRadioactiveBeforePrismatic;
 
@@ -30,16 +34,175 @@ public sealed class ModEntry : Mod
     }
 
 
+    public override object GetApi()
+    {
+        return api;
+    }
+
+    internal bool RegisterAlternativeLevelFiveCoreTools(
+        string ownerModId,
+        string tierId,
+        string textureAsset,
+        string barItemId,
+        string axeId,
+        string axeDisplayName,
+        string pickaxeId,
+        string pickaxeDisplayName,
+        string hoeId,
+        string hoeDisplayName,
+        string wateringCanId,
+        string wateringCanDisplayName
+    )
+    {
+        return RegisterAlternativeCoreTools(
+            Constants.CobaltLevel,
+            ownerModId,
+            tierId,
+            textureAsset,
+            barItemId,
+            axeId,
+            axeDisplayName,
+            pickaxeId,
+            pickaxeDisplayName,
+            hoeId,
+            hoeDisplayName,
+            wateringCanId,
+            wateringCanDisplayName
+        );
+    }
+
+    internal bool RegisterAlternativeLevelSixCoreTools(
+        string ownerModId,
+        string tierId,
+        string textureAsset,
+        string barItemId,
+        string axeId,
+        string axeDisplayName,
+        string pickaxeId,
+        string pickaxeDisplayName,
+        string hoeId,
+        string hoeDisplayName,
+        string wateringCanId,
+        string wateringCanDisplayName
+    )
+    {
+        return RegisterAlternativeCoreTools(
+            Constants.MiddleCustomLevel,
+            ownerModId,
+            tierId,
+            textureAsset,
+            barItemId,
+            axeId,
+            axeDisplayName,
+            pickaxeId,
+            pickaxeDisplayName,
+            hoeId,
+            hoeDisplayName,
+            wateringCanId,
+            wateringCanDisplayName
+        );
+    }
+
+    private bool RegisterAlternativeCoreTools(
+        int upgradeLevel,
+        string ownerModId,
+        string tierId,
+        string textureAsset,
+        string barItemId,
+        string axeId,
+        string axeDisplayName,
+        string pickaxeId,
+        string pickaxeDisplayName,
+        string hoeId,
+        string hoeDisplayName,
+        string wateringCanId,
+        string wateringCanDisplayName
+    )
+    {
+        if (upgradeLevel != Constants.CobaltLevel && upgradeLevel != Constants.MiddleCustomLevel)
+            return false;
+
+        string[] requiredValues =
+        {
+            ownerModId,
+            tierId,
+            textureAsset,
+            barItemId,
+            axeId,
+            axeDisplayName,
+            pickaxeId,
+            pickaxeDisplayName,
+            hoeId,
+            hoeDisplayName,
+            wateringCanId,
+            wateringCanDisplayName
+        };
+
+        if (requiredValues.Any(string.IsNullOrWhiteSpace))
+            return false;
+
+        if (alternativeCoreToolTiers.Any(entry => string.Equals(entry.OwnerModId, ownerModId, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(entry.TierId, tierId, StringComparison.OrdinalIgnoreCase)))
+        {
+            return false;
+        }
+
+        alternativeCoreToolTiers.Add(new AlternativeCoreToolTierRegistration(
+            ownerModId,
+            tierId,
+            upgradeLevel,
+            textureAsset,
+            barItemId,
+            axeId,
+            axeDisplayName,
+            pickaxeId,
+            pickaxeDisplayName,
+            hoeId,
+            hoeDisplayName,
+            wateringCanId,
+            wateringCanDisplayName
+        ));
+
+        Helper.GameContent.InvalidateCache("Data/Tools");
+        Helper.GameContent.InvalidateCache("Data/CraftingRecipes");
+        return true;
+    }
+
+    internal bool SetAlternativeTierBarTransmutationEnabled(string ownerModId, string tierId, bool enabled)
+    {
+        AlternativeCoreToolTierRegistration? registration = alternativeCoreToolTiers.FirstOrDefault(entry =>
+            string.Equals(entry.OwnerModId, ownerModId, StringComparison.OrdinalIgnoreCase)
+            && string.Equals(entry.TierId, tierId, StringComparison.OrdinalIgnoreCase)
+        );
+        if (registration == null)
+            return false;
+
+        string key = GetAlternativeTierKey(ownerModId, tierId);
+        bool changed = enabled
+            ? enabledAlternativeTierBarTransmutations.Add(key)
+            : enabledAlternativeTierBarTransmutations.Remove(key);
+
+        if (changed)
+        {
+            Helper.GameContent.InvalidateCache("Data/CraftingRecipes");
+            if (Context.IsWorldReady)
+                UnlockKnownRecipes();
+        }
+
+        return true;
+    }
+
     public override void Entry(IModHelper helper)
     {
         Instance = this;
         Config = helper.ReadConfig<ModConfig>();
         NormalizeConfig(helper);
         lastAppliedRadioactiveBeforePrismatic = Config.RadioactiveBeforePrismatic;
+        swordAndSorceryInstalled = IsSwordAndSorceryInstalled();
         enableSwordAndSorceryIntegration = ShouldEnableSwordAndSorceryIntegration();
 
         helper.Events.Content.AssetRequested += OnAssetRequested;
-        if (enableSwordAndSorceryIntegration)
+        if (swordAndSorceryInstalled)
             helper.Events.Content.AssetReady += OnAssetReady;
         helper.Events.GameLoop.GameLaunched += OnGameLaunched;
         helper.Events.GameLoop.SaveLoaded += OnSaveLoaded;
@@ -62,17 +225,17 @@ public sealed class ModEntry : Mod
 
     private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
     {
-        IGenericModConfigMenuApi? gmcm = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
-        if (gmcm == null)
+        IGenericModConfigMenuApi? gmcmApi = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
+        if (gmcmApi == null)
             return;
 
-        gmcm.Register(
+        gmcmApi.Register(
             ModManifest,
             () => Config = new ModConfig(),
             ApplyConfigChanges
         );
 
-        gmcm.AddBoolOption(
+        gmcmApi.AddBoolOption(
             ModManifest,
             () => Config.RadioactiveBeforePrismatic,
             value => Config.RadioactiveBeforePrismatic = value,
@@ -81,7 +244,7 @@ public sealed class ModEntry : Mod
             "RadioactiveBeforePrismatic"
         );
 
-        gmcm.AddBoolOption(
+        gmcmApi.AddBoolOption(
             ModManifest,
             () => Config.RadioactiveSprinklerActsAsScarecrow,
             value => Config.RadioactiveSprinklerActsAsScarecrow = value,
@@ -122,9 +285,14 @@ public sealed class ModEntry : Mod
     {
         NormalizeConfig(Helper);
         Helper.WriteConfig(Config);
+        Helper.GameContent.InvalidateCache("Data/CraftingRecipes");
 
         if (lastAppliedRadioactiveBeforePrismatic == Config.RadioactiveBeforePrismatic)
+        {
+            if (Context.IsWorldReady)
+                UnlockKnownRecipes();
             return;
+        }
 
         bool previousRadioactiveBeforePrismatic = lastAppliedRadioactiveBeforePrismatic;
         lastAppliedRadioactiveBeforePrismatic = Config.RadioactiveBeforePrismatic;
@@ -301,10 +469,17 @@ public sealed class ModEntry : Mod
                 AddToolTierData(data);
             });
 
-            if (enableSwordAndSorceryIntegration)
+            if (swordAndSorceryInstalled)
             {
                 e.Edit(
-                    asset => SwordAndSorceryIntegration.Apply(asset.AsDictionary<string, ToolData>().Data),
+                    asset =>
+                    {
+                        IDictionary<string, ToolData> data = asset.AsDictionary<string, ToolData>().Data;
+                        if (enableSwordAndSorceryIntegration)
+                            SwordAndSorceryIntegration.Apply(data, Instance.alternativeCoreToolTiers);
+                        else
+                            SwordAndSorceryIntegration.ApplyAlternativeTierCompatibility(data, Instance.alternativeCoreToolTiers);
+                    },
                     (AssetEditPriority)SwordAndSorceryIntegration.AssetEditPriority
                 );
             }
@@ -334,20 +509,60 @@ public sealed class ModEntry : Mod
                 data["Cobalt Sprinkler"] = $"{Constants.CobaltBarId} 1 645 1/Home/{Constants.CobaltSprinklerId} 1/false/null";
                 data[ToolTierUtility.GetSprinklerRecipeName(Constants.MiddleCustomLevel)] = $"{ToolTierUtility.GetRequiredBarId(Constants.MiddleCustomLevel)} 1 {Constants.CobaltSprinklerId} 1/Home/{Constants.PrismaticSprinklerId} 1/false/null";
                 data[ToolTierUtility.GetSprinklerRecipeName(Constants.HighestCustomLevel)] = $"{ToolTierUtility.GetRequiredBarId(Constants.HighestCustomLevel)} 1 {Constants.PrismaticSprinklerId} 1/Home/{Constants.RadioactiveSprinklerId} 1/false/null";
+
+                AlternativeCoreToolTierRegistration? mythicite = GetMoonMythiciteRegistration();
+                if (ShouldAddCobaltMythiciteTransmutation() && mythicite != null)
+                {
+                    data[Constants.CobaltToMythiciteRecipe] = $"{Constants.CobaltBarId} 2/Home/{mythicite.BarItemId} 1/false/null";
+                    data[Constants.MythiciteToCobaltRecipe] = $"{mythicite.BarItemId} 2/Home/{Constants.CobaltBarId} 1/false/null";
+                }
+                else
+                {
+                    data.Remove(Constants.CobaltToMythiciteRecipe);
+                    data.Remove(Constants.MythiciteToCobaltRecipe);
+                }
             });
         }
     }
 
+    private static bool ShouldAddCobaltMythiciteTransmutation()
+    {
+        AlternativeCoreToolTierRegistration? registration = GetMoonMythiciteRegistration();
+        return registration != null
+            && Instance.enabledAlternativeTierBarTransmutations.Contains(GetAlternativeTierKey(registration.OwnerModId, registration.TierId));
+    }
+
+    private static string GetAlternativeTierKey(string ownerModId, string tierId)
+    {
+        return $"{ownerModId}\n{tierId}";
+    }
+
+    private static AlternativeCoreToolTierRegistration? GetMoonMythiciteRegistration()
+    {
+        return Instance.alternativeCoreToolTiers.FirstOrDefault(registration =>
+            string.Equals(registration.OwnerModId, Constants.MoonMisadventuresModId, StringComparison.OrdinalIgnoreCase)
+            && string.Equals(registration.TierId, "Mythicite", StringComparison.OrdinalIgnoreCase)
+        );
+    }
+
+    private bool IsSwordAndSorceryInstalled()
+    {
+        return Helper.ModRegistry.IsLoaded(SwordAndSorceryIntegration.ContentModId)
+            && Helper.ModRegistry.IsLoaded(SwordAndSorceryIntegration.CodeModId);
+    }
+
     private bool ShouldEnableSwordAndSorceryIntegration()
     {
+        if (!swordAndSorceryInstalled)
+            return false;
+
         if (Helper.ModRegistry.IsLoaded(SwordAndSorceryIntegration.LegacyAddonModId))
         {
             DebugLog("The standalone Sword and Sorcery add-on is installed, so the integrated compatibility bridge is disabled to prevent duplicate edits.");
             return false;
         }
 
-        return Helper.ModRegistry.IsLoaded(SwordAndSorceryIntegration.ContentModId)
-            && Helper.ModRegistry.IsLoaded(SwordAndSorceryIntegration.CodeModId);
+        return true;
     }
 
     private void OnAssetReady(object? sender, AssetReadyEventArgs e)
@@ -355,7 +570,11 @@ public sealed class ModEntry : Mod
         if (!e.NameWithoutLocale.IsEquivalentTo("Data/Tools"))
             return;
 
-        SwordAndSorceryIntegration.Apply(Helper.GameContent.Load<Dictionary<string, ToolData>>("Data/Tools"));
+        Dictionary<string, ToolData> data = Helper.GameContent.Load<Dictionary<string, ToolData>>("Data/Tools");
+        if (enableSwordAndSorceryIntegration)
+            SwordAndSorceryIntegration.Apply(data, alternativeCoreToolTiers);
+        else
+            SwordAndSorceryIntegration.ApplyAlternativeTierCompatibility(data, alternativeCoreToolTiers);
     }
 
     private static ObjectData CreateObjectData(string name, string displayName, string description, string type, int category, int price, string textureAsset, int spriteIndex, List<string>? contextTags = null)
@@ -397,6 +616,9 @@ public sealed class ModEntry : Mod
         AddCoreToolTier(data, Constants.MiddleCustomLevel, Constants.PrismaticAxeId, Constants.PrismaticPickaxeId, Constants.PrismaticHoeId, Constants.PrismaticWateringCanId, "(T)" + Constants.CobaltAxeId, "(T)" + Constants.CobaltPickaxeId, "(T)" + Constants.CobaltHoeId, "(T)" + Constants.CobaltWateringCanId);
         AddCoreToolTier(data, Constants.HighestCustomLevel, Constants.RadioactiveAxeId, Constants.RadioactivePickaxeId, Constants.RadioactiveHoeId, Constants.RadioactiveWateringCanId, "(T)" + Constants.PrismaticAxeId, "(T)" + Constants.PrismaticPickaxeId, "(T)" + Constants.PrismaticHoeId, "(T)" + Constants.PrismaticWateringCanId);
 
+        foreach (AlternativeCoreToolTierRegistration registration in Instance.alternativeCoreToolTiers)
+            AddAlternativeCoreTools(data, registration);
+
         AddTierTool(data, "IridiumPan", Constants.CobaltPanId, "pan", "Pan", Constants.CobaltLevel, "(T)IridiumPan");
         AddTierTool(data, "IridiumPan", Constants.PrismaticPanId, "pan", "Pan", Constants.MiddleCustomLevel, "(T)" + Constants.CobaltPanId);
         AddTierTool(data, "IridiumPan", Constants.RadioactivePanId, "pan", "Pan", Constants.HighestCustomLevel, "(T)" + Constants.PrismaticPanId);
@@ -404,6 +626,117 @@ public sealed class ModEntry : Mod
         AddTierShopTool(data, Constants.CobaltFishingRodId, "rod", "Rod", Constants.CobaltLevel);
         AddTierShopTool(data, Constants.PrismaticFishingRodId, "rod", "Rod", Constants.MiddleCustomLevel);
         AddTierShopTool(data, Constants.RadioactiveFishingRodId, "rod", "Rod", Constants.HighestCustomLevel);
+    }
+
+    private static void AddAlternativeCoreTools(IDictionary<string, ToolData> data, AlternativeCoreToolTierRegistration registration)
+    {
+        string requireAxeId;
+        string requirePickaxeId;
+        string requireHoeId;
+        string requireWateringCanId;
+
+        if (registration.UpgradeLevel == Constants.CobaltLevel)
+        {
+            requireAxeId = "(T)IridiumAxe";
+            requirePickaxeId = "(T)IridiumPickaxe";
+            requireHoeId = "(T)IridiumHoe";
+            requireWateringCanId = "(T)IridiumWateringCan";
+        }
+        else if (registration.UpgradeLevel == Constants.MiddleCustomLevel)
+        {
+            requireAxeId = "(T)" + Constants.CobaltAxeId;
+            requirePickaxeId = "(T)" + Constants.CobaltPickaxeId;
+            requireHoeId = "(T)" + Constants.CobaltHoeId;
+            requireWateringCanId = "(T)" + Constants.CobaltWateringCanId;
+        }
+        else
+        {
+            return;
+        }
+
+        AddAlternativeCoreTool(data, "IridiumAxe", registration.AxeId, registration.TierId + " Axe", registration.AxeDisplayName, Translate("tools.description.axe"), requireAxeId, registration);
+        AddAlternativeCoreTool(data, "IridiumPickaxe", registration.PickaxeId, registration.TierId + " Pickaxe", registration.PickaxeDisplayName, Translate("tools.description.pickaxe"), requirePickaxeId, registration);
+        AddAlternativeCoreTool(data, "IridiumHoe", registration.HoeId, registration.TierId + " Hoe", registration.HoeDisplayName, Translate("tools.description.hoe"), requireHoeId, registration);
+        AddAlternativeCoreTool(data, "IridiumWateringCan", registration.WateringCanId, registration.TierId + " Watering Can", registration.WateringCanDisplayName, Translate("tools.description.watering-can"), requireWateringCanId, registration);
+
+        int nextLevel = registration.UpgradeLevel + 1;
+        if (nextLevel > Constants.HighestCustomLevel)
+            return;
+
+        AddAlternateUpgradeSource(data, GetToolIdForLevel(nextLevel, "Axe"), "(T)" + GetToolIdForLevel(registration.UpgradeLevel, "Axe"), "(T)" + registration.AxeId);
+        AddAlternateUpgradeSource(data, GetToolIdForLevel(nextLevel, "Pickaxe"), "(T)" + GetToolIdForLevel(registration.UpgradeLevel, "Pickaxe"), "(T)" + registration.PickaxeId);
+        AddAlternateUpgradeSource(data, GetToolIdForLevel(nextLevel, "Hoe"), "(T)" + GetToolIdForLevel(registration.UpgradeLevel, "Hoe"), "(T)" + registration.HoeId);
+        AddAlternateUpgradeSource(data, GetToolIdForLevel(nextLevel, "WateringCan"), "(T)" + GetToolIdForLevel(registration.UpgradeLevel, "WateringCan"), "(T)" + registration.WateringCanId);
+    }
+
+    private static void AddAlternativeCoreTool(
+        IDictionary<string, ToolData> data,
+        string templateId,
+        string itemId,
+        string name,
+        string displayName,
+        string description,
+        string requireToolId,
+        AlternativeCoreToolTierRegistration registration
+    )
+    {
+        if (!data.TryGetValue(templateId, out ToolData? template))
+            return;
+
+        data[itemId] = new ToolData
+        {
+            ClassName = template.ClassName,
+            Name = name,
+            DisplayName = displayName,
+            Description = description,
+            Texture = registration.TextureAsset,
+            SpriteIndex = template.SpriteIndex,
+            MenuSpriteIndex = template.MenuSpriteIndex >= 0 ? template.MenuSpriteIndex : template.SpriteIndex,
+            AttachmentSlots = template.AttachmentSlots,
+            SalePrice = template.SalePrice,
+            UpgradeLevel = registration.UpgradeLevel,
+            UpgradeFrom = new List<ToolUpgradeData>
+            {
+                new()
+                {
+                    RequireToolId = requireToolId,
+                    Price = ToolTierUtility.GetUpgradeCost(registration.UpgradeLevel),
+                    TradeItemId = "(O)" + registration.BarItemId,
+                    TradeItemAmount = ToolTierUtility.GetRequiredBars(registration.UpgradeLevel)
+                }
+            },
+            CanBeLostOnDeath = template.CanBeLostOnDeath,
+            SetProperties = template.SetProperties,
+            ModData = new Dictionary<string, string>
+            {
+                [Constants.ModId + "/Tier"] = registration.TierId,
+                [Constants.ModId + "/UpgradeLevel"] = registration.UpgradeLevel.ToString(),
+                [Constants.ModId + "/Owner"] = registration.OwnerModId
+            }
+        };
+    }
+
+    private static void AddAlternateUpgradeSource(IDictionary<string, ToolData> data, string targetToolId, string templateRequireToolId, string alternateRequireToolId)
+    {
+        if (!data.TryGetValue(targetToolId, out ToolData? targetTool))
+            return;
+
+        targetTool.UpgradeFrom ??= new List<ToolUpgradeData>();
+        if (targetTool.UpgradeFrom.Any(entry => string.Equals(entry.RequireToolId, alternateRequireToolId, StringComparison.OrdinalIgnoreCase)))
+            return;
+
+        ToolUpgradeData? template = targetTool.UpgradeFrom.FirstOrDefault(entry => string.Equals(entry.RequireToolId, templateRequireToolId, StringComparison.OrdinalIgnoreCase))
+            ?? targetTool.UpgradeFrom.FirstOrDefault();
+        if (template == null)
+            return;
+
+        targetTool.UpgradeFrom.Add(new ToolUpgradeData
+        {
+            RequireToolId = alternateRequireToolId,
+            Price = template.Price,
+            TradeItemId = template.TradeItemId,
+            TradeItemAmount = template.TradeItemAmount
+        });
     }
 
     private static void AddCoreToolTier(
@@ -737,7 +1070,7 @@ public sealed class ModEntry : Mod
         return itemId.StartsWith("(O)", StringComparison.OrdinalIgnoreCase) ? itemId : "(O)" + itemId;
     }
 
-    private const string SpriteRefreshVersion = "2.0.1";
+    private const string SpriteRefreshVersion = "2.1.0";
 
     private void RefreshExistingCustomToolSprites()
     {
@@ -855,9 +1188,18 @@ public sealed class ModEntry : Mod
             && tool.CurrentParentTileIndex == spriteData.SpriteIndex
             && tool.IndexOfMenuItemView == spriteData.MenuSpriteIndex
             && tool.modData.TryGetValue(Constants.ModId + "/Tier", out string? tier)
-            && string.Equals(tier, ToolTierUtility.GetTierName(spriteData.Level), StringComparison.Ordinal)
+            && string.Equals(tier, spriteData.TierId, StringComparison.Ordinal)
+            && ToolOwnerMatches(tool, spriteData.OwnerModId)
             && tool.modData.TryGetValue(Constants.ModId + "/SpriteRefreshVersion", out string? refreshVersion)
             && string.Equals(refreshVersion, SpriteRefreshVersion, StringComparison.Ordinal);
+    }
+
+    private static bool ToolOwnerMatches(Tool tool, string ownerModId)
+    {
+        bool hasOwner = tool.modData.TryGetValue(Constants.ModId + "/Owner", out string? currentOwner);
+        return string.IsNullOrWhiteSpace(ownerModId)
+            ? !hasOwner || string.IsNullOrWhiteSpace(currentOwner)
+            : hasOwner && string.Equals(currentOwner, ownerModId, StringComparison.Ordinal);
     }
 
     private static Tool? CreateCurrentCustomTool(string itemId, CustomToolSpriteData spriteData, Tool? oldTool)
@@ -905,9 +1247,13 @@ public sealed class ModEntry : Mod
         tool.UpgradeLevel = spriteData.Level;
         tool.CurrentParentTileIndex = spriteData.SpriteIndex;
         tool.IndexOfMenuItemView = spriteData.MenuSpriteIndex;
-        tool.modData[Constants.ModId + "/Tier"] = ToolTierUtility.GetTierName(spriteData.Level);
+        tool.modData[Constants.ModId + "/Tier"] = spriteData.TierId;
         tool.modData[Constants.ModId + "/UpgradeLevel"] = spriteData.Level.ToString();
         tool.modData[Constants.ModId + "/SpriteRefreshVersion"] = SpriteRefreshVersion;
+        if (string.IsNullOrWhiteSpace(spriteData.OwnerModId))
+            tool.modData.Remove(Constants.ModId + "/Owner");
+        else
+            tool.modData[Constants.ModId + "/Owner"] = spriteData.OwnerModId;
 
         SetStringMember(tool, "itemId", itemId);
         SetStringMember(tool, "qualifiedItemId", "(T)" + itemId);
@@ -1088,9 +1434,11 @@ public sealed class ModEntry : Mod
 
         if (GetMemberValue(state, "ModData") is IDictionary modData)
         {
-            SetDictionaryStringValue(modData, Constants.ModId + "/Tier", ToolTierUtility.GetTierName(spriteData.Level), ref changed);
+            SetDictionaryStringValue(modData, Constants.ModId + "/Tier", spriteData.TierId, ref changed);
             SetDictionaryStringValue(modData, Constants.ModId + "/UpgradeLevel", spriteData.Level.ToString(), ref changed);
             SetDictionaryStringValue(modData, Constants.ModId + "/SpriteRefreshVersion", SpriteRefreshVersion, ref changed);
+            if (!string.IsNullOrWhiteSpace(spriteData.OwnerModId))
+                SetDictionaryStringValue(modData, Constants.ModId + "/Owner", spriteData.OwnerModId, ref changed);
         }
 
         if (liveTool != null)
@@ -1180,7 +1528,7 @@ public sealed class ModEntry : Mod
         if (itemId.StartsWith("(T)", StringComparison.OrdinalIgnoreCase))
             itemId = itemId[3..];
 
-        return itemId switch
+        string builtInId = itemId switch
         {
             "Cobalt Axe" => GetToolIdForIdentity(UpgradeIdentity.Cobalt, "Axe"),
             "Cobalt Pickaxe" => GetToolIdForIdentity(UpgradeIdentity.Cobalt, "Pickaxe"),
@@ -1200,8 +1548,30 @@ public sealed class ModEntry : Mod
             "Radioactive Watering Can" => GetToolIdForIdentity(UpgradeIdentity.Radioactive, "WateringCan"),
             "Radioactive Pan" => GetToolIdForIdentity(UpgradeIdentity.Radioactive, "Pan"),
             "Radioactive Rod" => GetToolIdForIdentity(UpgradeIdentity.Radioactive, "FishingRod"),
-            _ => itemId
+            _ => string.Empty
         };
+        if (!string.IsNullOrWhiteSpace(builtInId))
+            return builtInId;
+
+        foreach (AlternativeCoreToolTierRegistration registration in Instance.alternativeCoreToolTiers)
+        {
+            if (MatchesAlternativeToolName(itemId, registration.TierId + " Axe", registration.AxeDisplayName))
+                return registration.AxeId;
+            if (MatchesAlternativeToolName(itemId, registration.TierId + " Pickaxe", registration.PickaxeDisplayName))
+                return registration.PickaxeId;
+            if (MatchesAlternativeToolName(itemId, registration.TierId + " Hoe", registration.HoeDisplayName))
+                return registration.HoeId;
+            if (MatchesAlternativeToolName(itemId, registration.TierId + " Watering Can", registration.WateringCanDisplayName))
+                return registration.WateringCanId;
+        }
+
+        return itemId;
+    }
+
+    private static bool MatchesAlternativeToolName(string candidate, string internalName, string displayName)
+    {
+        return string.Equals(candidate, internalName, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(candidate, displayName, StringComparison.OrdinalIgnoreCase);
     }
 
     private static string GetToolIdForIdentity(UpgradeIdentity identity, string toolKind)
@@ -1248,15 +1618,62 @@ public sealed class ModEntry : Mod
 
         int spriteIndex = customTool.SpriteIndex >= 0 ? customTool.SpriteIndex : template.SpriteIndex;
         int menuSpriteIndex = customTool.MenuSpriteIndex >= 0 ? customTool.MenuSpriteIndex : spriteIndex;
+        string tierId = customTool.ModData != null
+            && customTool.ModData.TryGetValue(Constants.ModId + "/Tier", out string? storedTier)
+            && !string.IsNullOrWhiteSpace(storedTier)
+                ? storedTier
+                : ToolTierUtility.GetTierName(level);
+        string ownerModId = customTool.ModData != null
+            && customTool.ModData.TryGetValue(Constants.ModId + "/Owner", out string? storedOwner)
+                ? storedOwner
+                : string.Empty;
+
         spriteData = new CustomToolSpriteData(
             level,
             customTool.Name,
             customTool.DisplayName,
             customTool.Texture,
             spriteIndex,
-            menuSpriteIndex
+            menuSpriteIndex,
+            tierId,
+            ownerModId
         );
         return true;
+    }
+
+    private static bool TryGetAlternativeCoreToolTemplate(string itemId, out string templateId, out int level)
+    {
+        foreach (AlternativeCoreToolTierRegistration registration in Instance.alternativeCoreToolTiers)
+        {
+            if (string.Equals(itemId, registration.AxeId, StringComparison.OrdinalIgnoreCase))
+            {
+                templateId = "IridiumAxe";
+                level = registration.UpgradeLevel;
+                return true;
+            }
+            if (string.Equals(itemId, registration.PickaxeId, StringComparison.OrdinalIgnoreCase))
+            {
+                templateId = "IridiumPickaxe";
+                level = registration.UpgradeLevel;
+                return true;
+            }
+            if (string.Equals(itemId, registration.HoeId, StringComparison.OrdinalIgnoreCase))
+            {
+                templateId = "IridiumHoe";
+                level = registration.UpgradeLevel;
+                return true;
+            }
+            if (string.Equals(itemId, registration.WateringCanId, StringComparison.OrdinalIgnoreCase))
+            {
+                templateId = "IridiumWateringCan";
+                level = registration.UpgradeLevel;
+                return true;
+            }
+        }
+
+        templateId = string.Empty;
+        level = 0;
+        return false;
     }
 
     private static bool TryGetVanillaTemplateForCustomToolId(string itemId, out string templateId, out int level)
@@ -1270,6 +1687,10 @@ public sealed class ModEntry : Mod
             level = Constants.MiddleCustomLevel;
         else if (itemId is Constants.RadioactiveAxeId or Constants.RadioactivePickaxeId or Constants.RadioactiveHoeId or Constants.RadioactiveWateringCanId or Constants.RadioactivePanId or Constants.RadioactiveFishingRodId)
             level = Constants.HighestCustomLevel;
+        else if (TryGetAlternativeCoreToolTemplate(itemId, out templateId, out level))
+        {
+            return true;
+        }
         else
             return false;
 
@@ -1438,7 +1859,16 @@ public sealed class ModEntry : Mod
         changed = true;
     }
 
-    private readonly record struct CustomToolSpriteData(int Level, string Name, string DisplayName, string Texture, int SpriteIndex, int MenuSpriteIndex);
+    private readonly record struct CustomToolSpriteData(
+        int Level,
+        string Name,
+        string DisplayName,
+        string Texture,
+        int SpriteIndex,
+        int MenuSpriteIndex,
+        string TierId,
+        string OwnerModId
+    );
 
 
     private static void MarkKnownRodPurchases()
@@ -1501,6 +1931,17 @@ public sealed class ModEntry : Mod
 
         UnlockTierRecipes(player, highestToolLevel, Constants.MiddleCustomLevel, Constants.CobaltLevel);
         UnlockTierRecipes(player, highestToolLevel, Constants.HighestCustomLevel, Constants.MiddleCustomLevel);
+
+        if (ShouldAddCobaltMythiciteTransmutation())
+        {
+            AddCraftingRecipe(player, Constants.CobaltToMythiciteRecipe);
+            AddCraftingRecipe(player, Constants.MythiciteToCobaltRecipe);
+        }
+        else
+        {
+            player.craftingRecipes.Remove(Constants.CobaltToMythiciteRecipe);
+            player.craftingRecipes.Remove(Constants.MythiciteToCobaltRecipe);
+        }
     }
 
     private static void UnlockTierRecipes(Farmer player, int highestToolLevel, int level, int previousLevel)
