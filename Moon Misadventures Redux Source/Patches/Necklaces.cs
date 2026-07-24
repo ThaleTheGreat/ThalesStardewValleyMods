@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -21,9 +22,11 @@ namespace ThaleTheGreat.MoonMisadventures.Patches
     {
         public const int NecklaceSlotId = 494990101;
 
+        private static readonly ConditionalWeakTable<InventoryPage, ClickableComponent> NecklaceSlots = new();
+
         public static void Postfix( InventoryPage __instance )
         {
-            if ( __instance.equipmentIcons.Any( component => component.myID == NecklaceSlotId ) )
+            if ( NecklaceSlots.TryGetValue( __instance, out _ ) )
                 return;
 
             Rectangle bounds = GetNecklaceSlotBounds( __instance );
@@ -33,15 +36,21 @@ namespace ThaleTheGreat.MoonMisadventures.Patches
                 fullyImmutable = true,
             };
 
+            NecklaceSlots.Add( __instance, necklaceSlot );
+            __instance.allClickableComponents?.Add( necklaceSlot );
             LinkControllerNeighbors( __instance, necklaceSlot );
-            __instance.equipmentIcons.Add( necklaceSlot );
         }
 
         public static ClickableComponent? GetNecklaceSlot( InventoryPage page )
         {
-            ClickableComponent? necklaceSlot = page.equipmentIcons.FirstOrDefault( component => component.myID == NecklaceSlotId );
-            if ( necklaceSlot == null )
+            if ( !NecklaceSlots.TryGetValue( page, out ClickableComponent necklaceSlot ) )
                 return null;
+
+            if ( page.allClickableComponents is not null
+                && !page.allClickableComponents.Contains( necklaceSlot ) )
+            {
+                page.allClickableComponents.Add( necklaceSlot );
+            }
 
             Rectangle bounds = GetNecklaceSlotBounds( page );
             if ( necklaceSlot.bounds != bounds )
@@ -58,7 +67,7 @@ namespace ThaleTheGreat.MoonMisadventures.Patches
             const int uiScale = 4;
             const int equipmentOriginX = 48;
             const int necklaceGridX = 68;
-            const int necklaceGridY = 16;
+            const int necklaceGridY = 0;
 
             var bounds = new Rectangle(
                 page.xPositionOnScreen + equipmentOriginX + necklaceGridX * uiScale,
@@ -66,7 +75,7 @@ namespace ThaleTheGreat.MoonMisadventures.Patches
                 64,
                 64 );
 
-            while ( page.equipmentIcons.Any( component => component.myID != NecklaceSlotId && component.bounds.Intersects( bounds ) ) )
+            while ( page.equipmentIcons.Any( component => component.bounds.Intersects( bounds ) ) )
                 bounds.Y += bounds.Height;
 
             return bounds;
