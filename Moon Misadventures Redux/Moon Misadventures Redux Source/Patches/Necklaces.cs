@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -21,9 +22,11 @@ namespace ThaleTheGreat.MoonMisadventures.Patches
     {
         public const int NecklaceSlotId = 494990101;
 
+        private static readonly ConditionalWeakTable<InventoryPage, ClickableComponent> NecklaceSlots = new();
+
         public static void Postfix( InventoryPage __instance )
         {
-            if ( __instance.equipmentIcons.Any( component => component.myID == NecklaceSlotId ) )
+            if ( NecklaceSlots.TryGetValue( __instance, out _ ) )
                 return;
 
             Rectangle bounds = GetNecklaceSlotBounds( __instance );
@@ -33,8 +36,27 @@ namespace ThaleTheGreat.MoonMisadventures.Patches
                 fullyImmutable = true,
             };
 
+            NecklaceSlots.Add( __instance, necklaceSlot );
+            __instance.allClickableComponents.Add( necklaceSlot );
             LinkControllerNeighbors( __instance, necklaceSlot );
-            __instance.equipmentIcons.Add( necklaceSlot );
+        }
+
+        public static ClickableComponent? GetNecklaceSlot( InventoryPage page )
+        {
+            if ( !NecklaceSlots.TryGetValue( page, out ClickableComponent necklaceSlot ) )
+                return null;
+
+            if ( !page.allClickableComponents.Contains( necklaceSlot ) )
+                page.allClickableComponents.Add( necklaceSlot );
+
+            Rectangle bounds = GetNecklaceSlotBounds( page );
+            if ( necklaceSlot.bounds != bounds )
+            {
+                necklaceSlot.bounds = bounds;
+                LinkControllerNeighbors( page, necklaceSlot );
+            }
+
+            return necklaceSlot;
         }
 
         private static Rectangle GetNecklaceSlotBounds( InventoryPage page )
@@ -42,13 +64,18 @@ namespace ThaleTheGreat.MoonMisadventures.Patches
             const int uiScale = 4;
             const int equipmentOriginX = 48;
             const int necklaceGridX = 68;
-            const int necklaceGridY = 48;
+            const int necklaceGridY = 0;
 
-            return new Rectangle(
+            var bounds = new Rectangle(
                 page.xPositionOnScreen + equipmentOriginX + necklaceGridX * uiScale,
                 page.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + 256 - 12 + necklaceGridY * uiScale,
                 64,
                 64 );
+
+            while ( page.equipmentIcons.Any( component => component.bounds.Intersects( bounds ) ) )
+                bounds.Y += bounds.Height;
+
+            return bounds;
         }
 
         private static void LinkControllerNeighbors( InventoryPage page, ClickableComponent necklaceSlot )
@@ -95,7 +122,7 @@ namespace ThaleTheGreat.MoonMisadventures.Patches
     {
         public static void Postfix( InventoryPage __instance, int x, int y, ref Item ___hoveredItem, ref string ___hoverText, ref string ___hoverTitle )
         {
-            var necklaceSlot = __instance.equipmentIcons.FirstOrDefault( cc => cc.myID == InventoryPageNecklaceConstructorPatch.NecklaceSlotId );
+            ClickableComponent? necklaceSlot = InventoryPageNecklaceConstructorPatch.GetNecklaceSlot( __instance );
 
             if (necklaceSlot is null)
                 return;
@@ -114,7 +141,7 @@ namespace ThaleTheGreat.MoonMisadventures.Patches
     {
         public static bool Prefix( InventoryPage __instance, int x, int y )
         {
-            var necklaceSlot = __instance.equipmentIcons.FirstOrDefault( cc => cc.myID == InventoryPageNecklaceConstructorPatch.NecklaceSlotId );
+            ClickableComponent? necklaceSlot = InventoryPageNecklaceConstructorPatch.GetNecklaceSlot( __instance );
 
             if (necklaceSlot is null)
                 return true;
@@ -152,7 +179,7 @@ namespace ThaleTheGreat.MoonMisadventures.Patches
     {
         public static void Postfix( InventoryPage __instance, SpriteBatch b )
         {
-            ClickableComponent? necklaceSlot = __instance.equipmentIcons.FirstOrDefault( cc => cc.myID == InventoryPageNecklaceConstructorPatch.NecklaceSlotId );
+            ClickableComponent? necklaceSlot = InventoryPageNecklaceConstructorPatch.GetNecklaceSlot( __instance );
 
             if ( necklaceSlot is null )
                 return;
