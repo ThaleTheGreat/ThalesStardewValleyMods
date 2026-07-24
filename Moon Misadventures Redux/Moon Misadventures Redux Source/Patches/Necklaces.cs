@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -21,19 +19,74 @@ namespace ThaleTheGreat.MoonMisadventures.Patches
     [HarmonyPatch( typeof( InventoryPage ), MethodType.Constructor, new Type[] { typeof( int ), typeof( int ), typeof( int ), typeof( int ) } )]
     public static class InventoryPageNecklaceConstructorPatch
     {
+        public const int NecklaceSlotId = 494990101;
+
         public static void Postfix( InventoryPage __instance )
         {
-            __instance.equipmentIcons.Add(
-                new ClickableComponent(
-                    new Rectangle( __instance.xPositionOnScreen + 48 + 208 - 80 - ( Mod.instance.Helper.ModRegistry.IsLoaded("bcmpinc.WearMoreRings") ? 208 : -144 ),
-                        __instance.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + 4 + 256 - 12,
-                        64, 64 ),
-                    "Necklace" )
-                {
-                    myID = 123450101, // TODO: Replace with Nexus mod id prefix
-                    rightNeighborID = 101,
-                    fullyImmutable = true,
-                } );
+            if ( __instance.equipmentIcons.Any( component => component.myID == NecklaceSlotId ) )
+                return;
+
+            Rectangle bounds = GetNecklaceSlotBounds( __instance );
+            var necklaceSlot = new ClickableComponent( bounds, "Necklace" )
+            {
+                myID = NecklaceSlotId,
+                fullyImmutable = true,
+            };
+
+            LinkControllerNeighbors( __instance, necklaceSlot );
+            __instance.equipmentIcons.Add( necklaceSlot );
+        }
+
+        private static Rectangle GetNecklaceSlotBounds( InventoryPage page )
+        {
+            const int uiScale = 4;
+            const int equipmentOriginX = 48;
+            const int necklaceGridX = 68;
+            const int necklaceGridY = 48;
+
+            return new Rectangle(
+                page.xPositionOnScreen + equipmentOriginX + necklaceGridX * uiScale,
+                page.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + 256 - 12 + necklaceGridY * uiScale,
+                64,
+                64 );
+        }
+
+        private static void LinkControllerNeighbors( InventoryPage page, ClickableComponent necklaceSlot )
+        {
+            ClickableComponent? left = page.equipmentIcons
+                .Where( component => component.bounds.Center.Y == necklaceSlot.bounds.Center.Y
+                    && component.bounds.Center.X < necklaceSlot.bounds.Center.X )
+                .OrderByDescending( component => component.bounds.Center.X )
+                .FirstOrDefault();
+            ClickableComponent? right = page.equipmentIcons
+                .Where( component => component.bounds.Center.Y == necklaceSlot.bounds.Center.Y
+                    && component.bounds.Center.X > necklaceSlot.bounds.Center.X )
+                .OrderBy( component => component.bounds.Center.X )
+                .FirstOrDefault();
+            ClickableComponent? up = page.equipmentIcons
+                .Where( component => component.bounds.Center.X == necklaceSlot.bounds.Center.X
+                    && component.bounds.Center.Y < necklaceSlot.bounds.Center.Y )
+                .OrderByDescending( component => component.bounds.Center.Y )
+                .FirstOrDefault();
+            ClickableComponent? down = page.equipmentIcons
+                .Where( component => component.bounds.Center.X == necklaceSlot.bounds.Center.X
+                    && component.bounds.Center.Y > necklaceSlot.bounds.Center.Y )
+                .OrderBy( component => component.bounds.Center.Y )
+                .FirstOrDefault();
+
+            necklaceSlot.leftNeighborID = left?.myID ?? -1;
+            necklaceSlot.rightNeighborID = right?.myID ?? -1;
+            necklaceSlot.upNeighborID = up?.myID ?? -1;
+            necklaceSlot.downNeighborID = down?.myID ?? -1;
+
+            if ( left != null )
+                left.rightNeighborID = NecklaceSlotId;
+            if ( right != null )
+                right.leftNeighborID = NecklaceSlotId;
+            if ( up != null )
+                up.downNeighborID = NecklaceSlotId;
+            if ( down != null )
+                down.upNeighborID = NecklaceSlotId;
         }
     }
 
@@ -42,7 +95,7 @@ namespace ThaleTheGreat.MoonMisadventures.Patches
     {
         public static void Postfix( InventoryPage __instance, int x, int y, ref Item ___hoveredItem, ref string ___hoverText, ref string ___hoverTitle )
         {
-            var necklaceSlot = __instance.equipmentIcons.FirstOrDefault( cc => cc.myID == 123450101 );
+            var necklaceSlot = __instance.equipmentIcons.FirstOrDefault( cc => cc.myID == InventoryPageNecklaceConstructorPatch.NecklaceSlotId );
 
             if (necklaceSlot is null)
                 return;
@@ -61,7 +114,7 @@ namespace ThaleTheGreat.MoonMisadventures.Patches
     {
         public static bool Prefix( InventoryPage __instance, int x, int y )
         {
-            var necklaceSlot = __instance.equipmentIcons.FirstOrDefault( cc => cc.myID == 123450101 );
+            var necklaceSlot = __instance.equipmentIcons.FirstOrDefault( cc => cc.myID == InventoryPageNecklaceConstructorPatch.NecklaceSlotId );
 
             if (necklaceSlot is null)
                 return true;
@@ -97,20 +150,29 @@ namespace ThaleTheGreat.MoonMisadventures.Patches
     [HarmonyPatch( typeof( InventoryPage ), nameof( InventoryPage.draw ) )]
     public static class InventoryPageNecklaceDrawPatch
     {
-        public static void Postfix( InventoryPage __instance, SpriteBatch b, Item ___hoveredItem)
+        public static void Postfix( InventoryPage __instance, SpriteBatch b )
         {
-            if (___hoveredItem != null && ___hoveredItem != Game1.player.get_necklaceItem().Value)
+            ClickableComponent? necklaceSlot = __instance.equipmentIcons.FirstOrDefault( cc => cc.myID == InventoryPageNecklaceConstructorPatch.NecklaceSlotId );
+
+            if ( necklaceSlot is null )
                 return;
 
-            var necklaceSlot = __instance.equipmentIcons.FirstOrDefault( cc => cc.myID == 123450101 );
+            b.Draw(
+                Game1.menuTexture,
+                necklaceSlot.bounds,
+                Game1.getSourceRectForStandardTileSheet( Game1.menuTexture, 10 ),
+                Color.White );
 
-            if (necklaceSlot is null)
-                return;
-
-            if ( Game1.player.get_necklaceItem().Value != null )
+            Item? necklace = Game1.player.get_necklaceItem().Value;
+            if ( necklace != null )
             {
-                b.Draw( Game1.menuTexture, necklaceSlot.bounds, Game1.getSourceRectForStandardTileSheet( Game1.menuTexture, 10 ), Color.White );
-                Game1.player.get_necklaceItem().Value.drawInMenu( b, new Vector2( necklaceSlot.bounds.X, necklaceSlot.bounds.Y ), necklaceSlot.scale, 1f, 0.866f, StackDrawType.Hide );
+                necklace.drawInMenu(
+                    b,
+                    new Vector2( necklaceSlot.bounds.X, necklaceSlot.bounds.Y ),
+                    necklaceSlot.scale,
+                    1f,
+                    0.866f,
+                    StackDrawType.Hide );
             }
             else
             {
