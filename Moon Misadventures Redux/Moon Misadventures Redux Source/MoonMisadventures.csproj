@@ -6,7 +6,7 @@
     <Nullable>annotations</Nullable>
     <AssemblyName>MoonMisadventures</AssemblyName>
     <RootNamespace>ThaleTheGreat.MoonMisadventures</RootNamespace>
-    <Version>1.0.0</Version>
+    <Version>1.1.0</Version>
     <ModFolderName>Moon Misadventures Redux</ModFolderName>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <PackageLicenseExpression>GPL-3.0-only</PackageLicenseExpression>

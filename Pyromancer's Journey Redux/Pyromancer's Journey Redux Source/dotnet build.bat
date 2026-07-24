@@ -5,8 +5,6 @@ cd /d "%~dp0"
 dotnet build
 set "exitCode=%errorlevel%"
 
-if exist "bin" rmdir /s /q "bin"
-if exist "obj" rmdir /s /q "obj"
-if exist "release" rmdir /s /q "release"
+for %%D in (bin obj release) do if exist "%%D" rmdir /s /q "%%D"
 
 endlocal & exit /b %exitCode%

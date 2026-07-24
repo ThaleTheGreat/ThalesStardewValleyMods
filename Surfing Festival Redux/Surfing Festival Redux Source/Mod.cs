@@ -213,7 +213,11 @@ namespace ThaleTheGreat.SurfingFestival
             {
                 if (obstacle.Type is ObstacleType.HomingProjectile or ObstacleType.FirstPlaceProjectile)
                 {
-                    var targetRect = currentEvent.getCharacterByName(obstacle.HomingTarget).GetBoundingBox().Center;
+                    Character? targetCharacter = currentEvent.getCharacterByName(obstacle.HomingTarget);
+                    if (targetCharacter is null)
+                        continue;
+
+                    var targetRect = targetCharacter.GetBoundingBox().Center;
                     var target = new Vector2(targetRect.X, targetRect.Y);
                     var current = obstacle.Position;
 

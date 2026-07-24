@@ -48,12 +48,16 @@ namespace ThaleTheGreat.SurfingFestival.Framework
 
         private float GetProgressCoordinate(string racerName)
         {
+            Character? racer = Game1.CurrentEvent?.getCharacterByName(racerName);
+            if (racer is null)
+                return 0f;
+
             return Mod.RacerState[racerName].Facing switch
             {
-                Game1.up => -Game1.CurrentEvent.getCharacterByName(racerName).Position.Y,
-                Game1.down => Game1.CurrentEvent.getCharacterByName(racerName).Position.Y,
-                Game1.left => -Game1.CurrentEvent.getCharacterByName(racerName).Position.X,
-                Game1.right => Game1.CurrentEvent.getCharacterByName(racerName).Position.X,
+                Game1.up => -racer.Position.Y,
+                Game1.down => racer.Position.Y,
+                Game1.left => -racer.Position.X,
+                Game1.right => racer.Position.X,
                 _ => throw new ArgumentException("Bad facing direction")
             };
         }
