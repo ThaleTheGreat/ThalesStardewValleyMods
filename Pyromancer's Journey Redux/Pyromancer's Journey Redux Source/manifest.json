@@ -1,7 +1,7 @@
 {
     "Name": "(TTG) Pyromancer's Journey Redux",
-    "Author": "kittycatcasey and ThaleTheGreat",
-    "Version": "1.0.0",
+    "Author": "ThaleTheGreat",
+    "Version": "1.0.1",
     "Description": "Adds a Doom-style arcade minigame in the Volcano Dungeon.",
     "UniqueID": "ThaleTheGreat.PyromancersJourney",
     "EntryDll": "PyromancersJourney.dll",
