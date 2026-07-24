@@ -1,7 +1,7 @@
 {
     "Name": "(TTG) Surfing Festival Redux",
-    "Author": "kittycatcasey and ThaleTheGreat",
-    "Version": "1.0.0",
+    "Author": "ThaleTheGreat",
+    "Version": "1.1.0",
     "Description": "Adds a summer beach festival with a multiplayer-compatible surf race, prizes, mail, animation, and festival shop content.",
     "UniqueID": "ThaleTheGreat.SurfingFestival",
     "EntryDll": "SurfingFestival.dll",

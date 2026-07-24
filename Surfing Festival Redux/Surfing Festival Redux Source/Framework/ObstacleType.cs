@@ -1,6 +1,6 @@
 namespace ThaleTheGreat.SurfingFestival.Framework
 {
-    internal enum ObstacleType
+    public enum ObstacleType
     {
         Item,
         Net,

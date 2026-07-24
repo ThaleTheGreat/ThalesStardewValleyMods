@@ -3,8 +3,9 @@ using StardewValley;
 
 namespace ThaleTheGreat.SurfingFestival.Framework
 {
-    internal class Obstacle
+    public class Obstacle
     {
+        public int Id { get; set; }
         public ObstacleType Type { get; set; }
         public Vector2 Position { get; set; }
         public string HomingTarget { get; set; } = string.Empty;

@@ -38,6 +38,13 @@ namespace ThaleTheGreat.SurfingFestival
         public static string? RaceWinner;
         internal static bool RaceCourseActive;
         internal static List<Obstacle> Obstacles = new();
+        private readonly Dictionary<long, int> remoteFacingDirections = new();
+        private string raceSessionId = string.Empty;
+        private long raceSnapshotSequence;
+        private long lastAppliedSnapshotSequence = -1;
+        private int nextObstacleId;
+        private int lastSentFacing = -1;
+        private long lastInputMilliseconds;
 
         public static Texture2D SurfboardTex = null!;
         public static Texture2D SurfboardWaterTex = null!;
@@ -187,6 +194,12 @@ namespace ThaleTheGreat.SurfingFestival
             if (currentEvent.playerControlSequenceID != "surfingRace")
                 return;
 
+            if (!Context.IsMainPlayer)
+            {
+                this.SendRaceInput(useItem: false);
+                return;
+            }
+
             var rand = new Random();
             foreach (var actor in currentEvent.actors)
             {
@@ -282,7 +295,9 @@ namespace ThaleTheGreat.SurfingFestival
             foreach (string racerName in Mod.Racers)
             {
                 var state = Mod.RacerState[racerName];
-                var racer = currentEvent.getCharacterByName(racerName);
+                Character? racer = currentEvent.getCharacterByName(racerName);
+                if (racer is null)
+                    continue;
 
                 for (int i = Mod.Obstacles.Count - 1; i >= 0; --i)
                 {
@@ -398,29 +413,32 @@ namespace ThaleTheGreat.SurfingFestival
                     continue;
                 }
 
-                if (racer is Farmer)
+                if (racer is Farmer farmer)
                 {
-                    if (racer == Game1.player)
+                    int requestedFacing = farmer == Game1.player
+                        ? Game1.player.FacingDirection
+                        : this.remoteFacingDirections.GetValueOrDefault(farmer.UniqueMultiplayerID, state.Facing);
+
+                    int opposite = state.Facing switch
                     {
-                        int opposite = state.Facing switch
-                        {
-                            Game1.up => Game1.down,
-                            Game1.down => Game1.up,
-                            Game1.left => Game1.right,
-                            Game1.right => Game1.left,
-                            _ => 0
-                        };
+                        Game1.up => Game1.down,
+                        Game1.down => Game1.up,
+                        Game1.left => Game1.right,
+                        Game1.right => Game1.left,
+                        _ => state.Facing
+                    };
 
-                        if (Game1.player.FacingDirection != state.Facing && Game1.player.FacingDirection != opposite)
-                        {
-                            racer.faceDirection(Game1.player.FacingDirection);
+                    if (requestedFacing != state.Facing && requestedFacing != opposite)
+                    {
+                        racer.faceDirection(requestedFacing);
+                        int wasSpeed = racer.speed;
+                        racer.speed = (state.Speed + state.AddedSpeed) / 2;
+                        racer.tryToMoveInDirection(racer.FacingDirection, true, 0, false);
+                        racer.speed = wasSpeed;
+                    }
 
-                            int wasSpeed = racer.speed;
-                            racer.speed = (state.Speed + state.AddedSpeed) / 2;
-                            racer.tryToMoveInDirection(racer.FacingDirection, racer is Farmer, 0, false);
-                            racer.speed = wasSpeed;
-                        }
-
+                    if (farmer == Game1.player)
+                    {
                         Game1.player.controller = new PathFindController(Game1.player, Game1.currentLocation, Game1.player.TilePoint, Game1.player.FacingDirection)
                         {
                             pathToEndPoint = null
@@ -509,11 +527,6 @@ namespace ThaleTheGreat.SurfingFestival
                     if (state.CurrentItem is not SurfItem currentItem)
                         continue;
 
-                    if (racer == Game1.player)
-                    {
-                        var msg = new UseItemMessage { ItemUsed = currentItem };
-                        this.Helper.Multiplayer.SendMessage(msg, UseItemMessage.Type, new[] { this.ModManifest.UniqueID });
-                    }
                     switch (currentItem)
                     {
                         case SurfItem.Boost:
@@ -541,6 +554,7 @@ namespace ThaleTheGreat.SurfingFestival
                             TemporaryAnimatedSprite tas = new TemporaryAnimatedSprite(128, 0, 0, 0, new Vector2(), false, false);
                             Mod.Obstacles.Add(new Obstacle
                             {
+                                Id = ++this.nextObstacleId,
                                 Type = ObstacleType.HomingProjectile,
                                 Position = new Vector2(racer.GetBoundingBox().Center.X, racer.GetBoundingBox().Center.Y),
                                 HomingTarget = target,
@@ -553,6 +567,7 @@ namespace ThaleTheGreat.SurfingFestival
                             state.CurrentItem = null;
                             Mod.Obstacles.Add(new Obstacle
                             {
+                                Id = ++this.nextObstacleId,
                                 Type = ObstacleType.FirstPlaceProjectile,
                                 Position = new Vector2(racer.GetBoundingBox().Center.X, racer.GetBoundingBox().Center.Y),
                                 HomingTarget = Mod.GetRacePlacement()[Mod.GetRacePlacement().Count - 1]
@@ -626,23 +641,14 @@ namespace ThaleTheGreat.SurfingFestival
 
                     if (state.LapsDone >= 2 && Mod.RaceWinner == null)
                     {
-                        Mod.RaceWinner = racerName;
-
-                        currentEvent.playerControlSequence = false;
-                        currentEvent.playerControlSequenceID = null;
-                        var festData = Mod.Instance.Helper.Reflection.GetField<Dictionary<string, string>>(currentEvent, "festivalData").GetValue();
-
-                        festData.TryGetValue($"{Mod.RaceWinner}Win", out string? winDialog);
-                        winDialog ??= I18n.Race_Winner_Player(name: racer.Name);
-
-                        currentEvent.eventCommands = festData["afterSurfingRace"].Replace("{{winDialog}}", winDialog).Split('/');
-                        currentEvent.currentCommand = 0;
-
-                        foreach (string curRacerName in Mod.Racers)
-                            currentEvent.getCharacterByName(curRacerName).stopGlowing();
+                        this.FinishRace(currentEvent, racerName);
+                        this.BroadcastRaceSnapshot(raceActive: false);
                     }
                 }
             }
+
+            if (e.IsMultipleOf(3) && Mod.RaceWinner is null)
+                this.BroadcastRaceSnapshot(raceActive: true);
         }
 
         private void OnButtonPressed(object? sender, ButtonPressedEventArgs e)
@@ -658,7 +664,13 @@ namespace ThaleTheGreat.SurfingFestival
                 return;
 
             if (e.Button.IsActionButton() && state.CurrentItem.HasValue && state.ItemObtainTimer == -1 && state.ItemUsageTimer == -1)
-                state.ShouldUseItem = true;
+            {
+                this.Helper.Input.Suppress(e.Button);
+                if (Context.IsMainPlayer)
+                    state.ShouldUseItem = true;
+                else
+                    this.SendRaceInput(useItem: true);
+            }
         }
 
         private bool TryHandleFestivalInteraction(ButtonPressedEventArgs e)
@@ -940,25 +952,185 @@ namespace ThaleTheGreat.SurfingFestival
         {
             if (e.FromModID != this.ModManifest.UniqueID)
                 return;
-            switch (e.Type)
+
+            if (e.Type == RaceInputMessage.Type && Context.IsMainPlayer)
             {
-                case UseItemMessage.Type:
-                    {
-                        var msg = e.ReadAs<UseItemMessage>();
-                        Farmer? senderFarmer = Game1.GetPlayer(e.FromPlayerID, onlyOnline: true);
-                        if (senderFarmer is null)
-                            return;
+                RaceInputMessage msg = e.ReadAs<RaceInputMessage>();
+                if (msg.SessionId != this.raceSessionId || Game1.CurrentEvent?.playerControlSequenceID != "surfingRace")
+                    return;
 
-                        string racerName = "farmer" + Utility.getFarmerNumberFromFarmer(senderFarmer);
-                        if (!Mod.Racers.Contains(racerName))
-                            return;
-                        var state = Mod.RacerState[racerName];
+                Farmer? senderFarmer = Game1.GetPlayer(e.FromPlayerID, onlyOnline: true);
+                if (senderFarmer is null)
+                    return;
 
-                        state.CurrentItem = msg.ItemUsed;
-                        state.ShouldUseItem = true;
-                    }
-                    break;
+                string racerName = "farmer" + Utility.getFarmerNumberFromFarmer(senderFarmer);
+                if (!Mod.RacerState.TryGetValue(racerName, out RacerState? state))
+                    return;
+
+                if (msg.FacingDirection is >= Game1.up and <= Game1.right)
+                    this.remoteFacingDirections[e.FromPlayerID] = msg.FacingDirection;
+
+                if (msg.UseItem && state.CurrentItem.HasValue && state.ItemObtainTimer == -1 && state.ItemUsageTimer == -1)
+                    state.ShouldUseItem = true;
+                return;
             }
+
+            if (e.Type == RaceSnapshotMessage.Type && !Context.IsMainPlayer && e.FromPlayerID == Game1.MasterPlayer.UniqueMultiplayerID)
+            {
+                this.ApplyRaceSnapshot(e.ReadAs<RaceSnapshotMessage>());
+            }
+        }
+
+        private void SendRaceInput(bool useItem)
+        {
+            if (Context.IsMainPlayer || string.IsNullOrEmpty(this.raceSessionId))
+                return;
+
+            int facing = Game1.player.FacingDirection;
+            long now = (long)Game1.currentGameTime.TotalGameTime.TotalMilliseconds;
+            if (!useItem && facing == this.lastSentFacing && now - this.lastInputMilliseconds < 250)
+                return;
+
+            this.lastSentFacing = facing;
+            this.lastInputMilliseconds = now;
+            this.Helper.Multiplayer.SendMessage(
+                new RaceInputMessage
+                {
+                    SessionId = this.raceSessionId,
+                    FacingDirection = facing,
+                    UseItem = useItem
+                },
+                RaceInputMessage.Type,
+                new[] { this.ModManifest.UniqueID },
+                new[] { Game1.MasterPlayer.UniqueMultiplayerID });
+        }
+
+        private void BroadcastRaceSnapshot(bool raceActive)
+        {
+            if (!Context.IsMainPlayer || string.IsNullOrEmpty(this.raceSessionId) || Game1.CurrentEvent is not Event currentEvent)
+                return;
+
+            var snapshot = new RaceSnapshotMessage
+            {
+                SessionId = this.raceSessionId,
+                Sequence = ++this.raceSnapshotSequence,
+                RaceActive = raceActive,
+                Winner = Mod.RaceWinner,
+                Racers = new List<string>(Mod.Racers)
+            };
+
+            foreach (string racerName in Mod.Racers)
+            {
+                Character? racer = currentEvent.getCharacterByName(racerName);
+                if (racer is null || !Mod.RacerState.TryGetValue(racerName, out RacerState? state))
+                    continue;
+
+                snapshot.RacerStates.Add(new RacerSnapshot
+                {
+                    Name = racerName,
+                    Position = racer.Position,
+                    FacingDirection = racer.FacingDirection,
+                    Speed = state.Speed,
+                    AddedSpeed = state.AddedSpeed,
+                    Surfboard = state.Surfboard,
+                    RaceFacing = state.Facing,
+                    LapsDone = state.LapsDone,
+                    ReachedHalf = state.ReachedHalf,
+                    CurrentItem = state.CurrentItem,
+                    ItemObtainTimer = state.ItemObtainTimer,
+                    ItemUsageTimer = state.ItemUsageTimer,
+                    SlowdownTimer = state.SlowdownTimer,
+                    StunTimer = state.StunTimer
+                });
+            }
+
+            foreach (Obstacle obstacle in Mod.Obstacles)
+            {
+                snapshot.Obstacles.Add(new ObstacleSnapshot
+                {
+                    Id = obstacle.Id,
+                    Type = obstacle.Type,
+                    Position = obstacle.Position,
+                    HomingTarget = obstacle.HomingTarget
+                });
+            }
+
+            this.Helper.Multiplayer.SendMessage(snapshot, RaceSnapshotMessage.Type, new[] { this.ModManifest.UniqueID });
+        }
+
+        private void ApplyRaceSnapshot(RaceSnapshotMessage snapshot)
+        {
+            if (snapshot.SessionId != this.raceSessionId || snapshot.Sequence <= this.lastAppliedSnapshotSequence)
+                return;
+            if (Game1.CurrentEvent is not Event currentEvent || currentEvent.FestivalName != Mod.FestivalName)
+                return;
+
+            this.lastAppliedSnapshotSequence = snapshot.Sequence;
+            Mod.Racers = new List<string>(snapshot.Racers);
+            Mod.RaceWinner = snapshot.Winner;
+            Mod.RaceCourseActive = snapshot.RaceActive;
+
+            foreach (RacerSnapshot racerSnapshot in snapshot.RacerStates)
+            {
+                Character? racer = currentEvent.getCharacterByName(racerSnapshot.Name);
+                if (racer is null)
+                    continue;
+
+                racer.position.X = racerSnapshot.Position.X;
+                racer.position.Y = racerSnapshot.Position.Y;
+                racer.faceDirection(racerSnapshot.FacingDirection);
+                if (!Mod.RacerState.TryGetValue(racerSnapshot.Name, out RacerState? state))
+                {
+                    state = new RacerState();
+                    Mod.RacerState[racerSnapshot.Name] = state;
+                }
+
+                state.Speed = racerSnapshot.Speed;
+                state.AddedSpeed = racerSnapshot.AddedSpeed;
+                state.Surfboard = racerSnapshot.Surfboard;
+                state.Facing = racerSnapshot.RaceFacing;
+                state.LapsDone = racerSnapshot.LapsDone;
+                state.ReachedHalf = racerSnapshot.ReachedHalf;
+                state.CurrentItem = racerSnapshot.CurrentItem;
+                state.ItemObtainTimer = racerSnapshot.ItemObtainTimer;
+                state.ItemUsageTimer = racerSnapshot.ItemUsageTimer;
+                state.SlowdownTimer = racerSnapshot.SlowdownTimer;
+                state.StunTimer = racerSnapshot.StunTimer;
+            }
+
+            Mod.Obstacles.Clear();
+            foreach (ObstacleSnapshot obstacle in snapshot.Obstacles)
+            {
+                Mod.Obstacles.Add(new Obstacle
+                {
+                    Id = obstacle.Id,
+                    Type = obstacle.Type,
+                    Position = obstacle.Position,
+                    HomingTarget = obstacle.HomingTarget
+                });
+            }
+
+            if (!snapshot.RaceActive && snapshot.Winner is not null && currentEvent.playerControlSequenceID == "surfingRace")
+                this.FinishRace(currentEvent, snapshot.Winner);
+        }
+
+        private void FinishRace(Event? currentEvent, string winner)
+        {
+            if (currentEvent is null)
+                return;
+
+            Mod.RaceWinner = winner;
+            currentEvent.playerControlSequence = false;
+            currentEvent.playerControlSequenceID = null;
+            Dictionary<string, string> festData = this.Helper.Reflection.GetField<Dictionary<string, string>>(currentEvent, "festivalData").GetValue();
+            Character? winnerCharacter = currentEvent.getCharacterByName(winner);
+            festData.TryGetValue($"{winner}Win", out string? winDialog);
+            winDialog ??= I18n.Race_Winner_Player(name: winnerCharacter?.Name ?? winner);
+            currentEvent.eventCommands = festData["afterSurfingRace"].Replace("{{winDialog}}", winDialog).Split('/');
+            currentEvent.currentCommand = 0;
+
+            foreach (string racerName in Mod.Racers)
+                currentEvent.getCharacterByName(racerName)?.stopGlowing();
         }
 
         private static void NormalizeMapActions(Map map)
@@ -1243,6 +1415,11 @@ namespace ThaleTheGreat.SurfingFestival
         private static void EventCommand_WarpSurfingRacers(Event instance, string[] args, EventContext context)
         {
             Mod.RaceWinner = null;
+            Mod.Instance.raceSessionId = $"{Game1.uniqueIDForThisGame}:{Game1.stats.DaysPlayed}:summer5";
+            Mod.Instance.raceSnapshotSequence = 0;
+            Mod.Instance.lastAppliedSnapshotSequence = -1;
+            Mod.Instance.nextObstacleId = 0;
+            Mod.Instance.remoteFacingDirections.Clear();
 
             // Generate obstacles
             Mod.Obstacles.Clear();
@@ -1257,18 +1434,21 @@ namespace ThaleTheGreat.SurfingFestival
                     if (tile?.TileIndex == 3)
                         Mod.Obstacles.Add(new Obstacle
                         {
+                            Id = ++Mod.Instance.nextObstacleId,
                             Type = ObstacleType.Item,
                             Position = new Vector2(ix * Game1.tileSize, iy * Game1.tileSize)
                         });
                     else if (tile?.TileIndex == 64)
                         Mod.Obstacles.Add(new Obstacle
                         {
+                            Id = ++Mod.Instance.nextObstacleId,
                             Type = ObstacleType.Net,
                             Position = new Vector2(ix * Game1.tileSize, iy * Game1.tileSize)
                         });
                     else if (tile?.TileIndex == 32)
                         Mod.Obstacles.Add(new Obstacle
                         {
+                            Id = ++Mod.Instance.nextObstacleId,
                             Type = ObstacleType.Rock,
                             Position = new Vector2(ix * Game1.tileSize, iy * Game1.tileSize)
                         });
@@ -1341,6 +1521,9 @@ namespace ThaleTheGreat.SurfingFestival
                 if (actualPos.Y < 50)
                     actualPos.Y = 57;
             }
+
+            if (Context.IsMainPlayer)
+                Mod.Instance.BroadcastRaceSnapshot(raceActive: true);
 
             // Go to next command
             ++instance.CurrentCommand;

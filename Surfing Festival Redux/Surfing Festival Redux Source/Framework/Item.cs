@@ -1,6 +1,6 @@
 namespace ThaleTheGreat.SurfingFestival.Framework
 {
-    internal enum SurfItem
+    public enum SurfItem
     {
         Boost,
         HomingProjectile,
