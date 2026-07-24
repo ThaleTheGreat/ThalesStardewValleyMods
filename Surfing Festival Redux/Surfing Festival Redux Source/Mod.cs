@@ -185,11 +185,13 @@ namespace ThaleTheGreat.SurfingFestival
                 Mod.PlayerDidBonfire = BonfireState.NotDone;
 
             this.PrevEvent = observedEvent;
-            if (observedEvent is not Event currentEvent || currentEvent.FestivalName != Mod.FestivalName)
+            if (observedEvent is null || observedEvent.FestivalName != Mod.FestivalName)
             {
                 Mod.RaceCourseActive = false;
                 return;
             }
+
+            Event currentEvent = observedEvent;
 
             if (currentEvent.playerControlSequenceID != "surfingRace")
                 return;
@@ -345,7 +347,7 @@ namespace ThaleTheGreat.SurfingFestival
                                 if (obstacle.Type == ObstacleType.FirstPlaceProjectile)
                                     Game1.playSound("thunder");
                                 if (obstacle.Type == ObstacleType.HomingProjectile)
-                                    currentEvent?.underwaterSprites?.Remove(obstacle.UnderwaterSprite);
+                                    currentEvent.underwaterSprites?.Remove(obstacle.UnderwaterSprite);
                                 break;
                         }
                         Mod.Obstacles.Remove(obstacle);
@@ -564,7 +566,7 @@ namespace ThaleTheGreat.SurfingFestival
                                 HomingTarget = target,
                                 UnderwaterSprite = tas
                             });
-                            currentEvent?.underwaterSprites?.Add(tas);
+                            currentEvent.underwaterSprites?.Add(tas);
                             Game1.playSound("throwDownITem");
                             break;
                         case SurfItem.FirstPlaceProjectile:
@@ -1118,11 +1120,8 @@ namespace ThaleTheGreat.SurfingFestival
                 this.FinishRace(currentEvent, snapshot.Winner);
         }
 
-        private void FinishRace(Event? currentEvent, string winner)
+        private void FinishRace(Event currentEvent, string winner)
         {
-            if (currentEvent is null)
-                return;
-
             Mod.RaceWinner = winner;
             currentEvent.playerControlSequence = false;
             currentEvent.playerControlSequenceID = null;
