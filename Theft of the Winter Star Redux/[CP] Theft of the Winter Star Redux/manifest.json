@@ -1,7 +1,7 @@
 {
     "Name": "[CP] (TTG) Theft of the Winter Star Redux",
-    "Author": "kittycatcasey and ThaleTheGreat",
-    "Version": "1.0.0",
+    "Author": "ThaleTheGreat",
+    "Version": "1.0.1",
     "Description": "Adds native Stardew Valley 1.6 items and recipes for Theft of the Winter Star.",
     "UniqueID": "ThaleTheGreat.TheftOfTheWinterStar.CP",
     "MinimumApiVersion": "4.5.2",
