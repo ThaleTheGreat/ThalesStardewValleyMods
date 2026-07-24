@@ -287,7 +287,7 @@ namespace ThaleTheGreat.MoonMisadventures
                             },
                         }.ToList(),
                         BuildCost = 2000000,
-                        BuildCondition = "PLAYER_HAS_FLAG Any ThaleTheGreat.MoonMisadventures_FirstUfoTravel",
+                        BuildCondition = "PLAYER_HAS_MAIL Any ThaleTheGreat.MoonMisadventures_FirstUfoTravel",
                         Size = new(3, 2),
                         DefaultAction = "ObeliskWarp Custom_MM_MoonFarm 7 11 true",
                     });

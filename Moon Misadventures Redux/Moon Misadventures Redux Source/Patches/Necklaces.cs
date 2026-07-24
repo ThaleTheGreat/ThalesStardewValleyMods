@@ -26,31 +26,23 @@ namespace ThaleTheGreat.MoonMisadventures.Patches
 
         public static void Postfix( InventoryPage __instance )
         {
-            if ( NecklaceSlots.TryGetValue( __instance, out _ ) )
-                return;
-
-            Rectangle bounds = GetNecklaceSlotBounds( __instance );
-            var necklaceSlot = new ClickableComponent( bounds, "Necklace" )
-            {
-                myID = NecklaceSlotId,
-                fullyImmutable = true,
-            };
-
-            NecklaceSlots.Add( __instance, necklaceSlot );
-            __instance.allClickableComponents.Add( necklaceSlot );
-            LinkControllerNeighbors( __instance, necklaceSlot );
+            EnsureNecklaceSlot( __instance );
         }
 
         public static ClickableComponent? GetNecklaceSlot( InventoryPage page )
         {
-            if ( !NecklaceSlots.TryGetValue( page, out ClickableComponent necklaceSlot ) )
+            ClickableComponent? necklaceSlot = EnsureNecklaceSlot( page );
+            if ( necklaceSlot is null )
                 return null;
 
-            if ( !page.allClickableComponents.Contains( necklaceSlot ) )
+            if ( page.allClickableComponents is not null
+                && !page.allClickableComponents.Contains( necklaceSlot ) )
+            {
                 page.allClickableComponents.Add( necklaceSlot );
+            }
 
-            Rectangle bounds = GetNecklaceSlotBounds( page );
-            if ( necklaceSlot.bounds != bounds )
+            if ( TryGetNecklaceSlotBounds( page, out Rectangle bounds )
+                && necklaceSlot.bounds != bounds )
             {
                 necklaceSlot.bounds = bounds;
                 LinkControllerNeighbors( page, necklaceSlot );
@@ -59,23 +51,57 @@ namespace ThaleTheGreat.MoonMisadventures.Patches
             return necklaceSlot;
         }
 
-        private static Rectangle GetNecklaceSlotBounds( InventoryPage page )
+        private static ClickableComponent? EnsureNecklaceSlot( InventoryPage page )
         {
-            const int uiScale = 4;
-            const int equipmentOriginX = 48;
-            const int necklaceGridX = 68;
-            const int necklaceGridY = 0;
+            if ( NecklaceSlots.TryGetValue( page, out ClickableComponent necklaceSlot ) )
+                return necklaceSlot;
 
-            var bounds = new Rectangle(
-                page.xPositionOnScreen + equipmentOriginX + necklaceGridX * uiScale,
-                page.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + 256 - 12 + necklaceGridY * uiScale,
-                64,
-                64 );
+            if ( !TryGetNecklaceSlotBounds( page, out Rectangle bounds ) )
+                return null;
 
-            while ( page.equipmentIcons.Any( component => component.bounds.Intersects( bounds ) ) )
+            necklaceSlot = new ClickableComponent( bounds, "Necklace" )
+            {
+                myID = NecklaceSlotId,
+                fullyImmutable = true,
+            };
+
+            NecklaceSlots.Add( page, necklaceSlot );
+            page.allClickableComponents?.Add( necklaceSlot );
+            LinkControllerNeighbors( page, necklaceSlot );
+            return necklaceSlot;
+        }
+
+        private static bool TryGetNecklaceSlotBounds( InventoryPage page, out Rectangle bounds )
+        {
+            bounds = Rectangle.Empty;
+
+            List<ClickableComponent> equipment = page.equipmentIcons?
+                .Where( component => component is not null
+                    && component.bounds.Width > 0
+                    && component.bounds.Height > 0 )
+                .ToList() ?? new();
+            if ( equipment.Count == 0 )
+                return false;
+
+            int top = equipment.Min( component => component.bounds.Top );
+            List<ClickableComponent> topRow = equipment
+                .Where( component => component.bounds.Top == top )
+                .ToList();
+
+            ClickableComponent anchor = topRow
+                .FirstOrDefault( component => string.Equals( component.name, "Trinket", StringComparison.Ordinal ) )
+                ?? topRow.OrderByDescending( component => component.bounds.Right ).First();
+
+            bounds = new Rectangle(
+                anchor.bounds.X,
+                anchor.bounds.Bottom,
+                anchor.bounds.Width,
+                anchor.bounds.Height );
+
+            while ( equipment.Any( component => component.bounds.Intersects( bounds ) ) )
                 bounds.Y += bounds.Height;
 
-            return bounds;
+            return true;
         }
 
         private static void LinkControllerNeighbors( InventoryPage page, ClickableComponent necklaceSlot )

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.5" tiledversion="2021.03.23" orientation="orthogonal" renderorder="right-down" compressionlevel="0" width="50" height="40" tilewidth="16" tileheight="16" infinite="0" nextlayerid="12" nextobjectid="9">
  <properties>
-  <property name="BuildConditions" value="PLAYER_HAS_FLAG Any ThaleTheGreat.MoonMisadventures_FirstUfoTravel"/>
+  <property name="BuildConditions" value="PLAYER_HAS_MAIL Any ThaleTheGreat.MoonMisadventures_FirstUfoTravel"/>
   <property name="CanBuildHere" value="T"/>
   <property name="LocationContext" value="Moon"/>
   <property name="LooserBuildRestrictions" value="T"/>
