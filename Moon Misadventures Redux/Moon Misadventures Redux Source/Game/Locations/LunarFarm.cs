@@ -31,6 +31,7 @@ namespace ThaleTheGreat.MoonMisadventures.Game.Locations
         protected override void initNetFields()
         {
             base.initNetFields();
+            isAlwaysActive.Value = true;
             NetFields.AddField( grownCrystal, "grownCrystal" );
 
             grownCrystal.InterpolationEnabled = false;
