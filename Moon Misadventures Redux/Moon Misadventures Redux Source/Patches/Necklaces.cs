@@ -92,15 +92,16 @@ namespace ThaleTheGreat.MoonMisadventures.Patches
                 .FirstOrDefault( component => string.Equals( component.name, "Trinket", StringComparison.Ordinal ) )
                 ?? topRow.OrderByDescending( component => component.bounds.Right ).First();
 
-            bounds = new Rectangle(
+            Rectangle candidate = new(
                 anchor.bounds.X,
                 anchor.bounds.Bottom,
                 anchor.bounds.Width,
                 anchor.bounds.Height );
 
-            while ( equipment.Any( component => component.bounds.Intersects( bounds ) ) )
-                bounds.Y += bounds.Height;
+            while ( equipment.Any( component => component.bounds.Intersects( candidate ) ) )
+                candidate.Y += candidate.Height;
 
+            bounds = candidate;
             return true;
         }
 
